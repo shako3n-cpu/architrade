@@ -44,5 +44,39 @@
     "contactUs": "დაგვიკავშირდით",
     "getDirections": "მარშრუტის აგება",
     "call": "დარეკვა"
+  },
+  "catalog": {
+    "allProducts": "ყველა პროდუქტი",
+    "resultCount_one": "{{count}} ნივთი",
+    "resultCount_other": "{{count}} ნივთი",
+    "inCategory": "კატეგორიაში"
+  },
+  "product": {
+    "articleNumber": "არტიკული",
+    "details": "დეტალურად",
+    "dimensions": "ზომები",
+    "width": "სიგანე",
+    "depth": "სიღრმე",
+    "height": "სიმაღლე",
+    "materials": "მასალები",
+    "finishes": "ფერები და დამუშავება",
+    "availability": "ხელმისაწვდომობა",
+    "origin": "წარმოშობა",
+    "warranty": "გარანტია",
+    "warrantyValue": "{{count}} თვე",
+    "priceOnRequest": "ფასი მოთხოვნით",
+    "requestPrice": "ფასის მოთხოვნა",
+    "newBadge": "ახალი",
+    "collection": "კოლექცია"
+  },
+  "availability": {
+    "in-stock": "მარაგშია",
+    "on-order": "შეკვეთით",
+    "custom": "ინდივიდუალური ზომით"
+  },
+  "preview": {
+    "eyebrow": "ნაბიჯი 3 — მონაცემების შემოწმება",
+    "title": "კატალოგის მონაცემები",
+    "description": "ეს დროებითი გვერდია მხოლოდ მონაცემების სანახავად — არა კატალოგის საბოლოო დიზაინი. შეამოწმეთ ფოტოები, ქართული ტექსტი და ენის გადამრთველი, შემდეგ კი გვერდი წაიშლება."
   }
 }

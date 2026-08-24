@@ -44,5 +44,39 @@
     "contactUs": "Contact us",
     "getDirections": "Get directions",
     "call": "Call"
+  },
+  "catalog": {
+    "allProducts": "All products",
+    "resultCount_one": "{{count}} piece",
+    "resultCount_other": "{{count}} pieces",
+    "inCategory": "in category"
+  },
+  "product": {
+    "articleNumber": "Article",
+    "details": "Details",
+    "dimensions": "Dimensions",
+    "width": "Width",
+    "depth": "Depth",
+    "height": "Height",
+    "materials": "Materials",
+    "finishes": "Finishes",
+    "availability": "Availability",
+    "origin": "Origin",
+    "warranty": "Warranty",
+    "warrantyValue": "{{count}} months",
+    "priceOnRequest": "Price on request",
+    "requestPrice": "Request a price",
+    "newBadge": "New",
+    "collection": "Collection"
+  },
+  "availability": {
+    "in-stock": "In stock",
+    "on-order": "On order",
+    "custom": "Made to measure"
+  },
+  "preview": {
+    "eyebrow": "Step 3 — data review",
+    "title": "Catalogue data",
+    "description": "A temporary page for checking the data only — this is not the catalogue design. Check the photographs, the copy and the language switcher, then this page gets deleted."
   }
 }

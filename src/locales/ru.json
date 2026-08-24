@@ -44,5 +44,41 @@
     "contactUs": "Связаться с нами",
     "getDirections": "Построить маршрут",
     "call": "Позвонить"
+  },
+  "catalog": {
+    "allProducts": "Все товары",
+    "resultCount_one": "{{count}} предмет",
+    "resultCount_few": "{{count}} предмета",
+    "resultCount_many": "{{count}} предметов",
+    "resultCount_other": "{{count}} предметов",
+    "inCategory": "в категории"
+  },
+  "product": {
+    "articleNumber": "Артикул",
+    "details": "Подробнее",
+    "dimensions": "Размеры",
+    "width": "Ширина",
+    "depth": "Глубина",
+    "height": "Высота",
+    "materials": "Материалы",
+    "finishes": "Цвета и отделка",
+    "availability": "Наличие",
+    "origin": "Происхождение",
+    "warranty": "Гарантия",
+    "warrantyValue": "{{count}} мес.",
+    "priceOnRequest": "Цена по запросу",
+    "requestPrice": "Запросить цену",
+    "newBadge": "Новинка",
+    "collection": "Коллекция"
+  },
+  "availability": {
+    "in-stock": "В наличии",
+    "on-order": "Под заказ",
+    "custom": "По индивидуальным размерам"
+  },
+  "preview": {
+    "eyebrow": "Шаг 3 — проверка данных",
+    "title": "Данные каталога",
+    "description": "Временная страница только для проверки данных — это не дизайн каталога. Проверьте фотографии, тексты и переключатель языков, после чего страница будет удалена."
   }
 }

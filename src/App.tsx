@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
 import { HomePreview } from '@/pages/home-preview'
+import { CatalogPreview } from '@/pages/catalog-preview'
 import { Placeholder } from '@/pages/placeholder'
 import { getStoredLanguage } from '@/i18n'
 import '@/i18n'
@@ -31,7 +32,8 @@ export default function App() {
         <Route path="/:lang" element={<RootLayout />}>
           <Route index element={<HomePreview />} />
 
-          <Route path="catalog" element={<Placeholder title="Catalog" />} />
+          {/* TEMPORARY: data review sheet, replaced by the real catalogue. */}
+          <Route path="catalog" element={<CatalogPreview />} />
           <Route path="catalog/:categorySlug" element={<Placeholder title="Category" />} />
           <Route path="collections" element={<Placeholder title="Collections" />} />
           <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
