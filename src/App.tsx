@@ -1,0 +1,54 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { RootLayout } from '@/components/layout/root-layout'
+import { HomePreview } from '@/pages/home-preview'
+import { Placeholder } from '@/pages/placeholder'
+import { getStoredLanguage } from '@/i18n'
+import '@/i18n'
+
+/**
+ * ============================================================================
+ * ROUTING
+ * ----------------------------------------------------------------------------
+ * Every page lives under a language prefix: /ka/... , /en/... , /ru/...
+ * "/" sends the visitor to whichever language they last used (Georgian on a
+ * first visit). RootLayout handles an unknown code such as /de/about.
+ *
+ * The Placeholder pages below are temporary and get replaced page by page.
+ * ============================================================================
+ */
+
+/** Reads the remembered language and redirects "/" to it. */
+function RootRedirect() {
+  return <Navigate to={`/${getStoredLanguage()}`} replace />
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<RootRedirect />} />
+
+        <Route path="/:lang" element={<RootLayout />}>
+          <Route index element={<HomePreview />} />
+
+          <Route path="catalog" element={<Placeholder title="Catalog" />} />
+          <Route path="catalog/:categorySlug" element={<Placeholder title="Category" />} />
+          <Route path="collections" element={<Placeholder title="Collections" />} />
+          <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
+          <Route path="product/:slug" element={<Placeholder title="Product" />} />
+          <Route path="about" element={<Placeholder title="About" />} />
+          <Route path="services" element={<Placeholder title="Services" />} />
+          <Route path="showroom" element={<Placeholder title="Showroom" />} />
+          <Route path="contact" element={<Placeholder title="Contact" />} />
+          <Route path="privacy" element={<Placeholder title="Privacy policy" />} />
+          <Route path="terms" element={<Placeholder title="Terms and conditions" />} />
+
+          <Route path="*" element={<Placeholder title="Page not found" />} />
+        </Route>
+
+        {/* Anything with no language prefix at all. */}
+        <Route path="*" element={<RootRedirect />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}

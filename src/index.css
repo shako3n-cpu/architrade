@@ -1,0 +1,199 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* ============================================================================
+   ARCHTRADE — DESIGN SYSTEM
+   ----------------------------------------------------------------------------
+   Dark, premium, gallery-like. Photography is the hero; the interface stays
+   quiet. Every colour, font and spacing decision lives in this one file so the
+   whole site can be re-skinned from here.
+
+   House rules enforced below:
+     - corner radius never exceeds 4px
+     - no drop shadows, no gradients
+     - hairline 1px dividers instead of heavy boxes/cards
+     - transitions are slow and subtle (300ms), disabled under reduced-motion
+   ========================================================================== */
+
+:root {
+  /* --- Brand palette (the six exact values the brand is built from) ------- */
+  --at-background: #121110; /* page background, deepest layer            */
+  --at-surface: #1b1917; /* elevated surface: drawers, inputs, bands  */
+  --at-hairline: #2a2724; /* 1px dividers and borders                  */
+  --at-ink: #f0ebe3; /* primary text                              */
+  --at-muted: #a39a8c; /* secondary / supporting text               */
+  --at-brass: #c69b57; /* the single accent. Use sparingly.         */
+
+  /* Brass variations, derived. Used for hover states and faint washes. */
+  --at-brass-bright: #d8b477;
+  --at-brass-dim: #a37f43;
+
+  /* --- Typography -------------------------------------------------------- */
+  /* Georgian-first families. Both cover Georgian, Latin AND Cyrillic, so a
+     single stack renders ka / en / ru without falling back to a system font. */
+  --at-font-heading: 'Noto Serif Georgian', 'Times New Roman', Georgia, serif;
+  --at-font-body: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
+
+  /* --- Motion ------------------------------------------------------------ */
+  --at-duration: 300ms;
+  --at-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Layout ------------------------------------------------------------ */
+  --at-header-height: 4.5rem; /* 72px — sticky header offset */
+}
+
+/* ----------------------------------------------------------------------------
+   Tailwind theme bridge.
+   Mapping the raw values above into @theme is what generates the utility
+   classes: bg-background, text-muted, border-hairline, font-heading, etc.
+   -------------------------------------------------------------------------- */
+@theme inline {
+  --color-background: var(--at-background);
+  --color-surface: var(--at-surface);
+  --color-hairline: var(--at-hairline);
+  --color-ink: var(--at-ink);
+  --color-muted: var(--at-muted);
+  --color-brass: var(--at-brass);
+  --color-brass-bright: var(--at-brass-bright);
+  --color-brass-dim: var(--at-brass-dim);
+
+  --font-heading: var(--at-font-heading);
+  --font-body: var(--at-font-body);
+
+  /* Radius scale is deliberately tiny. 4px is the hard ceiling. */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+
+  --default-transition-duration: var(--at-duration);
+  --default-transition-timing-function: var(--at-ease);
+
+  /* Content width used by the Container primitive */
+  --container-page: 90rem; /* 1440px */
+}
+
+@layer base {
+  /* Border colour defaults to the hairline so `border` alone is always right. */
+  *,
+  *::before,
+  *::after {
+    border-color: var(--at-hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Anchor links stop below the sticky header instead of under it. */
+    scroll-padding-top: var(--at-header-height);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--at-background);
+    color: var(--at-ink);
+    font-family: var(--at-font-body);
+    font-weight: 300; /* body default is Light; 400 for emphasis */
+    line-height: 1.75; /* generous, per brand direction */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--at-font-heading);
+    font-weight: 400; /* 600 is reserved for genuine emphasis */
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-wrap: balance; /* avoids lonely last words in headings */
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Keyboard focus must always be visible. Brass ring, offset from the page
+     background so it reads clearly against photography as well as flat dark. */
+  :focus-visible {
+    outline: 2px solid var(--at-brass);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Mouse users don't get the ring; keyboard users always do. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--at-brass);
+    color: var(--at-background);
+  }
+
+  /* Images never stretch, and always reserve their box while loading. */
+  img,
+  picture,
+  video {
+    max-width: 100%;
+    display: block;
+  }
+}
+
+@layer components {
+  /* Small uppercase label — used for eyebrows, section kickers, spec keys.
+     Wide letter-spacing is the signature of this typographic system. */
+  .at-label {
+    font-family: var(--at-font-body);
+    font-size: 0.6875rem; /* 11px */
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--at-muted);
+  }
+
+  /* Horizontal scroll row (new arrivals, related products) without a
+     visible scrollbar. Still fully keyboard and touch scrollable. */
+  .at-scroll-row {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .at-scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Slow image zoom used on product and category cards.
+     The parent needs `overflow-hidden`. */
+  .at-zoom {
+    transition: transform 700ms var(--at-ease);
+  }
+  .group:hover .at-zoom {
+    transform: scale(1.04);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Reduced motion: honour the OS setting. Nothing animates, nothing zooms,
+   and smooth scrolling is turned off.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .group:hover .at-zoom {
+    transform: none;
+  }
+}

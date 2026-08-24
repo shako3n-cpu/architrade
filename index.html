@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ka">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Paint the page background before React mounts, so there is no white
+         flash on first load. -->
+    <meta name="theme-color" content="#121110" />
+
+    <!--
+      Fonts. Both families cover Georgian, Latin and Cyrillic, which is what
+      lets ka / en / ru share one typographic system.
+        Noto Serif Georgian 400/600 -> headings
+        Noto Sans Georgian  300/400 -> body
+      preconnect shaves a round-trip off the font request.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400&family=Noto+Serif+Georgian:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Per-page title/description/OG/hreflang tags are injected at runtime by
+         the <Seo> component; these are the fallbacks a crawler sees first. -->
+    <title>ARCHTRADE</title>
+    <meta name="description" content="ARCHTRADE — furniture catalogue." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

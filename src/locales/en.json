@@ -1,0 +1,48 @@
+{
+  "nav": {
+    "catalog": "Catalog",
+    "collections": "Collections",
+    "about": "About",
+    "services": "Services",
+    "contact": "Contact",
+    "showroom": "Showroom"
+  },
+  "header": {
+    "skipToContent": "Skip to main content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuTitle": "Menu",
+    "languageLabel": "Choose language",
+    "mainNavLabel": "Main navigation",
+    "homeLink": "ARCHTRADE — home page"
+  },
+  "footer": {
+    "about": "Since 2009 ARCHTRADE has been making furniture built to outlast trends. We work in solid timber and natural textiles, take made-to-measure commissions, and supply residential and commercial projects across Georgia.",
+    "quickLinks": "Quick links",
+    "categories": "Categories",
+    "contactTitle": "Contact",
+    "workingHours": "Working hours",
+    "weekdays": "Monday — Friday",
+    "weekdaysHours": "10:00 — 19:00",
+    "saturday": "Saturday",
+    "saturdayHours": "11:00 — 18:00",
+    "sunday": "Sunday",
+    "closed": "Closed",
+    "follow": "Follow us",
+    "rights": "All rights reserved",
+    "privacy": "Privacy policy",
+    "terms": "Terms and conditions",
+    "navLabel": "Footer navigation"
+  },
+  "common": {
+    "address": "Address",
+    "addressLine": "76 Vazha-Pshavela Avenue, Tbilisi 0186",
+    "phone": "Phone",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "viewCatalog": "View catalog",
+    "contactUs": "Contact us",
+    "getDirections": "Get directions",
+    "call": "Call"
+  }
+}
