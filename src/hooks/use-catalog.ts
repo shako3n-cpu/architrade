@@ -5,6 +5,7 @@ import {
   fetchCategoryBySlug,
   fetchFeaturedProducts,
   fetchProductBySlug,
+  fetchProductPage,
   fetchProducts,
   fetchProductsByCategorySlug,
 } from '@/lib/queries'
@@ -70,5 +71,20 @@ export function useFeaturedProducts(limit = 6) {
   return useAsync(
     useCallback((signal: AbortSignal) => fetchFeaturedProducts(limit, signal), [limit]),
     [limit],
+  )
+}
+
+/**
+ * One product plus everything shown around it: the categories (for the
+ * breadcrumb and the related tags) and the related pieces.
+ *
+ * `data.product` is null when the slug matches nothing, which the page turns
+ * into a not-found state rather than an error — a mistyped URL is not a
+ * failure of the server.
+ */
+export function useProductPage(slug: string) {
+  return useAsync(
+    useCallback((signal: AbortSignal) => fetchProductPage(slug, signal), [slug]),
+    [slug],
   )
 }

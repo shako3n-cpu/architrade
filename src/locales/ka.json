@@ -5,7 +5,9 @@
     "about": "ჩვენ შესახებ",
     "services": "სერვისები",
     "contact": "კონტაქტი",
-    "showroom": "შოურუმი"
+    "showroom": "შოურუმი",
+    "home": "მთავარი",
+    "breadcrumbLabel": "ნავიგაციის ბილიკი"
   },
   "header": {
     "skipToContent": "მთავარ შიგთავსზე გადასვლა",
@@ -119,7 +121,23 @@
     "requestPrice": "ფასის მოთხოვნა",
     "newBadge": "ახალი",
     "collection": "კოლექცია",
-    "featuredBadge": "რჩეული"
+    "featuredBadge": "რჩეული",
+    "category": "კატეგორია",
+    "specTitle": "მახასიათებლები",
+    "galleryLabel": "ამ ნივთის ფოტოები",
+    "viewImage": "ფოტო {{index}}-ის ნახვა",
+    "imageCounter": "{{current}} / {{total}}",
+    "previousImage": "წინა ფოტო",
+    "nextImage": "შემდეგი ფოტო",
+    "inquiryEyebrow": "პირდაპირი კითხვა",
+    "inquiryBody": "მოგვწერეთ ამ ნივთზე და გამოგიგზავნით ფასს, დამზადების ვადას და ხელმისაწვდომ ფერებს.",
+    "inquiryNote": "სამუშაო საათებში, როგორც წესი, რამდენიმე საათში ვპასუხობთ.",
+    "relatedEyebrow": "კიდევ კატალოგიდან",
+    "relatedTitle": "შესაძლოა მოგეწონოთ",
+    "relatedDescription": "ნივთები, რომლებიც ბუნებრივად ერწყმის ამ ნივთს.",
+    "notFoundTitle": "ასეთი ნივთი ვერ ვიპოვეთ",
+    "notFoundBody": "შესაძლოა სახელი შეიცვალა ან ნივთი კატალოგიდან ამოღებულია. დანარჩენი ყველაფერი ადგილზეა.",
+    "backToCatalog": "კატალოგში დაბრუნება"
   },
   "availability": {
     "in-stock": "მარაგშია",

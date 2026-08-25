@@ -5,7 +5,9 @@
     "about": "About",
     "services": "Services",
     "contact": "Contact",
-    "showroom": "Showroom"
+    "showroom": "Showroom",
+    "home": "Home",
+    "breadcrumbLabel": "Breadcrumb"
   },
   "header": {
     "skipToContent": "Skip to main content",
@@ -119,7 +121,23 @@
     "requestPrice": "Request a price",
     "newBadge": "New",
     "collection": "Collection",
-    "featuredBadge": "Featured"
+    "featuredBadge": "Featured",
+    "category": "Category",
+    "specTitle": "Specifications",
+    "galleryLabel": "Photographs of this piece",
+    "viewImage": "View photograph {{index}}",
+    "imageCounter": "{{current}} / {{total}}",
+    "previousImage": "Previous photograph",
+    "nextImage": "Next photograph",
+    "inquiryEyebrow": "Direct enquiry",
+    "inquiryBody": "Send us this piece and we will come back with a price, the lead time, and the finishes it can be made in.",
+    "inquiryNote": "We usually reply within a few hours during working hours.",
+    "relatedEyebrow": "More from the catalog",
+    "relatedTitle": "You might also like",
+    "relatedDescription": "Pieces that sit naturally alongside this one.",
+    "notFoundTitle": "We could not find that piece",
+    "notFoundBody": "It may have been renamed, or withdrawn from the catalog. Everything else is still here.",
+    "backToCatalog": "Back to the catalog"
   },
   "availability": {
     "in-stock": "In stock",

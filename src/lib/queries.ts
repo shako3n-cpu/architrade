@@ -218,3 +218,80 @@ export async function fetchCatalogue(signal?: AbortSignal) {
 
   return { categories, products }
 }
+
+/** How many pieces the "you might also like" row shows. */
+const RELATED_LIMIT = 4
+
+/**
+ * Other pieces to show underneath a product.
+ *
+ * Prefers the same category, because "more dining chairs" is what someone
+ * looking at a dining chair usually wants. When that category is too thin to
+ * fill the row it tops up with the newest pieces from elsewhere rather than
+ * rendering a half-empty band — a young catalogue should not look broken.
+ *
+ * The second request only happens when the top-up is actually needed.
+ */
+export async function fetchRelatedProducts(
+  product: Product,
+  limit = RELATED_LIMIT,
+  signal?: AbortSignal,
+): Promise<Product[]> {
+  const siblingQuery = getSupabase()
+    .from('products')
+    .select(PRODUCT_COLUMNS)
+    .eq('category_id', product.category_id)
+    // Never recommend the piece the visitor is already looking at.
+    .neq('id', product.id)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  const siblings = unwrap<Product>(await withSignal(siblingQuery, signal))
+  if (siblings.length >= limit) return siblings
+
+  // Everything in this query sits outside the product's own category, so the
+  // current product is already excluded and cannot appear twice.
+  const fillerQuery = getSupabase()
+    .from('products')
+    .select(PRODUCT_COLUMNS)
+    .neq('category_id', product.category_id)
+    .order('created_at', { ascending: false })
+    .limit(limit - siblings.length)
+
+  return [...siblings, ...unwrap<Product>(await withSignal(fillerQuery, signal))]
+}
+
+/** Everything one product detail page needs. */
+export type ProductPageData = {
+  /** Null when the slug in the URL matches no row — the page shows not-found. */
+  product: Product | null
+  /** The whole (small) categories table, see the note below. */
+  categories: Category[]
+  related: Product[]
+}
+
+/**
+ * The product page in as few round trips as the data allows.
+ *
+ * Fetches every category rather than just this product's one, because the
+ * related-product cards each need their own category name for their tag. The
+ * table holds a handful of rows, so one request answers the breadcrumb and
+ * every tag at once — cheaper than a lookup per card.
+ *
+ * The category and related requests run together; both need the product first,
+ * so that one is unavoidably sequential.
+ */
+export async function fetchProductPage(
+  slug: string,
+  signal?: AbortSignal,
+): Promise<ProductPageData> {
+  const product = await fetchProductBySlug(slug, signal)
+  if (!product) return { product: null, categories: [], related: [] }
+
+  const [categories, related] = await Promise.all([
+    fetchCategories(signal),
+    fetchRelatedProducts(product, RELATED_LIMIT, signal),
+  ])
+
+  return { product, categories, related }
+}

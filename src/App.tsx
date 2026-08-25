@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
 import { Home } from '@/pages/home'
 import { CatalogPreview } from '@/pages/catalog-preview'
+import { Product } from '@/pages/product'
 import { Placeholder } from '@/pages/placeholder'
 import { getStoredLanguage } from '@/i18n'
 import '@/i18n'
@@ -37,7 +38,7 @@ export default function App() {
           <Route path="catalog/:categorySlug" element={<Placeholder title="Category" />} />
           <Route path="collections" element={<Placeholder title="Collections" />} />
           <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
-          <Route path="product/:slug" element={<Placeholder title="Product" />} />
+          <Route path="product/:slug" element={<Product />} />
           <Route path="about" element={<Placeholder title="About" />} />
           <Route path="services" element={<Placeholder title="Services" />} />
           <Route path="showroom" element={<Placeholder title="Showroom" />} />
