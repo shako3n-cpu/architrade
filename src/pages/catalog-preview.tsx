@@ -1,31 +1,31 @@
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
 import { SectionHeading } from '@/components/ui/section-heading'
-import { Eyebrow } from '@/components/ui/eyebrow'
 import { Media } from '@/components/ui/media'
+import { QueryState } from '@/components/ui/query-state'
 import { useLanguage } from '@/hooks/use-language'
+import { useCatalogue } from '@/hooks/use-catalog'
+import type { Category, Product } from '@/data/types'
 import {
-  categories,
-  collections,
-  getProductsByCategory,
-  getSubcategory,
-  products,
-  type SeedProduct,
-} from '@/data'
+  categoryTitle,
+  productCover,
+  productDescription,
+  productHoverImage,
+  productImageAlt,
+  productMaterials,
+  productTitle,
+} from '@/lib/localize'
 
 /**
- * TEMPORARY — step 3 data review only.
+ * TEMPORARY — data review only.
  *
- * Renders the whole catalogue as a plain contact sheet so the photography,
- * the Georgian copy and the language switching can be checked before the real
- * catalogue page is designed. This is NOT the catalogue: there are no filters,
- * no sorting, no search and no pagination.
- *
- * Delete this file and its `preview.*` locale keys once the real catalogue,
- * category and product pages exist.
+ * Renders the live Supabase catalogue as a plain contact sheet so the data can
+ * be checked before the real catalogue page is designed. This is NOT the
+ * catalogue: no filters, no sorting, no search, no pagination.
  */
 export function CatalogPreview() {
   const { lang, t } = useLanguage()
+  const catalogue = useCatalogue()
 
   return (
     <>
@@ -37,72 +37,94 @@ export function CatalogPreview() {
             title={t('preview.title')}
             description={t('preview.description')}
           />
-
-          <dl className="mt-12 flex flex-wrap gap-x-16 gap-y-6 border-t border-hairline pt-8">
-            <CountStat label={t('nav.catalog')} value={products.length} />
-            <CountStat label={t('footer.categories')} value={categories.length} />
-            <CountStat label={t('nav.collections')} value={collections.length} />
-          </dl>
         </Container>
       </Section>
 
-      {categories.map((category) => {
-        const items = getProductsByCategory(category.slug)
-
-        return (
-          <Section key={category.slug} spacing="md" bordered>
-            <Container>
-              <SectionHeading
-                as="h2"
-                eyebrow={t('catalog.resultCount', { count: items.length })}
-                title={category.name[lang]}
-                description={category.intro[lang]}
-              />
-
-              <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
-                {items.map((product) => (
-                  <PreviewTile key={product.id} product={product} />
-                ))}
-              </div>
-            </Container>
-          </Section>
-        )
-      })}
+      <Container>
+        <QueryState
+          result={catalogue}
+          isEmpty={(data) => data.categories.length === 0 && data.products.length === 0}
+        >
+          {({ categories, products }) => (
+            <>
+              {categories.map((category) => (
+                <CategoryBlock
+                  key={category.id}
+                  category={category}
+                  products={products.filter((product) => product.category_id === category.id)}
+                  lang={lang}
+                  emptyLabel={t('state.emptyBody')}
+                  countLabel={(count) => t('catalog.resultCount', { count })}
+                />
+              ))}
+            </>
+          )}
+        </QueryState>
+      </Container>
     </>
   )
 }
 
-/** One number with its label, used in the summary row. */
-function CountStat({ label, value }: { label: string; value: number }) {
+/** One category heading followed by the products that belong to it. */
+function CategoryBlock({
+  category,
+  products,
+  lang,
+  emptyLabel,
+  countLabel,
+}: {
+  category: Category
+  products: Product[]
+  lang: ReturnType<typeof useLanguage>['lang']
+  emptyLabel: string
+  countLabel: (count: number) => string
+}) {
   return (
-    <div>
-      <dt className="at-label">{label}</dt>
-      <dd className="mt-2 font-heading text-3xl text-ink">{value}</dd>
-    </div>
+    <Section spacing="md" bordered>
+      <SectionHeading
+        as="h2"
+        eyebrow={countLabel(products.length)}
+        title={categoryTitle(category, lang)}
+      />
+
+      {products.length === 0 ? (
+        <p className="mt-8 text-sm text-muted">{emptyLabel}</p>
+      ) : (
+        <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((product) => (
+            <ProductTile key={product.id} product={product} lang={lang} />
+          ))}
+        </div>
+      )}
+    </Section>
   )
 }
 
-/** One product, shown with every field so the data can be checked at a glance. */
-function PreviewTile({ product }: { product: SeedProduct }) {
-  const { lang, t } = useLanguage()
-  const { width, depth, height } = product.dimensions
-  const subcategory = getSubcategory(product.categorySlug, product.subcategorySlug)
+/** One product, showing every column the table actually has. */
+function ProductTile({
+  product,
+  lang,
+}: {
+  product: Product
+  lang: ReturnType<typeof useLanguage>['lang']
+}) {
+  const { t } = useLanguage()
+  const cover = productCover(product)
+  const hover = productHoverImage(product)
 
   return (
     <article className="group flex flex-col">
       <div className="relative overflow-hidden">
-        <Media
-          src={product.images[0]}
-          alt={`${product.name[lang]} — ${product.materials[lang]}`}
-          ratio="landscape"
-          zoom
-        />
+        {cover ? (
+          <Media src={cover} alt={productImageAlt(product, lang)} ratio="landscape" zoom />
+        ) : (
+          // A row saved without a photograph gets a quiet box, not a broken icon.
+          <div aria-hidden="true" className="aspect-[4/3] bg-surface" />
+        )}
 
-        {/* Second photograph, revealed on hover. Decorative: the first image
-            already carries the description. */}
-        {product.images[1] && (
+        {hover && (
           <img
-            src={product.images[1]}
+            src={hover}
             alt=""
             aria-hidden="true"
             loading="lazy"
@@ -111,46 +133,27 @@ function PreviewTile({ product }: { product: SeedProduct }) {
           />
         )}
 
-        {product.isNew && (
+        {/* The table has a `featured` column, not an `is_new` one — so this
+            says Featured. Do not relabel it "New" without adding that column. */}
+        {product.featured && (
           <span className="absolute top-3 left-3 bg-background/90 px-2.5 py-1 text-[10px] tracking-[0.18em] text-brass uppercase">
-            {t('product.newBadge')}
+            {t('product.featuredBadge')}
           </span>
         )}
       </div>
 
-      <h3 className="mt-5 font-heading text-lg leading-snug text-ink">{product.name[lang]}</h3>
+      <h3 className="mt-5 font-heading text-lg leading-snug text-ink">
+        {productTitle(product, lang)}
+      </h3>
 
-      <p className="at-label mt-2">
-        {product.articleNumber}
-        {subcategory ? ` · ${subcategory.name[lang]}` : ''}
+      <p className="mt-3 text-sm leading-relaxed text-muted">
+        {productDescription(product, lang)}
       </p>
 
-      <p className="mt-3 text-sm leading-relaxed text-muted">{product.shortDescription[lang]}</p>
-
       <dl className="mt-4 flex flex-col gap-1.5 border-t border-hairline pt-4 text-xs text-muted">
-        <SpecRow label={t('product.dimensions')} value={`${width} × ${depth} × ${height} cm`} />
-        <SpecRow label={t('product.materials')} value={product.materials[lang]} />
-        <SpecRow label={t('product.origin')} value={product.origin[lang]} />
-        <SpecRow
-          label={t('product.warranty')}
-          value={t('product.warrantyValue', { count: product.warrantyMonths })}
-        />
-        <SpecRow label={t('product.availability')} value={t(`availability.${product.availability}`)} />
+        <SpecRow label={t('product.dimensions')} value={product.dimensions} />
+        <SpecRow label={t('product.materials')} value={productMaterials(product, lang)} />
       </dl>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Eyebrow as="span" className="sr-only">
-          {t('product.finishes')}
-        </Eyebrow>
-        {product.finishes.map((finish) => (
-          <span
-            key={finish.hex}
-            title={`${finish.name[lang]} (${finish.hex})`}
-            className="size-4 rounded-xs border border-hairline"
-            style={{ backgroundColor: finish.hex }}
-          />
-        ))}
-      </div>
 
       <p className="mt-4 text-xs tracking-[0.14em] text-brass uppercase">
         {t('product.priceOnRequest')}

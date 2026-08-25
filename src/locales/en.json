@@ -67,7 +67,8 @@
     "priceOnRequest": "Price on request",
     "requestPrice": "Request a price",
     "newBadge": "New",
-    "collection": "Collection"
+    "collection": "Collection",
+    "featuredBadge": "Featured"
   },
   "availability": {
     "in-stock": "In stock",
@@ -77,6 +78,16 @@
   "preview": {
     "eyebrow": "Step 3 — data review",
     "title": "Catalogue data",
-    "description": "A temporary page for checking the data only — this is not the catalogue design. Check the photographs, the copy and the language switcher, then this page gets deleted."
+    "description": "A temporary page showing live data from Supabase — this is not the catalogue design."
+  },
+  "state": {
+    "loading": "Loading…",
+    "errorTitle": "Could not load the data",
+    "errorBody": "The server could not be reached. Check your connection and try again.",
+    "retry": "Try again",
+    "emptyTitle": "Nothing here yet",
+    "emptyBody": "No products have been added to this section yet.",
+    "notConfiguredTitle": "The database is not configured",
+    "notConfiguredBody": "Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server."
   }
 }

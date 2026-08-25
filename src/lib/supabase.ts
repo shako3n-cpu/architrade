@@ -1,15 +1,19 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 /**
  * ============================================================================
  * SUPABASE CLIENT
  * ----------------------------------------------------------------------------
- * One shared connection to the database, created once and imported everywhere:
+ * One shared connection to the database, created once on first use:
  *
- *   import { supabase } from '@/lib/supabase'
- *   const { data, error } = await supabase.from('products').select('*')
+ *   import { getSupabase } from '@/lib/supabase'
+ *   const { data, error } = await getSupabase().from('products').select('*')
  *
- * Never call createClient() anywhere else — a second client means a second
+ * In practice you should not need this directly — every query the site makes
+ * lives in src/lib/queries.ts, and pages read those through the hooks in
+ * src/hooks/use-catalog.ts.
+ *
+ * Never call createClient() anywhere else. A second client means a second
  * connection and a second auth session.
  *
  * CONFIGURATION
@@ -19,6 +23,9 @@ import { createClient } from '@supabase/supabase-js'
  *
  *     VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
  *     VITE_SUPABASE_ANON_KEY=eyJhbGci...
+ *
+ *   The file must be named exactly `.env` — not `.env.txt`. Windows adds the
+ *   .txt silently when you save from Notepad, and Vite will not read it.
  *
  *   Vite only exposes variables beginning with VITE_ to the browser, and it
  *   reads .env at STARTUP — restart `npm run dev` after editing it.
@@ -35,15 +42,37 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+/** True when both environment variables are present. */
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+
 /**
- * Fail loudly and early rather than letting every query fail with a confusing
- * network error much later on.
+ * Thrown when a query runs before the environment variables exist. Carries a
+ * distinct name so the UI can tell "nobody filled in .env" apart from "the
+ * network is down", and show the developer the more useful of the two.
  */
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Supabase is not configured. Copy .env.example to .env, fill in ' +
-      'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.',
-  )
+export class SupabaseConfigError extends Error {
+  override name = 'SupabaseConfigError'
+
+  constructor() {
+    super(
+      'Supabase is not configured. Copy .env.example to .env, fill in ' +
+        'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.',
+    )
+  }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+let client: SupabaseClient | null = null
+
+/**
+ * The shared client, built on first use.
+ *
+ * Deliberately NOT created at module load: a missing .env would then throw
+ * while the module graph was still evaluating, which React cannot catch, and
+ * the whole site would render as a blank white page. Failing here instead
+ * means the error arrives inside a query, where the page can show it.
+ */
+export function getSupabase(): SupabaseClient {
+  if (!isSupabaseConfigured) throw new SupabaseConfigError()
+  if (!client) client = createClient(supabaseUrl, supabaseAnonKey)
+  return client
+}

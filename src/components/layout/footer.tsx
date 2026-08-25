@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { CONTACT, FOOTER_NAV, SITE_NAME, SOCIAL } from '@/config/site'
-import { categories } from '@/data/categories'
 import { useLanguage } from '@/hooks/use-language'
+import { useCategories } from '@/hooks/use-catalog'
+import { categoryTitle } from '@/lib/localize'
 import { Container } from '@/components/ui/container'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { Wordmark } from './wordmark'
@@ -10,22 +11,26 @@ import { FooterColumn } from './footer-column'
 /**
  * Site footer.
  *
- * Four columns on desktop, stacking to one on mobile. Category links are read
- * straight from src/data/categories.ts, so adding a category there adds it
- * here with no edit to this file.
+ * Four columns on desktop, stacking to one on mobile. Category links come from
+ * the `categories` table, so adding a category in Supabase adds it here with
+ * no edit to this file.
  */
 export function Footer() {
   const { lang, localePath, t } = useLanguage()
   const year = new Date().getFullYear()
+  const categories = useCategories()
 
   const quickLinks = FOOTER_NAV.map((item) => ({
     to: localePath(item.to),
     label: t(item.labelKey),
   }))
 
-  const categoryLinks = categories.map((category) => ({
+  // The footer sits on every page, so it must never be the thing that breaks
+  // one. While the query is in flight, or if it fails, the column simply has
+  // no links — no skeleton, no error panel, nothing for the visitor to read.
+  const categoryLinks = (categories.data ?? []).map((category) => ({
     to: localePath(`/catalog/${category.slug}`),
-    label: category.name[lang],
+    label: categoryTitle(category, lang),
   }))
 
   return (

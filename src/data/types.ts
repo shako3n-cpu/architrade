@@ -37,11 +37,18 @@ export interface Category {
   slug: string
   title_ka: string
   title_en: string
-  description_ka: string
-  description_en: string
   /** Timestamp written by the database, ISO 8601. */
   created_at: string
 }
+
+/*
+ * NOTE: the live `categories` table has NO description columns — verified
+ * against the database, which returns exactly:
+ *   id, slug, title_ka, title_en, created_at
+ * So category pages have no intro paragraph to show. If you want one, add
+ * `description_ka` and `description_en` to the table and then add them here;
+ * nothing else needs to change.
+ */
 
 /**
  * A row of the `products` table.
