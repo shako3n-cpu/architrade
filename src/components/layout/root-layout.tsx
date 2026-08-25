@@ -5,6 +5,7 @@ import { DEFAULT_LANGUAGE, LANGUAGE_TAGS } from '@/config/site'
 import { isLanguage, setStoredLanguage } from '@/i18n'
 import { Header } from './header'
 import { Footer } from './footer'
+import { FloatingContact } from '@/components/contact/floating-contact'
 
 /**
  * The shell every page renders inside.
@@ -45,20 +46,22 @@ export function RootLayout() {
     return <Navigate to={`/${DEFAULT_LANGUAGE}${rest ? `/${rest}` : ''}`} replace />
   }
 
-  // Only the home page has a hero for the header to sit transparently over.
-  const isHome = location.pathname === `/${lang}` || location.pathname === `/${lang}/`
-
   return (
     <div className="flex min-h-dvh flex-col">
-      <Header overHero={isHome} />
+      <Header />
 
-      {/* Pages without a hero must clear the fixed header; the home page slides
-          underneath it on purpose. */}
-      <main id="main" className={isHome ? 'flex-1' : 'flex-1 pt-[var(--at-header-height)]'}>
+      {/* The header is fixed, so every page — the home page included — has to
+          clear its height. Nothing slides underneath it any more. */}
+      <main id="main" className="flex-1 pt-[var(--at-header-height)]">
         <Outlet />
       </main>
 
       <Footer />
+
+      {/* Outside <main> on purpose: it is a persistent site utility, not part
+          of the page's content, and it must not land inside the skip link's
+          target region. */}
+      <FloatingContact />
     </div>
   )
 }

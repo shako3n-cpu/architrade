@@ -39,12 +39,35 @@ export interface Category {
   title_en: string
   /** Timestamp written by the database, ISO 8601. */
   created_at: string
+
+  /*
+   * The three below are OPTIONAL, and that is not laziness.
+   *
+   * They were added by supabase-schema.sql after the first version of the
+   * table shipped. A database that has not had that file run against it still
+   * answers queries — it just answers them without these columns — so the
+   * types say `?` and every reader goes through the helpers in
+   * src/lib/localize.ts, which supply a sane default.
+   *
+   * Once the migration has run everywhere, drop the `?` and the fallback
+   * branch in src/lib/queries.ts together.
+   */
+
+  /** Which half of the catalogue this belongs to: home furniture or office. */
+  group_key?: CategoryGroup | null
+  /** Banner photograph for the category card. */
+  image?: string | null
+  /** Ascending display order. Categories with the same value fall back to slug. */
+  sort_order?: number | null
 }
+
+/** The top-level split the home page offers: home furniture vs office. */
+export type CategoryGroup = 'home' | 'office'
 
 /*
  * NOTE: the live `categories` table has NO description columns — verified
  * against the database, which returns exactly:
- *   id, slug, title_ka, title_en, created_at
+ *   id, slug, title_ka, title_en, created_at (+ the three optional columns)
  * So category pages have no intro paragraph to show. If you want one, add
  * `description_ka` and `description_en` to the table and then add them here;
  * nothing else needs to change.

@@ -43,6 +43,15 @@ export const CONTACT = {
   /** WhatsApp deep links need digits with no + and no spaces. */
   whatsappNumber: '995599000000',
 
+  /**
+   * Facebook page handle — the part after facebook.com/. Used for both the
+   * page link and the m.me Messenger deep link, so the two can never drift.
+   *
+   * PLACEHOLDER: swap in the client's real page before launch. Until then
+   * both buttons open a page that does not exist.
+   */
+  facebookHandle: 'archtrade',
+
   email: 'info@archtrade.ge',
 
   /** Street address is translated (see locales), this is the map link. */

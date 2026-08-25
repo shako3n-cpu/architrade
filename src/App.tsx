@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
-import { HomePreview } from '@/pages/home-preview'
+import { Home } from '@/pages/home'
 import { CatalogPreview } from '@/pages/catalog-preview'
 import { Placeholder } from '@/pages/placeholder'
 import { getStoredLanguage } from '@/i18n'
@@ -30,7 +30,7 @@ export default function App() {
         <Route path="/" element={<RootRedirect />} />
 
         <Route path="/:lang" element={<RootLayout />}>
-          <Route index element={<HomePreview />} />
+          <Route index element={<Home />} />
 
           {/* TEMPORARY: data review sheet, replaced by the real catalogue. */}
           <Route path="catalog" element={<CatalogPreview />} />

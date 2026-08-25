@@ -4,29 +4,42 @@
 /* ============================================================================
    ARCHTRADE — DESIGN SYSTEM
    ----------------------------------------------------------------------------
-   Dark, premium, gallery-like. Photography is the hero; the interface stays
-   quiet. Every colour, font and spacing decision lives in this one file so the
-   whole site can be re-skinned from here.
+   Light, warm and solid — a showroom in daylight rather than a gallery at
+   night. Photography is the hero; the interface stays quiet. Every colour,
+   font and spacing decision lives in this one file so the whole site can be
+   re-skinned from here.
 
    House rules enforced below:
      - corner radius never exceeds 4px
      - no drop shadows, no gradients
      - hairline 1px dividers instead of heavy boxes/cards
      - transitions are slow and subtle (300ms), disabled under reduced-motion
+
+   CONTRAST
+     Every text pair below clears WCAG AA (4.5:1) against the surface it sits
+     on. The accent is a muted wood-gold rather than a bright brass precisely
+     so that it stays readable on an off-white page — a lighter gold looked
+     better in isolation and failed on contrast, which is why it is not here.
    ========================================================================== */
 
 :root {
   /* --- Brand palette (the six exact values the brand is built from) ------- */
-  --at-background: #121110; /* page background, deepest layer            */
-  --at-surface: #1b1917; /* elevated surface: drawers, inputs, bands  */
-  --at-hairline: #2a2724; /* 1px dividers and borders                  */
-  --at-ink: #f0ebe3; /* primary text                              */
-  --at-muted: #a39a8c; /* secondary / supporting text               */
-  --at-brass: #c69b57; /* the single accent. Use sparingly.         */
+  --at-background: #fdfbf7; /* page background, softest off-white        */
+  --at-surface: #f5f1e9; /* bands, image placeholders, inputs         */
+  --at-hairline: #e4ddd0; /* 1px dividers and borders                  */
+  --at-ink: #1a1a1a; /* primary text, rich charcoal               */
+  --at-muted: #6e675c; /* secondary / supporting text  (5.4:1)      */
+  --at-brass: #8a6231; /* the single accent, muted wood-gold (5.2:1)*/
 
   /* Brass variations, derived. Used for hover states and faint washes. */
-  --at-brass-bright: #d8b477;
-  --at-brass-dim: #a37f43;
+  --at-brass-bright: #a87a42;
+  --at-brass-dim: #674724;
+
+  /* Text colours for the few charcoal bands (contact CTA). `muted` and `brass`
+     are both far too dark to sit on `ink`, so inverted sections use these
+     instead.                                       (8.1:1 and 8.9:1 on ink) */
+  --at-ink-muted: #b8b0a4;
+  --at-brass-on-ink: #d8b477;
 
   /* --- Typography -------------------------------------------------------- */
   /* Georgian-first families. Both cover Georgian, Latin AND Cyrillic, so a
@@ -52,10 +65,12 @@
   --color-surface: var(--at-surface);
   --color-hairline: var(--at-hairline);
   --color-ink: var(--at-ink);
+  --color-ink-muted: var(--at-ink-muted);
   --color-muted: var(--at-muted);
   --color-brass: var(--at-brass);
   --color-brass-bright: var(--at-brass-bright);
   --color-brass-dim: var(--at-brass-dim);
+  --color-brass-on-ink: var(--at-brass-on-ink);
 
   --font-heading: var(--at-font-heading);
   --font-body: var(--at-font-body);

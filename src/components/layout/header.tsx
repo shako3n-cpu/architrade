@@ -11,17 +11,19 @@ import { MobileDrawer } from './mobile-drawer'
 /**
  * Sticky site header.
  *
- * On the home page it starts transparent so the hero photograph runs full
- * bleed behind it, then fades in the dark background and its hairline once the
- * visitor scrolls. Every other page gets the solid treatment immediately,
- * because there is no hero for it to sit over.
+ * Always solid off-white; only the bottom hairline is animated, appearing once
+ * content starts sliding underneath. At the top of the page the header and the
+ * page share a background and the join is invisible, which is what makes the
+ * light theme feel like one continuous sheet.
+ *
+ * It deliberately does NOT go transparent over the hero. Charcoal navigation
+ * laid over an arbitrary photograph is a contrast gamble that the client would
+ * lose the first time they swapped the image, so the hero keeps its own half of
+ * the split instead.
  */
-export function Header({ overHero = false }: { overHero?: boolean }) {
+export function Header() {
   const { t } = useLanguage()
   const scrolled = useScrolled(24)
-
-  // Transparent only while over an untouched hero.
-  const isTransparent = overHero && !scrolled
 
   return (
     <>
@@ -36,11 +38,9 @@ export function Header({ overHero = false }: { overHero?: boolean }) {
 
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-40',
+          'fixed inset-x-0 top-0 z-40 border-b bg-background/95 backdrop-blur-sm',
           'transition-colors duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-          isTransparent
-            ? 'border-b border-transparent bg-transparent'
-            : 'border-b border-hairline bg-background/95 backdrop-blur-sm',
+          scrolled ? 'border-hairline' : 'border-transparent',
         )}
       >
         <div className="mx-auto flex h-[var(--at-header-height)] w-full max-w-[90rem] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
