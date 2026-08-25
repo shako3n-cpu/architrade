@@ -32,7 +32,7 @@ export function useLanguage() {
   /**
    * Swap the language while keeping the visitor exactly where they are.
    * Replaces only the FIRST path segment, so /en/product/aria-table
-   * becomes /ru/product/aria-table with query string and hash intact.
+   * becomes /ka/product/aria-table with query string and hash intact.
    */
   const switchLanguage = useCallback(
     (next: Language) => {

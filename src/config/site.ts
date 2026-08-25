@@ -11,8 +11,8 @@
  * ============================================================================
  */
 
-/** The three languages the site ships in. Georgian is the default. */
-export const LANGUAGES = ['ka', 'en', 'ru'] as const
+/** The two languages the site ships in. Georgian is the default. */
+export const LANGUAGES = ['ka', 'en'] as const
 export type Language = (typeof LANGUAGES)[number]
 
 export const DEFAULT_LANGUAGE: Language = 'ka'
@@ -21,14 +21,12 @@ export const DEFAULT_LANGUAGE: Language = 'ka'
 export const LANGUAGE_LABELS: Record<Language, string> = {
   ka: 'KA',
   en: 'EN',
-  ru: 'RU',
 }
 
 /** Used for the `lang` and `hreflang` attributes. */
 export const LANGUAGE_TAGS: Record<Language, string> = {
   ka: 'ka-GE',
   en: 'en',
-  ru: 'ru',
 }
 
 /* -------------------------------------------------------------------------- */

@@ -59,7 +59,7 @@ export function HomePreview() {
             as="h2"
             eyebrow="Step 2 of 3"
             title="Header and footer"
-            description="Resize the window below 1024px to get the drawer. Switch KA / EN / RU and note the page stays put."
+            description="Resize the window below 1024px to get the drawer. Switch KA / EN and note the page stays put."
           />
           <div className="h-[60vh]" />
         </Container>

@@ -3,12 +3,12 @@ import { useLanguage } from '@/hooks/use-language'
 import { cn } from '@/lib/utils'
 
 /**
- * KA / EN / RU switcher.
+ * KA / EN switcher.
  *
  * Switching keeps the visitor on the same page (see useLanguage) and writes the
  * choice to localStorage so the next visit opens in the same language.
  *
- * Marked up as a group of buttons rather than a <select> so all three languages
+ * Marked up as a group of buttons rather than a <select> so both languages
  * are visible at once — the visitor can see their language is offered without
  * opening anything.
  */

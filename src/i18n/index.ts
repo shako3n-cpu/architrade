@@ -2,17 +2,16 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import ka from '@/locales/ka.json'
 import en from '@/locales/en.json'
-import ru from '@/locales/ru.json'
 import { DEFAULT_LANGUAGE, LANGUAGES, type Language } from '@/config/site'
 
 /**
  * ============================================================================
  * TRANSLATION SETUP
  * ----------------------------------------------------------------------------
- * The URL is the single source of truth for the active language: /ka, /en, /ru.
+ * The URL is the single source of truth for the active language: /ka, /en.
  * localStorage only decides where a first-time visitor gets sent from "/".
  *
- * To add a new interface string: add the key to ALL THREE files in
+ * To add a new interface string: add the key to BOTH files in
  * src/locales/, then read it in a component with  t('your.key').
  * ============================================================================
  */
@@ -51,7 +50,6 @@ i18n.use(initReactI18next).init({
   resources: {
     ka: { translation: ka },
     en: { translation: en },
-    ru: { translation: ru },
   },
   lng: DEFAULT_LANGUAGE,
   fallbackLng: DEFAULT_LANGUAGE,

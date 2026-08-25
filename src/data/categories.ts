@@ -1,4 +1,4 @@
-import type { Category } from './types'
+import type { SeedCategory } from './types'
 
 /**
  * ============================================================================
@@ -10,7 +10,7 @@ import type { Category } from './types'
  *   3. Change `id` and `slug` — both must be unique across the file.
  *      The slug becomes the web address:  slug "office"  ->  /ka/catalog/office
  *      Use lowercase Latin letters and hyphens only. No spaces, no Georgian.
- *   4. Fill in `name` and `intro` for ALL THREE languages (ka / en / ru).
+ *   4. Fill in `name` and `intro` for BOTH languages (ka / en).
  *   5. Put a photo address in `image`.
  *   6. Save. The category appears in the menu, the footer and the home page
  *      automatically — nothing else to edit.
@@ -28,31 +28,29 @@ import type { Category } from './types'
  * ============================================================================
  */
 
-export const categories: Category[] = [
+export const categories: SeedCategory[] = [
   {
     id: 'cat-living-room',
     slug: 'living-room',
     name: {
       ka: 'მისაღები ოთახი',
       en: 'Living room',
-      ru: 'Гостиная',
     },
     image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1600&q=80',
     intro: {
       ka: 'დივნები, სავარძლები და ჟურნალის მაგიდები, რომლებიც ოთახს სიმშვიდეს სძენს. ბუნებრივი ქსოვილები მასივის კარკასზე.',
       en: 'Sofas, armchairs and low tables built to quiet a room. Natural textiles over solid timber frames.',
-      ru: 'Диваны, кресла и журнальные столы, которые успокаивают пространство. Натуральные ткани на каркасе из массива.',
     },
     subcategories: [
-      { slug: 'sofas', name: { ka: 'დივნები', en: 'Sofas', ru: 'Диваны' } },
-      { slug: 'armchairs', name: { ka: 'სავარძლები', en: 'Armchairs', ru: 'Кресла' } },
+      { slug: 'sofas', name: { ka: 'დივნები', en: 'Sofas' } },
+      { slug: 'armchairs', name: { ka: 'სავარძლები', en: 'Armchairs' } },
       {
         slug: 'coffee-tables',
-        name: { ka: 'ჟურნალის მაგიდები', en: 'Coffee tables', ru: 'Журнальные столы' },
+        name: { ka: 'ჟურნალის მაგიდები', en: 'Coffee tables' },
       },
       {
         slug: 'tv-stands',
-        name: { ka: 'ტელევიზორის მაგიდები', en: 'TV stands', ru: 'ТВ-тумбы' },
+        name: { ka: 'ტელევიზორის მაგიდები', en: 'TV stands' },
       },
     ],
   },
@@ -63,25 +61,23 @@ export const categories: Category[] = [
     name: {
       ka: 'საძინებელი',
       en: 'Bedroom',
-      ru: 'Спальня',
     },
     image: 'https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=1600&q=80',
     intro: {
       ka: 'საწოლები და საძინებლის ავეჯი მშვიდი ხაზებით. მუხის და კაკლის მასივი, რბილი ქსოვილები.',
       en: 'Beds and bedroom pieces with calm, unhurried lines. Solid oak, walnut and soft upholstery.',
-      ru: 'Кровати и мебель для спальни со спокойными линиями. Массив дуба, орех и мягкая обивка.',
     },
     subcategories: [
-      { slug: 'beds', name: { ka: 'საწოლები', en: 'Beds', ru: 'Кровати' } },
+      { slug: 'beds', name: { ka: 'საწოლები', en: 'Beds' } },
       {
         slug: 'wardrobes',
-        name: { ka: 'გარდერობები', en: 'Wardrobes', ru: 'Шкафы' },
+        name: { ka: 'გარდერობები', en: 'Wardrobes' },
       },
       {
         slug: 'nightstands',
-        name: { ka: 'ღამის მაგიდები', en: 'Nightstands', ru: 'Прикроватные тумбы' },
+        name: { ka: 'ღამის მაგიდები', en: 'Nightstands' },
       },
-      { slug: 'dressers', name: { ka: 'კომოდები', en: 'Dressers', ru: 'Комоды' } },
+      { slug: 'dressers', name: { ka: 'კომოდები', en: 'Dressers' } },
     ],
   },
 
@@ -91,35 +87,33 @@ export const categories: Category[] = [
     name: {
       ka: 'სამზარეულო და სასადილო',
       en: 'Dining & kitchen',
-      ru: 'Кухня и столовая',
     },
     image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1600&q=80',
     intro: {
       ka: 'სასადილო მაგიდები, სკამები და სამზარეულოს კომპლექტები — ინდივიდუალური ზომებით, ერთ სივრცედ აწყობილი.',
       en: 'Dining tables, chairs and kitchen cabinetry — measured to your room and finished as one continuous space.',
-      ru: 'Обеденные столы, стулья и кухонные гарнитуры — по вашим размерам, собранные в единое пространство.',
     },
     subcategories: [
       {
         slug: 'dining-tables',
-        name: { ka: 'სასადილო მაგიდები', en: 'Dining tables', ru: 'Обеденные столы' },
+        name: { ka: 'სასადილო მაგიდები', en: 'Dining tables' },
       },
-      { slug: 'chairs', name: { ka: 'სკამები', en: 'Chairs', ru: 'Стулья' } },
+      { slug: 'chairs', name: { ka: 'სკამები', en: 'Chairs' } },
       {
         slug: 'bar-stools',
-        name: { ka: 'ბარის სკამები', en: 'Bar stools', ru: 'Барные стулья' },
+        name: { ka: 'ბარის სკამები', en: 'Bar stools' },
       },
       {
         slug: 'kitchen-units',
-        name: { ka: 'სამზარეულოს კომპლექტები', en: 'Kitchen units', ru: 'Кухонные гарнитуры' },
+        name: { ka: 'სამზარეულოს კომპლექტები', en: 'Kitchen units' },
       },
       {
         slug: 'islands',
-        name: { ka: 'კუნძულები', en: 'Islands', ru: 'Кухонные острова' },
+        name: { ka: 'კუნძულები', en: 'Islands' },
       },
       {
         slug: 'sideboards',
-        name: { ka: 'ბუფეტები', en: 'Sideboards', ru: 'Буфеты' },
+        name: { ka: 'ბუფეტები', en: 'Sideboards' },
       },
     ],
   },
@@ -130,23 +124,21 @@ export const categories: Category[] = [
     name: {
       ka: 'საოფისე ავეჯი',
       en: 'Office',
-      ru: 'Офис',
     },
     image: 'https://images.unsplash.com/photo-1600494603989-9650cf6ddd3d?w=1600&q=80',
     intro: {
       ka: 'სამუშაო მაგიდები, ერგონომიული სავარძლები და წიგნის თაროები სახლის კაბინეტისა და ოფისისთვის.',
       en: 'Desks, ergonomic seating and bookshelves for the home study and the office floor alike.',
-      ru: 'Столы, эргономичные кресла и книжные полки для домашнего кабинета и офиса.',
     },
     subcategories: [
-      { slug: 'desks', name: { ka: 'სამუშაო მაგიდები', en: 'Desks', ru: 'Письменные столы' } },
+      { slug: 'desks', name: { ka: 'სამუშაო მაგიდები', en: 'Desks' } },
       {
         slug: 'office-chairs',
-        name: { ka: 'საოფისე სავარძლები', en: 'Ergonomic chairs', ru: 'Офисные кресла' },
+        name: { ka: 'საოფისე სავარძლები', en: 'Ergonomic chairs' },
       },
       {
         slug: 'bookshelves',
-        name: { ka: 'წიგნის თაროები', en: 'Bookshelves', ru: 'Книжные полки' },
+        name: { ka: 'წიგნის თაროები', en: 'Bookshelves' },
       },
     ],
   },
@@ -157,24 +149,22 @@ export const categories: Category[] = [
     name: {
       ka: 'დეკორი და განათება',
       en: 'Decor & lighting',
-      ru: 'Декор и освещение',
     },
     image: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=1600&q=80',
     intro: {
       ka: 'სანათები და სარკეები, რომლებიც ინტერიერს ხასიათს ანიჭებს — თბილი შუქი და მკაფიო ხაზები.',
       en: 'Lighting and mirrors that give an interior its character — warm light and clean lines.',
-      ru: 'Светильники и зеркала, которые задают характер интерьера — тёплый свет и чистые линии.',
     },
     subcategories: [
       {
         slug: 'floor-lamps',
-        name: { ka: 'იატაკის სანათები', en: 'Floor lamps', ru: 'Торшеры' },
+        name: { ka: 'იატაკის სანათები', en: 'Floor lamps' },
       },
       {
         slug: 'pendant-lights',
-        name: { ka: 'დასაკიდი სანათები', en: 'Pendant lights', ru: 'Подвесные светильники' },
+        name: { ka: 'დასაკიდი სანათები', en: 'Pendant lights' },
       },
-      { slug: 'mirrors', name: { ka: 'სარკეები', en: 'Mirrors', ru: 'Зеркала' } },
+      { slug: 'mirrors', name: { ka: 'სარკეები', en: 'Mirrors' } },
     ],
   },
 
@@ -184,22 +174,20 @@ export const categories: Category[] = [
     name: {
       ka: 'ეზოს ავეჯი',
       en: 'Outdoor',
-      ru: 'Уличная мебель',
     },
     image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1600&q=80',
     intro: {
       ka: 'ტერასისა და ბაღის ავეჯი ამინდგამძლე მასალებისგან — ტიკის ხე და ფხვნილსაღებავიანი ალუმინი.',
       en: 'Terrace and garden pieces in weather-resistant teak and powder-coated aluminium.',
-      ru: 'Мебель для террасы и сада из тика и алюминия с порошковым покрытием.',
     },
     subcategories: [
       {
         slug: 'lounge-sets',
-        name: { ka: 'დასასვენებელი კომპლექტები', en: 'Lounge sets', ru: 'Лаунж-комплекты' },
+        name: { ka: 'დასასვენებელი კომპლექტები', en: 'Lounge sets' },
       },
       {
         slug: 'outdoor-dining',
-        name: { ka: 'ეზოს სასადილო ჯგუფები', en: 'Outdoor dining', ru: 'Уличные обеденные группы' },
+        name: { ka: 'ეზოს სასადილო ჯგუფები', en: 'Outdoor dining' },
       },
     ],
   },

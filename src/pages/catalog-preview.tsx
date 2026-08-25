@@ -10,7 +10,7 @@ import {
   getProductsByCategory,
   getSubcategory,
   products,
-  type Product,
+  type SeedProduct,
 } from '@/data'
 
 /**
@@ -83,7 +83,7 @@ function CountStat({ label, value }: { label: string; value: number }) {
 }
 
 /** One product, shown with every field so the data can be checked at a glance. */
-function PreviewTile({ product }: { product: Product }) {
+function PreviewTile({ product }: { product: SeedProduct }) {
   const { lang, t } = useLanguage()
   const { width, depth, height } = product.dimensions
   const subcategory = getSubcategory(product.categorySlug, product.subcategorySlug)

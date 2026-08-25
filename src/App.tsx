@@ -10,7 +10,7 @@ import '@/i18n'
  * ============================================================================
  * ROUTING
  * ----------------------------------------------------------------------------
- * Every page lives under a language prefix: /ka/... , /en/... , /ru/...
+ * Every page lives under a language prefix: /ka/... , /en/...
  * "/" sends the visitor to whichever language they last used (Georgian on a
  * first visit). RootLayout handles an unknown code such as /de/about.
  *

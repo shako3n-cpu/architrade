@@ -30,7 +30,7 @@
 
   /* --- Typography -------------------------------------------------------- */
   /* Georgian-first families. Both cover Georgian, Latin AND Cyrillic, so a
-     single stack renders ka / en / ru without falling back to a system font. */
+     single stack renders ka / en without falling back to a system font. */
   --at-font-heading: 'Noto Serif Georgian', 'Times New Roman', Georgia, serif;
   --at-font-body: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
 
