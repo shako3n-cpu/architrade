@@ -104,6 +104,15 @@
     "resultCount_other": "{{count}} pieces",
     "inCategory": "in category"
   },
+  "category": {
+    "browseLabel": "Browse categories",
+    "otherCategories": "Other categories",
+    "notFoundTitle": "We could not find that category",
+    "notFoundBody": "It may have been renamed, or taken out of the catalog. Everything else is still here.",
+    "emptyTitle": "Nothing in this category yet",
+    "emptyBody": "These pieces have not been photographed yet. Ask us and we will send what is available.",
+    "backToCatalog": "Back to the catalog"
+  },
   "product": {
     "articleNumber": "Article",
     "details": "Details",

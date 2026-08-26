@@ -295,3 +295,45 @@ export async function fetchProductPage(
 
   return { product, categories, related }
 }
+
+/** Everything one category page needs. */
+export type CategoryPageData = {
+  /** Null when the slug in the URL matches no row — the page shows not-found. */
+  category: Category | null
+  /** The pieces inside this category, newest first. */
+  products: Product[]
+  /** The whole categories table, for the "browse other categories" row. */
+  categories: Category[]
+}
+
+/**
+ * The category page in two round trips.
+ *
+ * Deliberately NOT built from fetchCategoryBySlug + fetchProductsByCategorySlug:
+ * that pair asks for the category twice (the second function looks it up again
+ * internally to turn the slug into an id) and still leaves the page unable to
+ * tell "no such category" from "a category with nothing in it" — both arrive as
+ * an empty array. Fetching the whole categories table instead answers three
+ * things at once: which category this is, whether it exists at all, and what to
+ * put in the browse row. The table holds a handful of rows, so it is cheaper
+ * than the extra request it replaces.
+ */
+export async function fetchCategoryPage(
+  slug: string,
+  signal?: AbortSignal,
+): Promise<CategoryPageData> {
+  const categories = await fetchCategories(signal)
+  const category = categories.find((item) => item.slug === slug) ?? null
+
+  // A slug nobody recognises: return early rather than querying products for
+  // a category id that does not exist.
+  if (!category) return { category: null, products: [], categories }
+
+  const query = getSupabase()
+    .from('products')
+    .select(PRODUCT_COLUMNS)
+    .eq('category_id', category.id)
+    .order('created_at', { ascending: false })
+
+  return { category, products: unwrap<Product>(await withSignal(query, signal)), categories }
+}

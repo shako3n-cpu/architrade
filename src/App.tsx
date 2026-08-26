@@ -3,6 +3,7 @@ import { RootLayout } from '@/components/layout/root-layout'
 import { Home } from '@/pages/home'
 import { CatalogPreview } from '@/pages/catalog-preview'
 import { Product } from '@/pages/product'
+import { CategoryPage } from '@/pages/category'
 import { Placeholder } from '@/pages/placeholder'
 import { getStoredLanguage } from '@/i18n'
 import '@/i18n'
@@ -35,7 +36,7 @@ export default function App() {
 
           {/* TEMPORARY: data review sheet, replaced by the real catalogue. */}
           <Route path="catalog" element={<CatalogPreview />} />
-          <Route path="catalog/:categorySlug" element={<Placeholder title="Category" />} />
+          <Route path="catalog/:categorySlug" element={<CategoryPage />} />
           <Route path="collections" element={<Placeholder title="Collections" />} />
           <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
           <Route path="product/:slug" element={<Product />} />

@@ -3,6 +3,7 @@ import {
   fetchCatalogue,
   fetchCategories,
   fetchCategoryBySlug,
+  fetchCategoryPage,
   fetchFeaturedProducts,
   fetchProductBySlug,
   fetchProductPage,
@@ -85,6 +86,22 @@ export function useFeaturedProducts(limit = 6) {
 export function useProductPage(slug: string) {
   return useAsync(
     useCallback((signal: AbortSignal) => fetchProductPage(slug, signal), [slug]),
+    [slug],
+  )
+}
+
+/**
+ * One category plus everything shown around it: the pieces inside it and the
+ * full category list for the browse row.
+ *
+ * `data.category` is null when the slug matches nothing, which the page turns
+ * into a not-found state rather than an error — a mistyped URL is not a
+ * failure of the server. That is a distinction `useCategoryProducts` cannot
+ * make, since it reports both cases as an empty array.
+ */
+export function useCategoryPage(slug: string) {
+  return useAsync(
+    useCallback((signal: AbortSignal) => fetchCategoryPage(slug, signal), [slug]),
     [slug],
   )
 }
