@@ -142,7 +142,7 @@ export function ProductFormModal({
               <button
                 type="button"
                 aria-label={t('admin.close')}
-                className="-mr-2 inline-flex size-10 items-center justify-center text-muted transition-colors duration-300 hover:text-ink"
+                className="-mr-2 inline-flex size-11 items-center justify-center text-muted transition-colors duration-300 hover:text-ink"
               >
                 <X aria-hidden="true" className="size-5 stroke-[1.25]" />
               </button>

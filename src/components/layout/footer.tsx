@@ -57,19 +57,19 @@ export function Footer() {
               {t('footer.contactTitle')}
             </Eyebrow>
 
-            <address className="flex flex-col gap-3.5 text-sm text-muted not-italic">
+            <address className="flex flex-col gap-1 text-sm text-muted not-italic sm:gap-3.5">
               <span>{t('common.addressLine')}</span>
 
               <a
                 href={`tel:${CONTACT.phoneHref}`}
-                className="transition-colors duration-300 hover:text-brass"
+                className="inline-flex min-h-11 items-center transition-colors duration-300 hover:text-brass sm:min-h-0"
               >
                 {CONTACT.phoneDisplay}
               </a>
 
               <a
                 href={`mailto:${CONTACT.email}`}
-                className="transition-colors duration-300 hover:text-brass"
+                className="inline-flex min-h-11 items-center transition-colors duration-300 hover:text-brass sm:min-h-0"
               >
                 {CONTACT.email}
               </a>
@@ -102,14 +102,14 @@ export function Footer() {
             © {year} {SITE_NAME}. {t('footer.rights')}
           </p>
 
-          <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
+          <div className="flex flex-wrap items-center gap-x-7 gap-y-0 sm:gap-y-3">
             {SOCIAL.map((social) => (
               <a
                 key={social.name}
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="at-label transition-colors duration-300 hover:text-brass"
+                className="at-label inline-flex min-h-11 items-center transition-colors duration-300 hover:text-brass sm:min-h-0"
               >
                 {social.name}
               </a>
@@ -119,13 +119,13 @@ export function Footer() {
 
             <Link
               to={localePath('/privacy')}
-              className="text-xs text-muted transition-colors duration-300 hover:text-brass"
+              className="inline-flex min-h-11 items-center text-xs text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
             >
               {t('footer.privacy')}
             </Link>
             <Link
               to={localePath('/terms')}
-              className="text-xs text-muted transition-colors duration-300 hover:text-brass"
+              className="inline-flex min-h-11 items-center text-xs text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
             >
               {t('footer.terms')}
             </Link>

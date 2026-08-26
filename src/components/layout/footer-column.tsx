@@ -14,12 +14,13 @@ export function FooterColumn({ title, links }: { title: string; links: FooterLin
         {title}
       </Eyebrow>
 
-      <ul className="flex flex-col gap-3.5">
+      {/* gap shrinks on mobile because the links carry their own height. */}
+      <ul className="flex flex-col gap-1 sm:gap-3.5">
         {links.map((link) => (
           <li key={`${link.to}-${link.label}`}>
             <Link
               to={link.to}
-              className="text-sm text-muted transition-colors duration-300 hover:text-brass"
+              className="inline-flex min-h-11 items-center text-sm text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
             >
               {link.label}
             </Link>

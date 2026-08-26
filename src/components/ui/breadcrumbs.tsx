@@ -41,7 +41,7 @@ export function Breadcrumbs({ items, className }: { items: Crumb[]; className?: 
                 {item.to && !last ? (
                   <Link
                     to={localePath(item.to)}
-                    className="text-muted transition-colors duration-300 hover:text-brass"
+                    className="inline-flex min-h-11 items-center text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
                   >
                     {item.label}
                   </Link>

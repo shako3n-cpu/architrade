@@ -165,7 +165,7 @@ function CategoryManager({
                   }}
                   title={t('admin.rename')}
                   aria-label={t('admin.rename')}
-                  className="inline-flex size-9 items-center justify-center text-muted transition-colors duration-300 hover:text-brass"
+                  className="inline-flex size-11 items-center justify-center text-muted transition-colors duration-300 hover:text-brass sm:size-9"
                 >
                   <Pencil aria-hidden="true" className="size-4 stroke-[1.25]" />
                 </button>

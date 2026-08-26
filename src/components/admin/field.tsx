@@ -14,8 +14,17 @@ import { cn } from '@/lib/utils'
  * product from the shop.
  */
 
+/*
+ * `text-base` (16px) on phones is not a style choice — iOS Safari zooms the
+ * whole page in when a focused input's text is smaller than 16px, and the
+ * visitor is then left scrolled sideways on a form they were halfway through.
+ * Above `sm` there is no such behaviour, so the denser 14px comes back.
+ *
+ * `min-h-11` is 44px, the smallest comfortable touch target.
+ */
 const CONTROL =
-  'w-full border border-hairline bg-background px-3.5 py-2.5 text-sm text-ink ' +
+  'w-full min-h-11 border border-hairline bg-background px-3.5 py-2.5 ' +
+  'text-base text-ink sm:text-sm ' +
   'transition-colors duration-300 placeholder:text-muted/60 ' +
   'focus:border-brass focus:outline-none disabled:opacity-50'
 

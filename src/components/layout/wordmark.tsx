@@ -16,7 +16,9 @@ export function Wordmark({ className }: { className?: string }) {
       to={localePath('/')}
       aria-label={t('header.homeLink')}
       className={cn(
-        'font-heading text-xl leading-none tracking-[0.22em] text-ink',
+        // inline-flex + min-h-11 makes the whole header-height strip around
+        // the wordmark tappable, not just the 20px the glyphs occupy.
+        'inline-flex min-h-11 items-center font-heading text-xl leading-none tracking-[0.22em] text-ink',
         'transition-colors duration-300 hover:text-brass',
         className,
       )}

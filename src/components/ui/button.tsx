@@ -33,7 +33,8 @@ const buttonVariants = cva(
         link: 'text-brass underline-offset-[6px] hover:underline p-0 h-auto',
       },
       size: {
-        sm: 'h-10 px-5',
+        // 44px on touch screens, 40px from `sm` up.
+        sm: 'h-11 px-5 sm:h-10',
         md: 'h-12 px-7',
         lg: 'h-14 px-9',
       },

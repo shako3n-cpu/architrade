@@ -93,7 +93,9 @@ function IconLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex size-8 items-center justify-center rounded-xs transition-opacity duration-300 hover:opacity-80"
+      // 44px on touch screens, tightening to 32px from `sm` up where a
+      // pointer makes the smaller chip easy to hit.
+      className="flex size-11 items-center justify-center rounded-xs transition-opacity duration-300 hover:opacity-80 sm:size-8"
       style={{ backgroundColor: brandColor }}
     >
       {children}
@@ -116,7 +118,7 @@ function BrandLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex h-12 flex-1 items-center justify-center gap-2.5 rounded-xs px-6 text-[0.8125rem] tracking-[0.14em] uppercase transition-opacity duration-300 hover:opacity-80"
+      className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xs px-6 text-[0.8125rem] tracking-[0.14em] uppercase transition-opacity duration-300 hover:opacity-80 sm:w-auto sm:flex-1"
       style={{ backgroundColor: brandColor, color: '#fff' }}
     >
       {children}

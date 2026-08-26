@@ -83,7 +83,7 @@ export function MobileDrawer() {
 
             <a
               href={`tel:${CONTACT.phoneHref}`}
-              className="mb-6 flex items-center gap-3 text-ink transition-colors duration-300 hover:text-brass"
+              className="mb-4 flex min-h-11 items-center gap-3 text-ink transition-colors duration-300 hover:text-brass"
             >
               <Phone className="size-4 stroke-[1.25]" aria-hidden="true" />
               <span className="text-base">{CONTACT.phoneDisplay}</span>

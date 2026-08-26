@@ -111,7 +111,7 @@ function Arrow({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'absolute top-1/2 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center',
+        'absolute top-1/2 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center',
         'rounded-xs bg-background/90 text-ink transition-colors duration-300 hover:bg-background hover:text-brass',
         side === 'left' ? 'left-3' : 'right-3',
       )}

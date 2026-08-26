@@ -169,7 +169,7 @@ function ProductTable({
             onChange={(event) => onQuery(event.target.value)}
             placeholder={t('admin.searchPlaceholder')}
             aria-label={t('admin.searchLabel')}
-            className="w-full border border-hairline bg-background py-2.5 pr-3.5 pl-9 text-sm text-ink transition-colors duration-300 placeholder:text-muted/60 focus:border-brass focus:outline-none"
+            className="min-h-11 w-full border border-hairline bg-background py-2.5 pr-3.5 pl-9 text-base text-ink transition-colors duration-300 placeholder:text-muted/60 focus:border-brass focus:outline-none sm:text-sm"
           />
         </div>
 
@@ -177,7 +177,7 @@ function ProductTable({
           value={categoryId}
           onChange={(event) => onCategoryId(event.target.value)}
           aria-label={t('admin.filterByCategory')}
-          className="border border-hairline bg-background px-3.5 py-2.5 text-sm text-ink transition-colors duration-300 focus:border-brass focus:outline-none"
+          className="min-h-11 border border-hairline bg-background px-3.5 py-2.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none sm:text-sm"
         >
           <option value="">{t('admin.allCategories')}</option>
           {categories.map((category) => (
@@ -318,7 +318,7 @@ function IconButton({
       disabled={disabled}
       title={label}
       aria-label={label}
-      className="inline-flex size-9 items-center justify-center text-muted transition-colors duration-300 hover:text-brass disabled:opacity-40"
+      className="inline-flex size-11 items-center justify-center text-muted transition-colors duration-300 hover:text-brass disabled:opacity-40 sm:size-9"
     >
       {icon}
     </button>

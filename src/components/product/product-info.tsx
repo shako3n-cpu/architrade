@@ -43,7 +43,7 @@ export function ProductInfo({
           <Eyebrow>
             <Link
               to={localePath(`/catalog/${category.slug}`)}
-              className="text-brass transition-colors duration-300 hover:text-brass-dim"
+              className="inline-flex min-h-11 items-center text-brass transition-colors duration-300 hover:text-brass-dim sm:min-h-0"
             >
               {categoryTitle(category, lang)}
             </Link>

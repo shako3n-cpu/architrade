@@ -178,7 +178,10 @@ function Chip({
   active?: boolean
   children: ReactNode
 }) {
-  const classes = 'inline-block border px-4 py-2 text-xs tracking-[0.12em] uppercase'
+  // min-h-11 keeps the chips a comfortable 44px on touch screens; they relax
+  // back to their natural height once there is a pointer.
+  const classes =
+    'inline-flex min-h-11 items-center border px-4 py-2 text-xs tracking-[0.12em] uppercase sm:min-h-0'
 
   if (active) {
     return (

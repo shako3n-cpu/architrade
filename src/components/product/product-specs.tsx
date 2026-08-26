@@ -33,7 +33,7 @@ export function ProductSpecs({
         <Row label={t('product.category')}>
           <Link
             to={localePath(`/catalog/${category.slug}`)}
-            className="transition-colors duration-300 hover:text-brass"
+            className="inline-flex min-h-11 items-center transition-colors duration-300 hover:text-brass sm:min-h-0"
           >
             {categoryTitle(category, lang)}
           </Link>
