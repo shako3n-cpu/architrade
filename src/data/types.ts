@@ -104,6 +104,20 @@ export interface Product {
   featured: boolean
   /** Timestamp written by the database, ISO 8601. Used for "newest" sorting. */
   created_at: string
+
+  /**
+   * Internal reference price, entered in the admin dashboard.
+   *
+   * OPTIONAL, and it stays optional: the column is added by
+   * supabase-admin-setup.sql, so a database that has not had that file run
+   * against it has no such column — the same reasoning as the three optional
+   * columns on Category above.
+   *
+   * NOT SHOWN ANYWHERE ON THE PUBLIC SITE. Every product reads "Price on
+   * request" by design, because no two commissions are quoted the same. This
+   * is here so the office can keep a number against a piece for itself.
+   */
+  price?: number | null
 }
 
 /* -------------------------------------------------------------------------- */

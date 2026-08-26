@@ -1,0 +1,131 @@
+import type { ReactNode } from 'react'
+import { Link, Navigate, NavLink, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { LogOut } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { SITE_NAME } from '@/config/site'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
+/**
+ * The gate in front of every admin screen except the login form.
+ *
+ * Worth being honest about what this is: it decides what gets DRAWN, nothing
+ * more. Anybody can edit JavaScript in their own browser and walk past it. The
+ * thing that actually stops a stranger changing the catalogue is the row level
+ * security policies in the database, which check the `admins` table on every
+ * write. This exists so the right person sees the right screen, not to keep
+ * the wrong person out of the data.
+ */
+export function RequireAdmin({ children }: { children: ReactNode }) {
+  const { status } = useAuth()
+  const location = useLocation()
+  const { t } = useTranslation()
+
+  // Restoring the session is asynchronous. Redirecting during this moment
+  // would throw a signed-in manager back to the login screen on every refresh.
+  if (status === 'checking') {
+    return (
+      <div role="status" aria-live="polite" className="grid min-h-dvh place-items-center px-6">
+        <p className="text-sm text-muted">{t('state.loading')}</p>
+      </div>
+    )
+  }
+
+  if (status === 'signedOut') {
+    // Remember where they were headed so signing in can return them there.
+    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />
+  }
+
+  if (status === 'notAdmin') return <NotAnAdmin />
+
+  return <AdminChrome>{children}</AdminChrome>
+}
+
+/**
+ * Signed in with a real account that is not on the admins list.
+ *
+ * A separate screen from the login form on purpose: the password was correct,
+ * so telling them to try signing in again would send them round in a circle.
+ */
+function NotAnAdmin() {
+  const { email, signOut } = useAuth()
+  const { t } = useTranslation()
+
+  return (
+    <div className="grid min-h-dvh place-items-center px-6">
+      <div className="w-full max-w-md border border-hairline bg-surface p-10 text-center">
+        <h1 className="font-heading text-2xl text-ink">{t('admin.notAdminTitle')}</h1>
+
+        <p className="mt-4 text-sm leading-relaxed text-muted">{t('admin.notAdminBody')}</p>
+
+        {email && <p className="mt-4 font-mono text-xs break-all text-muted/80">{email}</p>}
+
+        <Button variant="outline" size="sm" className="mt-8" onClick={() => void signOut()}>
+          {t('admin.signOut')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+/** Header and navigation drawn around every signed-in admin screen. */
+function AdminChrome({ children }: { children: ReactNode }) {
+  const { email, signOut } = useAuth()
+  const { t } = useTranslation()
+
+  return (
+    <>
+      <header className="border-b border-hairline bg-surface">
+        <div className="mx-auto flex w-full max-w-[80rem] flex-wrap items-center gap-x-8 gap-y-4 px-5 py-4 sm:px-8">
+          <Link to="/admin" className="font-heading text-lg tracking-[0.2em] text-ink uppercase">
+            {SITE_NAME}
+          </Link>
+
+          <span className="text-[10px] tracking-[0.18em] text-brass uppercase">
+            {t('admin.badge')}
+          </span>
+
+          <nav aria-label={t('admin.navLabel')} className="flex items-center gap-6">
+            <AdminLink to="/admin" end>
+              {t('admin.navProducts')}
+            </AdminLink>
+            <AdminLink to="/admin/categories">{t('admin.navCategories')}</AdminLink>
+          </nav>
+
+          <div className="ml-auto flex items-center gap-4">
+            {email && <span className="hidden text-xs text-muted sm:inline">{email}</span>}
+
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="inline-flex items-center gap-2 text-xs tracking-[0.12em] text-muted uppercase transition-colors duration-300 hover:text-brass"
+            >
+              <LogOut aria-hidden="true" className="size-4 stroke-[1.25]" />
+              {t('admin.signOut')}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-[80rem] px-5 py-10 sm:px-8">{children}</main>
+    </>
+  )
+}
+
+function AdminLink({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        cn(
+          'text-xs tracking-[0.12em] uppercase transition-colors duration-300',
+          isActive ? 'text-brass' : 'text-muted hover:text-ink',
+        )
+      }
+    >
+      {children}
+    </NavLink>
+  )
+}

@@ -5,6 +5,11 @@ import { CatalogPreview } from '@/pages/catalog-preview'
 import { Product } from '@/pages/product'
 import { CategoryPage } from '@/pages/category'
 import { Placeholder } from '@/pages/placeholder'
+import { AdminLayout } from '@/components/admin/admin-layout'
+import { RequireAdmin } from '@/components/admin/require-admin'
+import { AdminLogin } from '@/pages/admin/login'
+import { AdminDashboard } from '@/pages/admin/dashboard'
+import { AdminCategories } from '@/pages/admin/categories'
 import { getStoredLanguage } from '@/i18n'
 import '@/i18n'
 
@@ -30,6 +35,37 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
+
+        {/*
+         * The back office. Declared BEFORE /:lang so "admin" is never mistaken
+         * for a language code, and it carries no language prefix of its own —
+         * it is a private tool, not part of the public site.
+         */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="login" element={<AdminLogin />} />
+
+          <Route
+            index
+            element={
+              <RequireAdmin>
+                <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
+
+          <Route
+            path="categories"
+            element={
+              <RequireAdmin>
+                <AdminCategories />
+              </RequireAdmin>
+            }
+          />
+
+          {/* A mistyped admin address goes to the dashboard, not to the
+              public site's language redirect. */}
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
 
         <Route path="/:lang" element={<RootLayout />}>
           <Route index element={<Home />} />
