@@ -44,11 +44,13 @@ export const CONTACT = {
   whatsappNumber: '995599000000',
 
   /**
-   * Facebook page handle — the part after facebook.com/. Used for both the
-   * page link and the m.me Messenger deep link, so the two can never drift.
+   * Facebook page handle — the part after facebook.com/. The single source
+   * for the page link in SOCIAL below, the footer icon, and the m.me
+   * Messenger deep link in src/lib/contact.ts, so those can never drift
+   * apart. Change it here and all three follow.
    *
    * PLACEHOLDER: swap in the client's real page before launch. Until then
-   * both buttons open a page that does not exist.
+   * every Facebook and Messenger link opens a page that does not exist.
    */
   facebookHandle: 'archtrade',
 
@@ -61,8 +63,18 @@ export const CONTACT = {
     'https://www.google.com/maps?q=41.7255,44.7451&hl=en&z=16&output=embed',
 } as const
 
+/**
+ * Built from the handles above rather than written out again, so the footer
+ * link and the Messenger deep link cannot end up pointing at two different
+ * pages. Not built with facebookPageUrl() from src/lib/contact.ts, even
+ * though that produces the same string: this file must not import from lib,
+ * which already imports from here.
+ *
+ * PLACEHOLDER: the Instagram and Pinterest handles are still guesses — give
+ * them the same treatment as facebookHandle once the real accounts are known.
+ */
 export const SOCIAL = [
-  { name: 'Facebook', href: 'https://facebook.com/archtrade' },
+  { name: 'Facebook', href: `https://facebook.com/${CONTACT.facebookHandle}` },
   { name: 'Instagram', href: 'https://instagram.com/archtrade' },
   { name: 'Pinterest', href: 'https://pinterest.com/archtrade' },
 ] as const
