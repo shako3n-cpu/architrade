@@ -6,8 +6,8 @@ import { ADMIN_HOST_PREFIX, PUBLIC_HOSTS } from '@/config/site'
  * ----------------------------------------------------------------------------
  * One deployment, one bundle, two front doors:
  *
- *   admin-archtrade.vercel.app  ->  the back office, and nothing else
- *   archtrade.vercel.app        ->  the catalogue, and nothing else
+ *   admin-architrade.vercel.app  ->  the back office, and nothing else
+ *   architrade.vercel.app        ->  the catalogue, and nothing else
  *
  * The hostname is read ONCE, when the module first loads, because it cannot
  * change without a full page load. Everything downstream reads the constant.
@@ -32,7 +32,7 @@ export type HostMode =
   | 'open'
 
 /**
- * True for `admin.archtrade.ge`, `admin-archtrade.vercel.app` and
+ * True for `admin.architrade.ge`, `admin-architrade.vercel.app` and
  * `admin.localhost`; false for `administration.example.com`.
  *
  * The trailing separator matters. A bare `startsWith('admin')` would hand the

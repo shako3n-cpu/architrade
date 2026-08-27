@@ -20,11 +20,11 @@ import '@/i18n'
  * ----------------------------------------------------------------------------
  * Two front doors onto one bundle, chosen by hostname (see src/lib/host.ts):
  *
- *   admin-archtrade.vercel.app   "/" lands on the dashboard; the catalogue
+ *   admin-architrade.vercel.app   "/" lands on the dashboard; the catalogue
  *                                is not routed at all, so the public header,
  *                                footer and contact bar never render.
  *
- *   archtrade.vercel.app         the catalogue; /admin is not routed, and a
+ *   architrade.vercel.app         the catalogue; /admin is not routed, and a
  *                                visitor who types it is sent to the shop.
  *
  *   localhost, previews          both, unchanged, so this is still workable.
