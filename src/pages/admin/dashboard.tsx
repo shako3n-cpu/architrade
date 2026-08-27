@@ -6,6 +6,7 @@ import { useCatalogue } from '@/hooks/use-catalog'
 import { deleteProduct, explainWriteFailure } from '@/lib/admin-queries'
 import { QueryState } from '@/components/ui/query-state'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ProductFormModal } from '@/components/admin/product-form-modal'
 import { cn } from '@/lib/utils'
 
@@ -102,6 +103,7 @@ function ProductTable({
   const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Product | null>(null)
 
   const name = (category: Category) => (lang === 'ka' ? category.title_ka : category.title_en)
   const productName = (product: Product) => (lang === 'ka' ? product.title_ka : product.title_en)
@@ -128,11 +130,6 @@ function ProductTable({
   }, [products, query, categoryId])
 
   const remove = async (product: Product) => {
-    // Deleting a row cannot be undone from this screen, so it is confirmed —
-    // and the confirmation names the piece rather than saying "this item".
-    const ok = window.confirm(t('admin.confirmDelete', { name: productName(product) }))
-    if (!ok) return
-
     setError(null)
     setDeletingId(product.id)
 
@@ -272,7 +269,7 @@ function ProductTable({
                         />
                         <IconButton
                           label={t('admin.delete')}
-                          onClick={() => void remove(product)}
+                          onClick={() => setPendingDelete(product)}
                           disabled={deletingId === product.id}
                           icon={<Trash2 aria-hidden="true" className="size-4 stroke-[1.25]" />}
                         />
@@ -285,6 +282,27 @@ function ProductTable({
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setPendingDelete(null)
+        }}
+        title={t('admin.delete')}
+        description={
+          pendingDelete
+            ? t('admin.confirmDelete', { name: productName(pendingDelete) })
+            : ''
+        }
+        confirmLabel={t('admin.delete')}
+        busy={pendingDelete !== null && deletingId === pendingDelete.id}
+        onConfirm={() => {
+          if (!pendingDelete) return
+          const product = pendingDelete
+          setPendingDelete(null)
+          void remove(product)
+        }}
+      />
     </>
   )
 }
