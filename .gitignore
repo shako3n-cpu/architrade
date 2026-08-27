@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Supabase CLI scratch state — the linked project ref, pooler URL and version
+# stamps it writes after `supabase link`. Local machine state, not source.
+supabase/.temp/
