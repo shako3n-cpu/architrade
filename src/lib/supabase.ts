@@ -73,6 +73,33 @@ let client: SupabaseClient | null = null
  */
 export function getSupabase(): SupabaseClient {
   if (!isSupabaseConfigured) throw new SupabaseConfigError()
-  if (!client) client = createClient(supabaseUrl, supabaseAnonKey)
+  if (!client) {
+    client = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        /*
+         * Spelled out rather than left to the defaults, because the admin
+         * dashboard depends on both and a silent change would look like
+         * a random sign-out.
+         *
+         *   persistSession    the session is written to localStorage, so a
+         *                     refresh or a new tab stays signed in. Route
+         *                     changes never touch it — the client is a module
+         *                     singleton and React Router does not reload the
+         *                     page — so moving between /admin screens cannot
+         *                     lose it either.
+         *   autoRefreshToken  the access token lasts an hour; supabase-js
+         *                     renews it in the background so a long editing
+         *                     session does not expire mid-save.
+         *
+         * localStorage is per ORIGIN, so a session on the catalogue hostname
+         * and a session on the admin hostname are separate: signing in on one
+         * does not sign you in on the other. That is the correct behaviour
+         * here, and it is why the back office lives on its own hostname.
+         */
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    })
+  }
   return client
 }

@@ -108,3 +108,37 @@ export const FOOTER_NAV = [
 
 export const SITE_NAME = 'ARCHTRADE'
 export const FOUNDED_YEAR = 2009
+
+/* -------------------------------------------------------------------------- */
+/* Hostnames                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The prefix that marks a hostname as the back office.
+ *
+ * Matched against the START of the hostname, followed by the end of it, a dot
+ * or a hyphen — so `admin.archtrade.ge`, `admin-archtrade.vercel.app` and
+ * `admin.localhost` all count. See src/lib/host.ts.
+ */
+export const ADMIN_HOST_PREFIX = 'admin'
+
+/**
+ * Production hostnames that serve the CATALOGUE ONLY. On these, /admin is not
+ * reachable at all — a visitor who types it is sent to the catalogue.
+ *
+ * Anything not listed here (localhost, a Vercel preview URL, a LAN address)
+ * keeps serving both the catalogue and /admin, so development and preview
+ * deployments are unaffected. That means an unlisted production domain leaves
+ * /admin exposed on the public site: ADD EVERY LIVE CATALOGUE DOMAIN HERE.
+ *
+ * Lowercase, no protocol, no trailing slash. Include the `www.` form as a
+ * separate entry — it is a different hostname.
+ */
+export const PUBLIC_HOSTS = [
+  'archtrade.vercel.app',
+  'architrade.vercel.app',
+  'archtrade.ge',
+  'www.archtrade.ge',
+  'architrade.ge',
+  'www.architrade.ge',
+] as const
