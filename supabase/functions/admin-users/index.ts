@@ -104,12 +104,16 @@ Deno.serve(async (request: Request) => {
 
   const service = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    // SERVICE_ROLE_KEY first, SUPABASE_SERVICE_ROLE_KEY as the fallback.
-    // Supabase injects the SUPABASE_ prefixed one into deployed functions, but
-    // the prefix is reserved and cannot be set by hand — so a project that
-    // needs to supply the key itself has to use the unprefixed name. Reading
-    // both means either arrangement works without editing this file.
-    Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+    // ORDER MATTERS, and it is the reverse of what it looks like it should be.
+    // Supabase injects SUPABASE_SERVICE_ROLE_KEY into every deployed function
+    // and that value is always right for the project it is running in. A key
+    // set by hand can be stale, or from another project, or the wrong kind of
+    // key altogether — and this project has one that is, which is what made
+    // account creation fail with "Invalid API key" from inside the function.
+    //
+    // So: the injected key wins, and SERVICE_ROLE_KEY is the fallback for an
+    // environment that does not provide one (self-hosted, mainly).
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || '',
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
@@ -119,19 +123,41 @@ Deno.serve(async (request: Request) => {
   if (!token) return json({ error: 'Not signed in' }, 401, origin)
 
   const { data: caller, error: callerError } = await service.auth.getUser(token)
-  if (callerError || !caller.user) return json({ error: 'Not signed in' }, 401, origin)
+  if (callerError || !caller.user) {
+    // The reason matters. "Invalid API key" here is not the caller's problem
+    // at all — it means THIS function's service key is wrong, and reporting
+    // that as "not signed in" sends whoever is debugging it to the one place
+    // the fault is not.
+    return json({ error: 'Not signed in', detail: callerError?.message ?? 'unknown token' }, 401, origin)
+  }
 
   /* ---- 2. Are they allowed? ------------------------------------------ */
   // Read from the table, never from the token. A JWT carries whatever it
   // carried when it was issued, which may be an hour out of date.
 
-  const { data: membership } = await service
+  const { data: membership, error: membershipError } = await service
     .from('admins')
     .select('role')
     .eq('user_id', caller.user.id)
     .maybeSingle()
 
-  if (membership?.role !== 'admin') {
+  // A query that FAILED is not the same as a query that found nothing, and
+  // conflating the two is how a broken service key ends up telling a genuine
+  // administrator that they are not one. The service key bypasses row level
+  // security, so an error here is always configuration, never permission.
+  if (membershipError) {
+    return json(
+      { error: 'Could not check who you are', detail: membershipError.message },
+      500,
+      origin,
+    )
+  }
+
+  if (!membership) {
+    return json({ error: 'This account is not on the staff list' }, 403, origin)
+  }
+
+  if (membership.role !== 'admin') {
     return json({ error: 'Administrators only' }, 403, origin)
   }
 

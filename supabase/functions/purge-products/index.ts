@@ -109,11 +109,16 @@ Deno.serve(async (request: Request) => {
 
   const service = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    // SERVICE_ROLE_KEY first, SUPABASE_SERVICE_ROLE_KEY as the fallback, the
-    // same way admin-users reads it. Supabase injects the prefixed one into
-    // deployed functions, but the SUPABASE_ prefix is reserved and cannot be
-    // set by hand — so a key supplied by the project has to use the other name.
-    Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+    // ORDER MATTERS, and it is the reverse of what it looks like it should be.
+    // Supabase injects SUPABASE_SERVICE_ROLE_KEY into every deployed function
+    // and that value is always right for the project it is running in. A key
+    // set by hand can be stale, or from another project, or the wrong kind of
+    // key altogether — and this project has one that is, which is what made
+    // account creation fail with "Invalid API key" from inside the function.
+    //
+    // So: the injected key wins, and SERVICE_ROLE_KEY is the fallback for an
+    // environment that does not provide one (self-hosted, mainly).
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || '',
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 

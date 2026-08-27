@@ -278,6 +278,37 @@ export async function removeStaff(userId: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Pulls the sentence the function actually sent back.
+ *
+ * supabase-js reports every non-2xx as "Edge Function returned a non-2xx
+ * status code" and hangs the real response off `context`, unread. That message
+ * is the same whether the account already exists, the password is too short,
+ * or the function's own key is wrong — so on its own it is worth nothing to
+ * the person at the keyboard, and not much more to whoever they ask.
+ */
+async function readFunctionError(error: unknown): Promise<string | null> {
+  const response = (error as { context?: Response }).context
+  if (!response || typeof response.clone !== 'function') return null
+
+  try {
+    // Cloned, so reading it here cannot stop anything else reading it later.
+    const text = await response.clone().text()
+    if (!text) return null
+
+    try {
+      const body = JSON.parse(text) as { error?: string; detail?: string }
+      if (!body.error) return text.slice(0, 300)
+      return body.detail ? `${body.error} (${body.detail})` : body.error
+    } catch {
+      // Not JSON — a gateway error page, most likely. Still better than nothing.
+      return text.slice(0, 300)
+    }
+  } catch {
+    return null
+  }
+}
+
 /** Raised when the edge function has not been deployed to the project yet. */
 export class FunctionMissingError extends Error {
   override name = 'FunctionMissingError'
@@ -312,5 +343,6 @@ export async function createStaffAccount(input: {
   const status = (error as { context?: { status?: number } }).context?.status
   if (status === 404) throw new FunctionMissingError('admin-users is not deployed')
 
-  throw error
+  const detail = await readFunctionError(error)
+  throw detail ? new Error(detail) : error
 }
