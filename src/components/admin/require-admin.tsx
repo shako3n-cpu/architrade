@@ -18,8 +18,15 @@ import { cn } from '@/lib/utils'
  * write. This exists so the right person sees the right screen, not to keep
  * the wrong person out of the data.
  */
-export function RequireAdmin({ children }: { children: ReactNode }) {
-  const { status, revalidate } = useAuth()
+export function RequireAdmin({
+  children,
+  adminOnly = false,
+}: {
+  children: ReactNode
+  /** Refuse operators as well as strangers. Used by /admin/users. */
+  adminOnly?: boolean
+}) {
+  const { status, isAdmin, revalidate } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
 
@@ -51,6 +58,22 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   }
 
   if (status === 'notAdmin') return <NotAnAdmin />
+
+  // An operator who typed /admin/users into the address bar. They are staff,
+  // so they keep the navigation and can go somewhere useful — this is a wrong
+  // turn, not a locked door.
+  if (adminOnly && !isAdmin) {
+    return (
+      <AdminChrome>
+        <div className="border border-hairline bg-surface p-10 text-center">
+          <h1 className="font-heading text-2xl text-ink">{t('admin.adminsOnlyTitle')}</h1>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted">
+            {t('admin.adminsOnlyBody')}
+          </p>
+        </div>
+      </AdminChrome>
+    )
+  }
 
   return <AdminChrome>{children}</AdminChrome>
 }
@@ -84,7 +107,7 @@ function NotAnAdmin() {
 
 /** Header and navigation drawn around every signed-in admin screen. */
 function AdminChrome({ children }: { children: ReactNode }) {
-  const { email, signOut } = useAuth()
+  const { email, role, isAdmin, signOut } = useAuth()
   const { t } = useTranslation()
 
   return (
@@ -95,8 +118,11 @@ function AdminChrome({ children }: { children: ReactNode }) {
             {SITE_NAME}
           </Link>
 
+          {/* The badge says which of the two dashboards this is. An operator
+              seeing "Operator" here is the explanation for why the delete and
+              user-management controls are not where a colleague said. */}
           <span className="text-[10px] tracking-[0.18em] text-brass uppercase">
-            {t('admin.badge')}
+            {role === 'operator' ? t('admin.roleOperator') : t('admin.badge')}
           </span>
 
           <nav aria-label={t('admin.navLabel')} className="flex items-center gap-6">
@@ -104,6 +130,7 @@ function AdminChrome({ children }: { children: ReactNode }) {
               {t('admin.navProducts')}
             </AdminLink>
             <AdminLink to="/admin/categories">{t('admin.navCategories')}</AdminLink>
+            {isAdmin && <AdminLink to="/admin/users">{t('admin.navUsers')}</AdminLink>}
           </nav>
 
           <div className="ml-auto flex items-center gap-4">

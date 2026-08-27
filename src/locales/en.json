@@ -251,6 +251,27 @@
     "idleBody_one": "Nothing has happened here for a while. You will be signed out in {{count}} second.",
     "idleBody_other": "Nothing has happened here for a while. You will be signed out in {{count}} seconds.",
     "idleStay": "Stay signed in",
-    "idleExpired": "Session expired due to inactivity. Please sign in again."
+    "idleExpired": "Session expired due to inactivity. Please sign in again.",
+    "navUsers": "Users",
+    "roleAdmin": "Administrator",
+    "roleOperator": "Operator",
+    "archive": "Archive",
+    "archived": "Archived",
+    "restore": "Restore",
+    "confirmArchive": "Archive {{name}}? It comes off the website straight away and stays here, so it can be put back.",
+    "adminsOnlyTitle": "Administrators only",
+    "adminsOnlyBody": "Managing accounts is limited to administrators. You can still add, edit and archive pieces in the catalog.",
+    "staffTitle": "Users",
+    "staffSubtitle": "Everyone who can sign in here. Administrators can do everything, including deleting pieces and managing this list. Operators can add, edit and archive pieces, which covers everyday catalog work.",
+    "staffYou": "You",
+    "staffRole": "Role",
+    "staffPassword": "Temporary password",
+    "staffAddTitle": "Add an account",
+    "staffAddHint": "The person is signed in from the moment you press the button — there is no confirmation email. Tell them the password yourself, and ask them to change it once they are in.",
+    "staffCreate": "Create account",
+    "staffCreated": "The account was created and added to the list below.",
+    "staffFunctionMissing": "Creating accounts is not switched on for this project yet. The site administrator needs to deploy the admin-users function — see supabase-rbac.sql. Until then, create the account in the Supabase dashboard under Authentication, then add it here.",
+    "staffRemove": "Remove from the list",
+    "staffConfirmRemove": "Remove {{name}}? They lose access to the dashboard immediately. Their sign-in account is not deleted."
   }
 }

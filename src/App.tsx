@@ -10,6 +10,7 @@ import { RequireAdmin } from '@/components/admin/require-admin'
 import { AdminLogin } from '@/pages/admin/login'
 import { AdminDashboard } from '@/pages/admin/dashboard'
 import { AdminCategories } from '@/pages/admin/categories'
+import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
 import { getStoredLanguage } from '@/i18n'
 import '@/i18n'
@@ -65,6 +66,17 @@ const adminRoutes = (
       element={
         <RequireAdmin>
           <AdminCategories />
+        </RequireAdmin>
+      }
+    />
+
+    {/* Administrators only — an operator who types this address is told so
+        rather than being bounced somewhere without explanation. */}
+    <Route
+      path="users"
+      element={
+        <RequireAdmin adminOnly>
+          <AdminUsers />
         </RequireAdmin>
       }
     />

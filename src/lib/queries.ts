@@ -48,6 +48,14 @@ const CATEGORY_COLUMNS_BASE = 'id, slug, title_ka, title_en, created_at'
 // prettier-ignore
 const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at'
 
+/**
+ * The same list plus `is_archived`, for the dashboard, which has to show the
+ * archive and mark it. The public site never asks for this column: it filters
+ * on it instead and has no use for the value itself.
+ */
+// prettier-ignore
+const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at, is_archived'
+
 /** Postgres "undefined column", surfaced by PostgREST as the error code. */
 const UNDEFINED_COLUMN = '42703'
 
@@ -89,6 +97,43 @@ async function withColumnFallback<T>(
   const fallback = await base()
   if (fallback.error) throw new Error(fallback.error.message)
   return fallback.data
+}
+
+/* -------------------------------------------------------------------------- */
+/* Archived pieces                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Set the first time the database says it has no `is_archived` column, so the
+ * fallback is paid once per page load rather than on every request.
+ *
+ * supabase-rbac.sql adds the column. Until it has been run — and on the day
+ * this ships it will not have been — every product query would otherwise fail
+ * outright and the catalogue would go blank. Falling back means the site
+ * behaves exactly as it did before, with nothing archived because nothing can
+ * be. Delete this and `live()` once every environment has been migrated.
+ */
+let archivingUnavailable = false
+
+/** Narrows a query to the pieces the public is allowed to see. */
+function live<T extends { eq(column: string, value: unknown): T }>(builder: T): T {
+  return archivingUnavailable ? builder : builder.eq('is_archived', false)
+}
+
+/**
+ * Runs a product query, and runs it again unfiltered if the only thing wrong
+ * was that the column does not exist yet. Every other error is thrown as-is,
+ * so a genuine failure is never disguised as a schema mismatch.
+ */
+async function withArchiveFallback<T>(
+  run: () => Promise<{ data: T[] | null; error: PgError | null }>,
+): Promise<T[]> {
+  const result = await run()
+  if (!result.error) return result.data ?? []
+  if (!isMissingColumn(result.error)) throw new Error(result.error.message)
+
+  archivingUnavailable = true
+  return unwrap<T>(await run())
 }
 
 /** Every category, in display order. */
@@ -149,14 +194,32 @@ export async function fetchCategoryBySlug(
   )
 }
 
-/** Every product, newest first. */
-export async function fetchProducts(signal?: AbortSignal): Promise<Product[]> {
-  const query = getSupabase()
-    .from('products')
-    .select(PRODUCT_COLUMNS)
-    .order('created_at', { ascending: false })
+/**
+ * Every product, newest first.
+ *
+ * `includeArchived` is for the admin dashboard and nowhere else. The public
+ * site must never pass it — an archived piece is one the office has taken down
+ * and does not want a customer to find.
+ */
+export async function fetchProducts(
+  signal?: AbortSignal,
+  includeArchived = false,
+): Promise<Product[]> {
+  return withArchiveFallback<Product>(async () => {
+    const base = getSupabase()
+      .from('products')
+      .select(includeArchived ? PRODUCT_COLUMNS_ADMIN : PRODUCT_COLUMNS)
+      .order('created_at', { ascending: false })
 
-  return unwrap<Product>(await withSignal(query, signal))
+    // The admin list asks for the column by name and the public list filters
+    // on it; on a database without it, both need the same fallback.
+    const query = includeArchived ? base : live(base)
+
+    return (await withSignal(query, signal)) as unknown as {
+      data: Product[] | null
+      error: PgError | null
+    }
+  })
 }
 
 /** One product by the slug in the URL. Null when no such product exists. */
@@ -164,11 +227,25 @@ export async function fetchProductBySlug(
   slug: string,
   signal?: AbortSignal,
 ): Promise<Product | null> {
-  const query = getSupabase().from('products').select(PRODUCT_COLUMNS).eq('slug', slug)
+  const run = async () => {
+    const base = getSupabase().from('products').select(PRODUCT_COLUMNS).eq('slug', slug)
+    return withSignal(live(base), signal).maybeSingle()
+  }
 
-  const { data, error } = await withSignal(query, signal).maybeSingle()
+  const { data, error } = await run()
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    if (!isMissingColumn(error)) throw new Error(error.message)
+    archivingUnavailable = true
+
+    const retry = await run()
+    if (retry.error) throw new Error(retry.error.message)
+    return retry.data as Product | null
+  }
+
+  // An archived piece is filtered out above, so it arrives here as null and
+  // the page shows "we could not find that piece" — which is the truth, as far
+  // as the public site is concerned.
   return data as Product | null
 }
 
@@ -185,35 +262,45 @@ export async function fetchProductsByCategorySlug(
   const category = await fetchCategoryBySlug(slug, signal)
   if (!category) return []
 
-  const query = getSupabase()
-    .from('products')
-    .select(PRODUCT_COLUMNS)
-    .eq('category_id', category.id)
-    .order('created_at', { ascending: false })
+  return withArchiveFallback<Product>(async () => {
+    const base = getSupabase()
+      .from('products')
+      .select(PRODUCT_COLUMNS)
+      .eq('category_id', category.id)
+      .order('created_at', { ascending: false })
 
-  return unwrap<Product>(await withSignal(query, signal))
+    return (await withSignal(live(base), signal)) as unknown as {
+      data: Product[] | null
+      error: PgError | null
+    }
+  })
 }
 
 /** Products flagged `featured`, for the home page. */
 export async function fetchFeaturedProducts(limit = 6, signal?: AbortSignal): Promise<Product[]> {
-  const query = getSupabase()
-    .from('products')
-    .select(PRODUCT_COLUMNS)
-    .eq('featured', true)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+  return withArchiveFallback<Product>(async () => {
+    const base = getSupabase()
+      .from('products')
+      .select(PRODUCT_COLUMNS)
+      .eq('featured', true)
+      .order('created_at', { ascending: false })
+      .limit(limit)
 
-  return unwrap<Product>(await withSignal(query, signal))
+    return (await withSignal(live(base), signal)) as unknown as {
+      data: Product[] | null
+      error: PgError | null
+    }
+  })
 }
 
 /**
  * Categories and products in one go, for pages that group one by the other.
  * Runs both requests at the same time rather than one after the other.
  */
-export async function fetchCatalogue(signal?: AbortSignal) {
+export async function fetchCatalogue(signal?: AbortSignal, includeArchived = false) {
   const [categories, products] = await Promise.all([
     fetchCategories(signal),
-    fetchProducts(signal),
+    fetchProducts(signal, includeArchived),
   ])
 
   return { categories, products }
@@ -237,28 +324,40 @@ export async function fetchRelatedProducts(
   limit = RELATED_LIMIT,
   signal?: AbortSignal,
 ): Promise<Product[]> {
-  const siblingQuery = getSupabase()
-    .from('products')
-    .select(PRODUCT_COLUMNS)
-    .eq('category_id', product.category_id)
-    // Never recommend the piece the visitor is already looking at.
-    .neq('id', product.id)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+  const siblings = await withArchiveFallback<Product>(async () => {
+    const base = getSupabase()
+      .from('products')
+      .select(PRODUCT_COLUMNS)
+      .eq('category_id', product.category_id)
+      // Never recommend the piece the visitor is already looking at.
+      .neq('id', product.id)
+      .order('created_at', { ascending: false })
+      .limit(limit)
 
-  const siblings = unwrap<Product>(await withSignal(siblingQuery, signal))
+    return (await withSignal(live(base), signal)) as unknown as {
+      data: Product[] | null
+      error: PgError | null
+    }
+  })
   if (siblings.length >= limit) return siblings
 
   // Everything in this query sits outside the product's own category, so the
   // current product is already excluded and cannot appear twice.
-  const fillerQuery = getSupabase()
-    .from('products')
-    .select(PRODUCT_COLUMNS)
-    .neq('category_id', product.category_id)
-    .order('created_at', { ascending: false })
-    .limit(limit - siblings.length)
+  const filler = await withArchiveFallback<Product>(async () => {
+    const base = getSupabase()
+      .from('products')
+      .select(PRODUCT_COLUMNS)
+      .neq('category_id', product.category_id)
+      .order('created_at', { ascending: false })
+      .limit(limit - siblings.length)
 
-  return [...siblings, ...unwrap<Product>(await withSignal(fillerQuery, signal))]
+    return (await withSignal(live(base), signal)) as unknown as {
+      data: Product[] | null
+      error: PgError | null
+    }
+  })
+
+  return [...siblings, ...filler]
 }
 
 /** Everything one product detail page needs. */

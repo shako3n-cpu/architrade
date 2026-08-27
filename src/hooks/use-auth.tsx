@@ -1,11 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import type { StaffRole } from '@/data/types'
 import {
   clearAuthStorage,
   getSession,
   hasValidSession,
-  isAdmin,
+  fetchRole,
   onAuthChange,
   signIn,
   signOut,
@@ -38,6 +39,13 @@ export type AuthStatus = 'checking' | 'signedOut' | 'notAdmin' | 'ready'
 type AuthValue = {
   status: AuthStatus
   email: string | null
+  /**
+   * What this account may do, or null when it is not staff. Only ever
+   * non-null while `status` is 'ready'.
+   */
+  role: StaffRole | null
+  /** Shorthand for the check nearly every screen makes. */
+  isAdmin: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   /**
@@ -51,7 +59,12 @@ const AuthContext = createContext<AuthValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [admin, setAdmin] = useState<boolean | null>(null)
+  /*
+   * Three states, not two: null means "not asked yet", which is different from
+   * "asked, and they are nobody". Collapsing them would show the refusal
+   * screen for a moment on every page load.
+   */
+  const [role, setRole] = useState<StaffRole | null | undefined>(undefined)
   const [checking, setChecking] = useState(true)
 
   // Restore whatever session is in storage, then follow it.
@@ -76,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next)
       // Force the membership check to run again for the new account rather
       // than leaving the previous answer on screen.
-      setAdmin(null)
+      setRole(undefined)
     })
 
     return () => {
@@ -85,17 +98,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Check admin membership whenever the account changes.
+  // Look up the role whenever the account changes.
   useEffect(() => {
     const userId = session?.user.id
     if (!userId) {
-      setAdmin(null)
+      setRole(undefined)
       return
     }
 
     let active = true
-    isAdmin(userId).then((result) => {
-      if (active) setAdmin(result)
+    fetchRole(userId).then((result) => {
+      if (active) setRole(result)
     })
 
     return () => {
@@ -106,10 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const status: AuthStatus = useMemo(() => {
     if (checking) return 'checking'
     if (!session) return 'signedOut'
-    // The membership answer has not arrived yet — still checking, not refused.
-    if (admin === null) return 'checking'
-    return admin ? 'ready' : 'notAdmin'
-  }, [checking, session, admin])
+    // The answer has not arrived yet — still checking, not refused.
+    if (role === undefined) return 'checking'
+    return role ? 'ready' : 'notAdmin'
+  }, [checking, session, role])
 
   const doSignIn = useCallback(async (email: string, password: string) => {
     // onAuthChange fires and sets the session, so nothing is stored here.
@@ -151,11 +164,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       email: session?.user.email ?? null,
+      role: role ?? null,
+      isAdmin: role === 'admin',
       signIn: doSignIn,
       signOut: doSignOut,
       revalidate,
     }),
-    [status, session, doSignIn, doSignOut, revalidate],
+    [status, session, role, doSignIn, doSignOut, revalidate],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

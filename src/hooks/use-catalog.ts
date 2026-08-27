@@ -39,8 +39,14 @@ export function useProducts() {
 }
 
 /** Categories and products together, fetched in parallel. */
-export function useCatalogue() {
-  return useAsync(useCallback((signal: AbortSignal) => fetchCatalogue(signal), []), [])
+export function useCatalogue(includeArchived = false) {
+  return useAsync(
+    useCallback(
+      (signal: AbortSignal) => fetchCatalogue(signal, includeArchived),
+      [includeArchived],
+    ),
+    [includeArchived],
+  )
 }
 
 /** One category by slug. `data` is null when the slug matches nothing. */

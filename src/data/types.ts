@@ -106,6 +106,19 @@ export interface Product {
   created_at: string
 
   /**
+   * Soft delete. True hides the piece from the public site while keeping it in
+   * the admin dashboard, where an administrator can restore it or delete it
+   * for real.
+   *
+   * OPTIONAL for the same reason as `price`: the column is added by
+   * supabase-rbac.sql, so a database that has not had that file run against it
+   * has no such column. Read it as `product.is_archived === true` rather than
+   * as a plain boolean, so an undefined means "live", which is what a database
+   * without archiving has.
+   */
+  is_archived?: boolean | null
+
+  /**
    * Internal reference price, entered in the admin dashboard.
    *
    * OPTIONAL, and it stays optional: the column is added by
@@ -212,4 +225,30 @@ export type Collection = {
   coverImage: string
   /** Gallery shown on the collection detail page. */
   images: string[]
+}
+
+/* -------------------------------------------------------------------------- */
+/* 3. Staff                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What somebody signed into the dashboard is allowed to do.
+ *
+ *   admin     everything: delete, restore an archived piece, manage staff
+ *   operator  create, edit and archive; no deleting and no staff management
+ *
+ * The authority is the `role` column on the `admins` table, checked by row
+ * level security on every statement — NOT this type, and not anything the
+ * browser believes. What the browser knows only decides which buttons appear.
+ */
+export type StaffRole = 'admin' | 'operator'
+
+/** A row of the `admins` table. Read it as "staff"; the name is historical. */
+export interface StaffMember {
+  /** Primary key, and a foreign key to auth.users.id. */
+  user_id: string
+  /** Copied from the auth account so the list is readable at a glance. */
+  email: string | null
+  role: StaffRole
+  created_at: string
 }

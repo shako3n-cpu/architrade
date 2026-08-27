@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js'
+import type { StaffRole } from '@/data/types'
 import { getSupabase } from './supabase'
 
 /**
@@ -100,26 +101,50 @@ export function onAuthChange(handler: (session: Session | null) => void): () => 
 }
 
 /**
- * Whether the signed-in account is on the `admins` list.
+ * The signed-in account's role, or null if it is not staff at all.
  *
  * Being signed in is not the same as being allowed to change anything — see
  * the note in supabase-admin-setup.sql about signups being open. The dashboard
- * checks this so it can say "this account is not an administrator" plainly,
+ * reads this so it can say "this account is not an administrator" plainly,
  * instead of letting someone fill in a long form and meet an unexplained
  * permission error when they press Save.
  *
- * Returns false rather than throwing when the table does not exist yet, so a
- * project that has not run the setup file still reaches a readable message.
+ * WHAT THIS IS FOR, AND WHAT IT IS NOT FOR
+ *   It decides which buttons are drawn. It decides nothing else. Anybody can
+ *   edit JavaScript in their own browser and make this function return
+ *   'admin'; what actually refuses the delete is the row level security policy
+ *   in supabase-rbac.sql, which asks the database, not the browser.
+ *
+ * Returns null rather than throwing when the table does not exist yet, so a
+ * project that has not run the setup files still reaches a readable message.
+ * A database that has `admins` but not yet the `role` column falls back to
+ * 'admin', which is what everyone on that list was before roles existed.
  */
-export async function isAdmin(userId: string): Promise<boolean> {
+const UNDEFINED_COLUMN = '42703'
+
+export async function fetchRole(userId: string): Promise<StaffRole | null> {
   const { data, error } = await getSupabase()
     .from('admins')
-    .select('user_id')
+    .select('role')
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (error) return false
-  return data !== null
+  if (error) {
+    if (error.code !== UNDEFINED_COLUMN) return null
+
+    // supabase-rbac.sql has not been run. Everyone on the pre-roles list held
+    // full rights, so that is what they keep until it is.
+    const { data: row } = await getSupabase()
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    return row ? 'admin' : null
+  }
+
+  if (!data) return null
+  return data.role === 'operator' ? 'operator' : 'admin'
 }
 
 /**

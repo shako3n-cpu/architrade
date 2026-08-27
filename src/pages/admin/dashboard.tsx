@@ -1,9 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ArchiveRestore, Archive, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import type { Category, Product } from '@/data/types'
 import { useCatalogue } from '@/hooks/use-catalog'
-import { deleteProduct, explainWriteFailure } from '@/lib/admin-queries'
+import { useAuth } from '@/hooks/use-auth'
+import {
+  archiveProduct,
+  deleteProduct,
+  explainWriteFailure,
+  restoreProduct,
+} from '@/lib/admin-queries'
 import { QueryState } from '@/components/ui/query-state'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -21,7 +27,10 @@ import { cn } from '@/lib/utils'
  */
 export function AdminDashboard() {
   const { t, i18n } = useTranslation()
-  const catalogue = useCatalogue()
+  // `true` asks for archived pieces too. The dashboard is the one place they
+  // are meant to be visible; every public query filters them out.
+  const catalogue = useCatalogue(true)
+  const { isAdmin } = useAuth()
 
   const [query, setQuery] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -64,6 +73,7 @@ export function AdminDashboard() {
             onEdit={openEdit}
             onChanged={catalogue.retry}
             lang={i18n.language}
+            isAdmin={isAdmin}
           />
         )}
       </QueryState>
@@ -89,6 +99,7 @@ function ProductTable({
   onEdit,
   onChanged,
   lang,
+  isAdmin,
 }: {
   products: Product[]
   categories: Category[]
@@ -99,11 +110,21 @@ function ProductTable({
   onEdit: (product: Product) => void
   onChanged: () => void
   lang: string
+  /** Decides which buttons are drawn. The database decides what is allowed. */
+  isAdmin: boolean
 }) {
   const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<Product | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  /*
+   * Archiving and deleting share one confirmation dialog, because they ask the
+   * same question with different stakes. Keeping them in one piece of state
+   * makes it impossible to have both open at once.
+   */
+  const [pending, setPending] = useState<{ product: Product; kind: 'archive' | 'delete' } | null>(
+    null,
+  )
 
   const name = (category: Category) => (lang === 'ka' ? category.title_ka : category.title_en)
   const productName = (product: Product) => (lang === 'ka' ? product.title_ka : product.title_en)
@@ -129,12 +150,18 @@ function ProductTable({
     })
   }, [products, query, categoryId])
 
-  const remove = async (product: Product) => {
+  /**
+   * One path for all three actions, because all three fail identically: a
+   * missing setup file, or the database refusing an operator. The refusal is
+   * the one worth getting right — an operator who finds a delete button that
+   * this screen should have hidden still gets a sentence, not a raw error.
+   */
+  const act = async (product: Product, action: () => Promise<void>) => {
     setError(null)
-    setDeletingId(product.id)
+    setBusyId(product.id)
 
     try {
-      await deleteProduct(product.id)
+      await action()
       onChanged()
     } catch (cause) {
       const kind = explainWriteFailure(cause)
@@ -148,7 +175,7 @@ function ProductTable({
               }),
       )
     } finally {
-      setDeletingId(null)
+      setBusyId(null)
     }
   }
 
@@ -210,7 +237,7 @@ function ProductTable({
                 <Th>{t('admin.colTitle')}</Th>
                 <Th>{t('admin.colCategory')}</Th>
                 <Th className="w-28">{t('admin.colPrice')}</Th>
-                <Th className="w-28 text-right">{t('admin.colActions')}</Th>
+                <Th className="w-36 text-right">{t('admin.colActions')}</Th>
               </tr>
             </thead>
 
@@ -224,7 +251,7 @@ function ProductTable({
                     key={product.id}
                     className={cn(
                       'border-b border-hairline last:border-b-0',
-                      deletingId === product.id && 'opacity-50',
+                      busyId === product.id && 'opacity-50',
                     )}
                   >
                     <td className="p-3">
@@ -245,11 +272,18 @@ function ProductTable({
                       <p className="mt-0.5 text-xs text-muted">
                         {lang === 'ka' ? product.title_en : product.title_ka}
                       </p>
-                      {product.featured && (
-                        <span className="mt-1.5 inline-block text-[9px] tracking-[0.14em] text-brass uppercase">
-                          {t('product.featuredBadge')}
-                        </span>
-                      )}
+                      <span className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                        {product.featured && (
+                          <span className="text-[9px] tracking-[0.14em] text-brass uppercase">
+                            {t('product.featuredBadge')}
+                          </span>
+                        )}
+                        {product.is_archived && (
+                          <span className="border border-hairline px-1.5 py-0.5 text-[9px] tracking-[0.14em] text-muted uppercase">
+                            {t('admin.archived')}
+                          </span>
+                        )}
+                      </span>
                     </td>
 
                     <td className="p-3 text-sm text-muted">
@@ -267,12 +301,43 @@ function ProductTable({
                           onClick={() => onEdit(product)}
                           icon={<Pencil aria-hidden="true" className="size-4 stroke-[1.25]" />}
                         />
-                        <IconButton
-                          label={t('admin.delete')}
-                          onClick={() => setPendingDelete(product)}
-                          disabled={deletingId === product.id}
-                          icon={<Trash2 aria-hidden="true" className="size-4 stroke-[1.25]" />}
-                        />
+
+                        {product.is_archived ? (
+                          // Restoring is an administrator's call. An operator
+                          // cannot even see an archived row from the database's
+                          // point of view, so this would be refused anyway.
+                          isAdmin && (
+                            <IconButton
+                              label={t('admin.restore')}
+                              onClick={() => void act(product, () => restoreProduct(product.id))}
+                              disabled={busyId === product.id}
+                              icon={
+                                <ArchiveRestore
+                                  aria-hidden="true"
+                                  className="size-4 stroke-[1.25]"
+                                />
+                              }
+                            />
+                          )
+                        ) : (
+                          <IconButton
+                            label={t('admin.archive')}
+                            onClick={() => setPending({ product, kind: 'archive' })}
+                            disabled={busyId === product.id}
+                            icon={<Archive aria-hidden="true" className="size-4 stroke-[1.25]" />}
+                          />
+                        )}
+
+                        {/* Hidden from operators here, and refused for them by
+                            the delete policy in supabase-rbac.sql. */}
+                        {isAdmin && (
+                          <IconButton
+                            label={t('admin.delete')}
+                            onClick={() => setPending({ product, kind: 'delete' })}
+                            disabled={busyId === product.id}
+                            icon={<Trash2 aria-hidden="true" className="size-4 stroke-[1.25]" />}
+                          />
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -284,23 +349,27 @@ function ProductTable({
       )}
 
       <ConfirmDialog
-        open={pendingDelete !== null}
+        open={pending !== null}
         onOpenChange={(nextOpen) => {
-          if (!nextOpen) setPendingDelete(null)
+          if (!nextOpen) setPending(null)
         }}
-        title={t('admin.delete')}
+        title={pending?.kind === 'delete' ? t('admin.delete') : t('admin.archive')}
         description={
-          pendingDelete
-            ? t('admin.confirmDelete', { name: productName(pendingDelete) })
+          pending
+            ? t(pending.kind === 'delete' ? 'admin.confirmDelete' : 'admin.confirmArchive', {
+                name: productName(pending.product),
+              })
             : ''
         }
-        confirmLabel={t('admin.delete')}
-        busy={pendingDelete !== null && deletingId === pendingDelete.id}
+        confirmLabel={pending?.kind === 'delete' ? t('admin.delete') : t('admin.archive')}
+        busy={pending !== null && busyId === pending.product.id}
         onConfirm={() => {
-          if (!pendingDelete) return
-          const product = pendingDelete
-          setPendingDelete(null)
-          void remove(product)
+          if (!pending) return
+          const { product, kind } = pending
+          setPending(null)
+          void act(product, () =>
+            kind === 'delete' ? deleteProduct(product.id) : archiveProduct(product.id),
+          )
         }}
       />
     </>

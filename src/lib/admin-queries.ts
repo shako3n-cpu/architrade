@@ -1,4 +1,4 @@
-import type { Category, Product } from '@/data/types'
+import type { Category, Product, StaffMember, StaffRole } from '@/data/types'
 import { getSupabase } from './supabase'
 
 /**
@@ -80,8 +80,52 @@ export async function updateProduct(id: string, draft: ProductDraft): Promise<Pr
   return data as Product
 }
 
+/**
+ * Removes a product permanently. ADMINS ONLY.
+ *
+ * The row goes, and with it the link between the piece and its photographs —
+ * the files stay in the bucket. That is deliberate: a delete pressed by
+ * mistake should not also destroy the photography, which is the expensive part
+ * to replace.
+ *
+ * The dashboard hides this button from operators, but that is only politeness.
+ * The delete policy in supabase-rbac.sql is what refuses it, and it refuses it
+ * for a hand-written request just the same.
+ */
 export async function deleteProduct(id: string): Promise<void> {
   const { error } = await getSupabase().from('products').delete().eq('id', id)
+  if (error) throw error
+}
+
+/**
+ * Takes a piece off the public site without destroying it — the soft delete.
+ *
+ * This is what an operator gets instead of a delete, and what an admin should
+ * reach for first. Everything is kept: the row, the photographs, the text. The
+ * piece simply stops being returned to the public site's queries.
+ */
+export async function archiveProduct(id: string): Promise<void> {
+  const { error } = await getSupabase()
+    .from('products')
+    .update({ is_archived: true })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+/**
+ * Puts an archived piece back on the public site. ADMINS ONLY.
+ *
+ * Enforced in the database rather than here: an operator's update policy can
+ * only see rows where `is_archived = false`, so an archived row is not visible
+ * to their UPDATE at all and this call is refused.
+ */
+export async function restoreProduct(id: string): Promise<void> {
+  const { error } = await getSupabase()
+    .from('products')
+    .update({ is_archived: false })
+    .eq('id', id)
+
   if (error) throw error
 }
 
@@ -174,4 +218,87 @@ export function explainWriteFailure(error: unknown): WriteFailure {
   if (/bucket not found/i.test(message)) return 'setupMissing'
 
   return 'unknown'
+}
+
+/* -------------------------------------------------------------------------- */
+/* Staff                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Everyone with access to the dashboard. ADMINS ONLY — an operator's select
+ * policy returns only their own row, which is how the dashboard learns its own
+ * role without being able to enumerate colleagues.
+ */
+export async function fetchStaff(signal?: AbortSignal): Promise<StaffMember[]> {
+  const query = getSupabase()
+    .from('admins')
+    .select('user_id, email, role, created_at')
+    .order('role', { ascending: true })
+    .order('email', { ascending: true })
+
+  const { data, error } = signal ? await query.abortSignal(signal) : await query
+
+  if (error) throw error
+  return (data ?? []) as StaffMember[]
+}
+
+/** Promotes or demotes somebody already on the list. ADMINS ONLY. */
+export async function updateStaffRole(userId: string, role: StaffRole): Promise<void> {
+  const { error } = await getSupabase()
+    .from('admins')
+    .update({ role })
+    .eq('user_id', userId)
+
+  if (error) throw error
+}
+
+/**
+ * Takes somebody off the staff list. ADMINS ONLY.
+ *
+ * Their Supabase Auth account is NOT deleted — removing that needs the
+ * service_role key, which no browser may hold. They keep an account they can
+ * sign into and it can do nothing: /admin shows them "this account cannot edit
+ * the catalog" and every write policy refuses them. Delete the account itself
+ * in Dashboard -> Authentication -> Users if you want it gone entirely.
+ */
+export async function removeStaff(userId: string): Promise<void> {
+  const { error } = await getSupabase().from('admins').delete().eq('user_id', userId)
+  if (error) throw error
+}
+
+/** Raised when the edge function has not been deployed to the project yet. */
+export class FunctionMissingError extends Error {
+  override name = 'FunctionMissingError'
+}
+
+/**
+ * Creates a brand new account and puts it on the staff list. ADMINS ONLY.
+ *
+ * This is the one thing the browser cannot do for itself. Making a user in
+ * Supabase Auth requires the service_role key, and that key bypasses row level
+ * security on every table in the project — so it lives in an edge function on
+ * a server, and the browser calls the function instead of holding the key.
+ * See supabase/functions/admin-users/index.ts.
+ *
+ * supabase-js attaches the caller's access token to the request, which is what
+ * the function uses to check that the caller really is an administrator.
+ */
+export async function createStaffAccount(input: {
+  email: string
+  password: string
+  role: StaffRole
+}): Promise<void> {
+  const { error } = await getSupabase().functions.invoke('admin-users', {
+    method: 'POST',
+    body: input,
+  })
+
+  if (!error) return
+
+  // A project that has never deployed the function answers 404. Saying "not
+  // deployed" is far more use than "Edge Function returned a non-2xx status".
+  const status = (error as { context?: { status?: number } }).context?.status
+  if (status === 404) throw new FunctionMissingError('admin-users is not deployed')
+
+  throw error
 }
