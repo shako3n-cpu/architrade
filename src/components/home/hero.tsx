@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { FOUNDED_YEAR } from '@/config/site'
 import { useLanguage } from '@/hooks/use-language'
+import { cn } from '@/lib/utils'
 
 /**
  * The first screen: a split rather than a photograph with text laid over it.
@@ -51,10 +52,14 @@ export function Hero() {
             </Button>
           </div>
 
-          <dl className="mt-14 grid grid-cols-3 gap-6 border-t border-hairline pt-8">
+          <dl className="mt-14 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-hairline pt-8 sm:grid-cols-3">
+            <Stat
+              className="col-span-2 sm:order-3 sm:col-span-1"
+              value={t('home.statDeliveryValue')}
+              label={t('home.statDelivery')}
+            />
             <Stat value={String(FOUNDED_YEAR)} label={t('home.statFounded')} />
             <Stat value={t('home.statProjectsValue')} label={t('home.statProjects')} />
-            <Stat value={t('home.statDeliveryValue')} label={t('home.statDelivery')} />
           </dl>
         </div>
 
@@ -76,12 +81,12 @@ export function Hero() {
 }
 
 /** One figure in the hairline-topped row beneath the buttons. */
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label, className }: { value: string; label: string; className?: string }) {
   return (
-    <div>
+    <div className={cn('min-w-0', className)}>
       <dt className="sr-only">{label}</dt>
       <dd>
-        <span className="block font-heading text-2xl text-ink">{value}</span>
+        <span className="block whitespace-nowrap font-heading text-2xl text-ink">{value}</span>
         <span className="mt-1.5 block text-xs leading-snug text-muted">{label}</span>
       </dd>
     </div>
