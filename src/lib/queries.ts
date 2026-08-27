@@ -49,12 +49,13 @@ const CATEGORY_COLUMNS_BASE = 'id, slug, title_ka, title_en, created_at'
 const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at'
 
 /**
- * The same list plus `is_archived`, for the dashboard, which has to show the
- * archive and mark it. The public site never asks for this column: it filters
- * on it instead and has no use for the value itself.
+ * The same list plus the two archive columns, for the dashboard, which has to
+ * show the archive, mark it, and say how long each piece has left before it is
+ * purged. The public site never asks for either: it filters on them instead
+ * and has no use for the values themselves.
  */
 // prettier-ignore
-const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at, is_archived'
+const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at, is_archived, deleted_at'
 
 /** Postgres "undefined column", surfaced by PostgREST as the error code. */
 const UNDEFINED_COLUMN = '42703'
@@ -115,9 +116,20 @@ async function withColumnFallback<T>(
  */
 let archivingUnavailable = false
 
-/** Narrows a query to the pieces the public is allowed to see. */
-function live<T extends { eq(column: string, value: unknown): T }>(builder: T): T {
-  return archivingUnavailable ? builder : builder.eq('is_archived', false)
+/**
+ * Narrows a query to the pieces the public is allowed to see.
+ *
+ * Two conditions where one would do. `deleted_at` is set by the database in
+ * step with `is_archived` — see supabase-retention.sql — so a row can only
+ * fail one of these by failing both. Asking for both anyway costs nothing (the
+ * partial indexes carry the same pair) and means a row that somehow acquires
+ * one without the other still never reaches a customer.
+ */
+function live<
+  T extends { eq(column: string, value: unknown): T; is(column: string, value: null): T },
+>(builder: T): T {
+  if (archivingUnavailable) return builder
+  return builder.eq('is_archived', false).is('deleted_at', null)
 }
 
 /**
@@ -208,7 +220,10 @@ export async function fetchProducts(
   return withArchiveFallback<Product>(async () => {
     const base = getSupabase()
       .from('products')
-      .select(includeArchived ? PRODUCT_COLUMNS_ADMIN : PRODUCT_COLUMNS)
+      // On a database without the archive columns the admin list cannot ask
+      // for them by name either, so the retry has to fall back to the plain
+      // list rather than repeating a select that has already been rejected.
+      .select(includeArchived && !archivingUnavailable ? PRODUCT_COLUMNS_ADMIN : PRODUCT_COLUMNS)
       .order('created_at', { ascending: false })
 
     // The admin list asks for the column by name and the public list filters

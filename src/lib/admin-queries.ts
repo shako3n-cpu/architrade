@@ -91,6 +91,10 @@ export async function updateProduct(id: string, draft: ProductDraft): Promise<Pr
  * The dashboard hides this button from operators, but that is only politeness.
  * The delete policy in supabase-rbac.sql is what refuses it, and it refuses it
  * for a hand-written request just the same.
+ *
+ * Archiving is the better route even for an admin: it is reversible for thirty
+ * days, and when the thirty days are up the purge takes the photographs with
+ * it — which this does not.
  */
 export async function deleteProduct(id: string): Promise<void> {
   const { error } = await getSupabase().from('products').delete().eq('id', id)
@@ -103,6 +107,11 @@ export async function deleteProduct(id: string): Promise<void> {
  * This is what an operator gets instead of a delete, and what an admin should
  * reach for first. Everything is kept: the row, the photographs, the text. The
  * piece simply stops being returned to the public site's queries.
+ *
+ * `deleted_at` is deliberately NOT sent from here. A trigger sets it — see
+ * supabase-retention.sql — so that the timestamp is right whichever way the
+ * row was archived, including from the SQL editor. Thirty days after it is
+ * stamped the piece is deleted for good, photographs included.
  */
 export async function archiveProduct(id: string): Promise<void> {
   const { error } = await getSupabase()
@@ -119,6 +128,9 @@ export async function archiveProduct(id: string): Promise<void> {
  * Enforced in the database rather than here: an operator's update policy can
  * only see rows where `is_archived = false`, so an archived row is not visible
  * to their UPDATE at all and this call is refused.
+ *
+ * The same trigger clears `deleted_at`, so restoring stops the thirty day
+ * clock as one change rather than two.
  */
 export async function restoreProduct(id: string): Promise<void> {
   const { error } = await getSupabase()

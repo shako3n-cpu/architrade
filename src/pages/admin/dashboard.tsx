@@ -14,6 +14,7 @@ import { QueryState } from '@/components/ui/query-state'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ProductFormModal } from '@/components/admin/product-form-modal'
+import { RETENTION_DAYS, daysUntilPurge } from '@/lib/retention'
 import { cn } from '@/lib/utils'
 
 /**
@@ -34,6 +35,10 @@ export function AdminDashboard() {
 
   const [query, setQuery] = useState('')
   const [categoryId, setCategoryId] = useState('')
+  // Which of the two lists is on screen. The archive is a separate view rather
+  // than a badge in a mixed list, because the two are read for different
+  // reasons: one is the catalogue, the other is a waiting room with a clock.
+  const [status, setStatus] = useState<ProductStatus>('live')
   const [editing, setEditing] = useState<Product | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -70,6 +75,8 @@ export function AdminDashboard() {
             onQuery={setQuery}
             categoryId={categoryId}
             onCategoryId={setCategoryId}
+            status={status}
+            onStatus={setStatus}
             onEdit={openEdit}
             onChanged={catalogue.retry}
             lang={i18n.language}
@@ -96,6 +103,8 @@ function ProductTable({
   onQuery,
   categoryId,
   onCategoryId,
+  status,
+  onStatus,
   onEdit,
   onChanged,
   lang,
@@ -107,6 +116,8 @@ function ProductTable({
   onQuery: (value: string) => void
   categoryId: string
   onCategoryId: (value: string) => void
+  status: ProductStatus
+  onStatus: (value: ProductStatus) => void
   onEdit: (product: Product) => void
   onChanged: () => void
   lang: string
@@ -134,13 +145,24 @@ function ProductTable({
     [categories],
   )
 
+  // Split first, filter second, so the tab counts describe the whole
+  // catalogue rather than whatever the search box currently matches.
+  const [liveOnes, archivedOnes] = useMemo(() => {
+    const live: Product[] = []
+    const archived: Product[] = []
+    for (const product of products) (product.is_archived ? archived : live).push(product)
+    return [live, archived]
+  }, [products])
+
+  const inTab = status === 'archived' ? archivedOnes : liveOnes
+
   const visible = useMemo(() => {
     // Matching on BOTH titles regardless of the interface language: a manager
     // typing a Georgian name should find the piece even with the dashboard in
     // English, and the other way round.
     const needle = query.trim().toLowerCase()
 
-    return products.filter((product) => {
+    return inTab.filter((product) => {
       if (categoryId && product.category_id !== categoryId) return false
       if (!needle) return true
       return (
@@ -148,7 +170,7 @@ function ProductTable({
         product.title_en.toLowerCase().includes(needle)
       )
     })
-  }, [products, query, categoryId])
+  }, [inTab, query, categoryId])
 
   /**
    * One path for all three actions, because all three fail identically: a
@@ -181,7 +203,22 @@ function ProductTable({
 
   return (
     <>
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex border border-hairline" role="group">
+        <StatusTab
+          label={t('admin.tabLive')}
+          count={liveOnes.length}
+          active={status === 'live'}
+          onClick={() => onStatus('live')}
+        />
+        <StatusTab
+          label={t('admin.tabArchived')}
+          count={archivedOnes.length}
+          active={status === 'archived'}
+          onClick={() => onStatus('archived')}
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <Search
             aria-hidden="true"
@@ -212,7 +249,7 @@ function ProductTable({
         </select>
 
         <p className="text-xs text-muted">
-          {t('admin.showing', { shown: visible.length, total: products.length })}
+          {t('admin.showing', { shown: visible.length, total: inTab.length })}
         </p>
       </div>
 
@@ -224,7 +261,11 @@ function ProductTable({
 
       {visible.length === 0 ? (
         <p className="mt-10 border-t border-b border-hairline py-16 text-center text-sm text-muted">
-          {products.length === 0 ? t('admin.noProducts') : t('admin.noMatches')}
+          {inTab.length > 0
+            ? t('admin.noMatches')
+            : status === 'archived'
+              ? t('admin.noArchived', { days: RETENTION_DAYS })
+              : t('admin.noProducts')}
         </p>
       ) : (
         // Scrolls inside itself on a narrow screen rather than pushing the
@@ -283,6 +324,7 @@ function ProductTable({
                             {t('admin.archived')}
                           </span>
                         )}
+                        <PurgeNotice deletedAt={product.deleted_at} />
                       </span>
                     </td>
 
@@ -358,6 +400,7 @@ function ProductTable({
           pending
             ? t(pending.kind === 'delete' ? 'admin.confirmDelete' : 'admin.confirmArchive', {
                 name: productName(pending.product),
+                days: RETENTION_DAYS,
               })
             : ''
         }
@@ -373,6 +416,56 @@ function ProductTable({
         }}
       />
     </>
+  )
+}
+
+/** Which of the two lists the dashboard is showing. */
+type ProductStatus = 'live' | 'archived'
+
+function StatusTab({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string
+  count: number
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'min-h-11 px-5 text-[11px] tracking-[0.16em] uppercase transition-colors duration-300',
+        active ? 'bg-surface text-ink' : 'text-muted hover:text-brass',
+      )}
+    >
+      {label}
+      <span className="ml-2 text-[10px] text-muted">{count}</span>
+    </button>
+  )
+}
+
+/**
+ * How long an archived piece has left.
+ *
+ * Renders nothing at all when there is no date to count from — which is both a
+ * live piece and a database that has not had supabase-retention.sql run
+ * against it yet. Neither has anything true to say here, and a wrong number
+ * about a permanent deletion is worse than no number.
+ */
+function PurgeNotice({ deletedAt }: { deletedAt?: string | null }) {
+  const { t } = useTranslation()
+  const days = daysUntilPurge(deletedAt)
+  if (days === null) return null
+
+  return (
+    <span className="text-[9px] tracking-[0.14em] text-muted uppercase">
+      {days === 0 ? t('admin.purgeToday') : t('admin.purgeIn', { count: days })}
+    </span>
   )
 }
 

@@ -258,7 +258,7 @@
     "archive": "Archive",
     "archived": "Archived",
     "restore": "Restore",
-    "confirmArchive": "Archive {{name}}? It comes off the website straight away and stays here, so it can be put back.",
+    "confirmArchive": "Archive {{name}}? It comes off the website straight away and waits here for {{days}} days, so it can be put back. After that it is deleted for good, photographs included.",
     "adminsOnlyTitle": "Administrators only",
     "adminsOnlyBody": "Managing accounts is limited to administrators. You can still add, edit and archive pieces in the catalog.",
     "staffTitle": "Users",
@@ -272,6 +272,12 @@
     "staffCreated": "The account was created and added to the list below.",
     "staffFunctionMissing": "Creating accounts is not switched on for this project yet. The site administrator needs to deploy the admin-users function — see supabase-rbac.sql. Until then, create the account in the Supabase dashboard under Authentication, then add it here.",
     "staffRemove": "Remove from the list",
-    "staffConfirmRemove": "Remove {{name}}? They lose access to the dashboard immediately. Their sign-in account is not deleted."
+    "staffConfirmRemove": "Remove {{name}}? They lose access to the dashboard immediately. Their sign-in account is not deleted.",
+    "tabLive": "On the site",
+    "tabArchived": "Archive",
+    "purgeIn_one": "Deleted for good in {{count}} day",
+    "purgeIn_other": "Deleted for good in {{count}} days",
+    "purgeToday": "Deleted for good tonight",
+    "noArchived": "Nothing is archived. A piece taken off the site waits here for {{days}} days, and can be put back at any time in that window."
   }
 }

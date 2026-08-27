@@ -119,6 +119,17 @@ export interface Product {
   is_archived?: boolean | null
 
   /**
+   * When the piece was archived, as an ISO timestamp. Null — or absent — means
+   * it is live.
+   *
+   * The database sets this itself, in step with `is_archived`, and thirty days
+   * later the piece is deleted for real. See supabase-retention.sql. Nothing
+   * in the app writes it; the dashboard only reads it, to say how long an
+   * archived piece has left.
+   */
+  deleted_at?: string | null
+
+  /**
    * Internal reference price, entered in the admin dashboard.
    *
    * OPTIONAL, and it stays optional: the column is added by
