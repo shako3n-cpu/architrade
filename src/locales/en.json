@@ -246,6 +246,11 @@
     "errorNotPermitted": "This account is not allowed to make changes. Ask the site administrator to add it to the administrator list.",
     "errorDuplicate": "A product with this name already exists. Try a slightly different name.",
     "errorDuplicateCategory": "A category with this name already exists.",
-    "errorUnknown": "Something went wrong. {{message}}"
+    "errorUnknown": "Something went wrong. {{message}}",
+    "idleTitle": "Session ending",
+    "idleBody_one": "Nothing has happened here for a while. You will be signed out in {{count}} second.",
+    "idleBody_other": "Nothing has happened here for a while. You will be signed out in {{count}} seconds.",
+    "idleStay": "Stay signed in",
+    "idleExpired": "Session expired due to inactivity. Please sign in again."
   }
 }

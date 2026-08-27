@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -18,9 +19,21 @@ import { cn } from '@/lib/utils'
  * the wrong person out of the data.
  */
 export function RequireAdmin({ children }: { children: ReactNode }) {
-  const { status } = useAuth()
+  const { status, revalidate } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
+
+  /*
+   * Every admin route change re-checks the token with Supabase before the
+   * screen is trusted. A session can die between one click and the next —
+   * revoked in the dashboard, signed out in another tab, or simply run out —
+   * and without this the dashboard would keep drawing rows from a cache while
+   * every save came back refused. Cheap: supabase-js answers from memory
+   * unless the token actually needs refreshing.
+   */
+  useEffect(() => {
+    void revalidate()
+  }, [location.pathname, revalidate])
 
   // Restoring the session is asynchronous. Redirecting during this moment
   // would throw a signed-in manager back to the login screen on every refresh.

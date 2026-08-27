@@ -5,6 +5,7 @@ import type { TFunction } from 'i18next'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { SupabaseConfigError } from '@/lib/supabase'
+import { takeSignOutReason } from '@/lib/auth'
 import { SITE_NAME } from '@/config/site'
 import { Button } from '@/components/ui/button'
 import { TextField } from '@/components/admin/field'
@@ -27,6 +28,15 @@ export function AdminLogin() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  /*
+   * Why this screen appeared, if the idle timeout is the answer. Read once on
+   * mount and cleared in the same breath, so it explains the redirect that
+   * just happened and does not reappear on the next visit. A lazy initialiser
+   * rather than an effect: reading it during the first render means the
+   * message is there in the first paint, with no flash of a plain form.
+   */
+  const [timedOut] = useState(() => takeSignOutReason() === 'idle')
 
   // Already signed in — go where they were headed, or to the dashboard.
   if (status === 'ready') {
@@ -60,7 +70,19 @@ export function AdminLogin() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="mt-10 space-y-5 border border-hairline bg-surface p-8">
+        {timedOut && (
+          <p
+            role="status"
+            className="mt-8 border border-hairline bg-surface p-4 text-center text-sm leading-relaxed text-ink"
+          >
+            {t('admin.idleExpired')}
+          </p>
+        )}
+
+        <form
+          onSubmit={submit}
+          className={`${timedOut ? 'mt-6' : 'mt-10'} space-y-5 border border-hairline bg-surface p-8`}
+        >
           <TextField
             label={t('admin.email')}
             type="email"

@@ -1,7 +1,15 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { getSession, isAdmin, onAuthChange, signIn, signOut } from '@/lib/auth'
+import {
+  clearAuthStorage,
+  getSession,
+  hasValidSession,
+  isAdmin,
+  onAuthChange,
+  signIn,
+  signOut,
+} from '@/lib/auth'
 
 /**
  * ============================================================================
@@ -32,6 +40,11 @@ type AuthValue = {
   email: string | null
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  /**
+   * Re-checks the token against Supabase and drops the session if it is gone.
+   * Called on every admin route change — see RequireAdmin.
+   */
+  revalidate: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
@@ -107,14 +120,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut()
   }, [])
 
+  /*
+   * The session is read through a ref rather than the closure so that this
+   * callback keeps one identity for the life of the provider. RequireAdmin
+   * lists it as an effect dependency; a new function on every session change
+   * would make that effect fire for reasons that have nothing to do with
+   * navigating.
+   */
+  const sessionRef = useRef<Session | null>(null)
+  useEffect(() => {
+    sessionRef.current = session
+  }, [session])
+
+  const revalidate = useCallback(async () => {
+    // Nobody is signed in, so there is nothing to verify and the login screen
+    // is already where they are.
+    if (!sessionRef.current) return
+
+    if (await hasValidSession()) return
+
+    // The token is past saving — revoked in the dashboard, signed out in
+    // another tab, or a refresh token that has run out. Drop it locally and
+    // let the guard send them to the login screen. No network sign-out call:
+    // the credential it would present is the dead one.
+    clearAuthStorage()
+    setSession(null)
+  }, [])
+
   const value = useMemo(
     () => ({
       status,
       email: session?.user.email ?? null,
       signIn: doSignIn,
       signOut: doSignOut,
+      revalidate,
     }),
-    [status, session, doSignIn, doSignOut],
+    [status, session, doSignIn, doSignOut, revalidate],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

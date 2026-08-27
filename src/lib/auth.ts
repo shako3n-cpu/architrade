@@ -39,9 +39,48 @@ export async function signIn(email: string, password: string): Promise<Session> 
   return data.session
 }
 
+/**
+ * Signs out everywhere, then scrubs the tokens out of browser storage by hand.
+ *
+ * supabase-js removes its own key already, so the sweep is belt and braces —
+ * but it is the cheap half of the pair. A signOut that fails at the network
+ * (revoking the refresh token needs a round trip) would otherwise leave a
+ * usable access token sitting in localStorage for up to an hour, which is
+ * exactly the case the idle timeout exists to prevent. So the sweep runs even
+ * when the call throws, and the error is reported afterwards.
+ */
 export async function signOut(): Promise<void> {
-  const { error } = await getSupabase().auth.signOut()
-  if (error) throw error
+  try {
+    // 'global' revokes the refresh token for every session on this account,
+    // not only this browser. It is the default, said out loud because the
+    // weaker scopes are a security decision nobody should make by accident.
+    const { error } = await getSupabase().auth.signOut({ scope: 'global' })
+    if (error) throw error
+  } finally {
+    clearAuthStorage()
+  }
+}
+
+/**
+ * Deletes every Supabase auth token from local and session storage.
+ *
+ * Matches supabase-js's own key shape — `sb-<project-ref>-auth-token`, plus
+ * the numbered chunks a large token is split across — so the project's other
+ * stored values (the language preference, for one) are left alone. Anything
+ * that throws is ignored: private browsing modes make storage unreadable, and
+ * a browser that will not let us store a token has not stored one either.
+ */
+export function clearAuthStorage(): void {
+  for (const store of [globalThis.localStorage, globalThis.sessionStorage]) {
+    try {
+      const doomed = Object.keys(store).filter(
+        (key) => key.startsWith('sb-') && key.includes('-auth-token'),
+      )
+      for (const key of doomed) store.removeItem(key)
+    } catch {
+      /* storage unavailable — nothing was written there to begin with */
+    }
+  }
 }
 
 /** The session restored from storage on a page load, or null. */
@@ -81,4 +120,71 @@ export async function isAdmin(userId: string): Promise<boolean> {
 
   if (error) return false
   return data !== null
+}
+
+/**
+ * Whether there is still a live, unexpired session.
+ *
+ * Called on every admin route change. `getSession()` refreshes an expired
+ * token on its own if the refresh token is still good, so a false answer
+ * means the session is genuinely gone — revoked in the dashboard, signed out
+ * in another tab, or a refresh token past its life — and not merely stale.
+ *
+ * The expiry is checked a minute early. A token that dies in forty seconds
+ * would let the manager start filling in a form only to have the save
+ * rejected, and sending them to the login screen now is kinder than losing
+ * their work then.
+ */
+const EXPIRY_MARGIN_SECONDS = 60
+
+export async function hasValidSession(): Promise<boolean> {
+  let session: Session | null
+  try {
+    session = await getSession()
+  } catch {
+    // Network failure, or no .env. Not evidence that the session is invalid,
+    // so the manager keeps their screen rather than being thrown out because
+    // the wifi dropped.
+    return true
+  }
+
+  if (!session) return false
+  if (!session.expires_at) return true
+
+  return session.expires_at - EXPIRY_MARGIN_SECONDS > Date.now() / 1000
+}
+
+/* -------------------------------------------------------------------------- */
+/* Why the login screen is showing                                            */
+/* -------------------------------------------------------------------------- */
+
+const REASON_KEY = 'archtrade.signOutReason'
+
+/** The only reason worth explaining. Everything else is an ordinary sign-out. */
+export type SignOutReason = 'idle'
+
+/**
+ * Left behind by the idle timeout so the login screen can say why it appeared,
+ * instead of looking like the session vanished for no reason.
+ *
+ * sessionStorage, not localStorage: the explanation belongs to this tab and
+ * this visit. It should not still be waiting tomorrow morning.
+ */
+export function setSignOutReason(reason: SignOutReason): void {
+  try {
+    sessionStorage.setItem(REASON_KEY, reason)
+  } catch {
+    /* storage blocked — the manager sees a plain login screen instead */
+  }
+}
+
+/** Reads the reason and removes it, so it is shown exactly once. */
+export function takeSignOutReason(): SignOutReason | null {
+  try {
+    const reason = sessionStorage.getItem(REASON_KEY)
+    sessionStorage.removeItem(REASON_KEY)
+    return reason === 'idle' ? reason : null
+  } catch {
+    return null
+  }
 }

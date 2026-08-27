@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { AuthProvider } from '@/hooks/use-auth'
+import { SessionTimeout } from '@/components/admin/session-timeout'
 
 /**
  * The parent route for everything under /admin, including the login screen.
@@ -21,6 +22,11 @@ export function AdminLayout() {
       <div className="min-h-dvh bg-background">
         <Outlet />
       </div>
+
+      {/* Inside the provider, outside the routed screens: the idle clock must
+          survive moving between the dashboard and the categories page, and
+          restarting it on every navigation would mean it never ran out. */}
+      <SessionTimeout />
     </AuthProvider>
   )
 }
