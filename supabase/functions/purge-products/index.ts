@@ -109,7 +109,11 @@ Deno.serve(async (request: Request) => {
 
   const service = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    // SERVICE_ROLE_KEY first, SUPABASE_SERVICE_ROLE_KEY as the fallback, the
+    // same way admin-users reads it. Supabase injects the prefixed one into
+    // deployed functions, but the SUPABASE_ prefix is reserved and cannot be
+    // set by hand — so a key supplied by the project has to use the other name.
+    Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
