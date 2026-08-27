@@ -48,13 +48,50 @@ function objectName(url: string): string {
   return at === -1 ? '' : withoutQuery.slice(at + PUBLIC_PREFIX.length)
 }
 
+/*
+ * The headers supabase-js actually puts on the request. `authorization` and
+ * `content-type` are the obvious two; `x-client-info` and `apikey` are added
+ * by the library itself, and leaving them out of this list is what makes the
+ * browser fail the preflight and the caller see "Failed to send a request to
+ * the Edge Function" — an error that says nothing about headers and sends you
+ * looking at the network, the deployment and the token instead.
+ */
+const ALLOWED_HEADERS = 'authorization, x-client-info, apikey, content-type'
+
 function cors(origin: string | null) {
   return {
+    // Echoing the caller's origin rather than '*' keeps the response usable
+    // from both the admin subdomain and localhost without opening it to every
+    // site on the internet.
     'Access-Control-Allow-Origin': origin ?? '*',
-    'Access-Control-Allow-Headers': 'authorization, content-type',
+    'Access-Control-Allow-Headers': ALLOWED_HEADERS,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     Vary: 'Origin',
   }
+}
+
+/**
+ * The answer to a preflight.
+ *
+ * It agrees to whatever headers the browser asked for, falling back to the
+ * list above when it asked for none. That is not a hole: allow-headers decides
+ * which headers the browser may SEND, and nothing is trusted for being sent —
+ * the caller is identified from their token and their role is read from the
+ * `admins` table. Agreeing broadly here means the day supabase-js adds another
+ * header, this function does not break with an error that points nowhere.
+ */
+function preflight(request: Request) {
+  const origin = request.headers.get('origin')
+
+  return new Response(null, {
+    headers: {
+      ...cors(origin),
+      'Access-Control-Allow-Headers':
+        request.headers.get('access-control-request-headers') ?? ALLOWED_HEADERS,
+      // A day, so the browser stops asking before every single call.
+      'Access-Control-Max-Age': '86400',
+    },
+  })
 }
 
 function json(body: unknown, status: number, origin: string | null) {
@@ -67,7 +104,7 @@ function json(body: unknown, status: number, origin: string | null) {
 Deno.serve(async (request: Request) => {
   const origin = request.headers.get('origin')
 
-  if (request.method === 'OPTIONS') return new Response(null, { headers: cors(origin) })
+  if (request.method === 'OPTIONS') return preflight(request)
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin)
 
   const service = createClient(
