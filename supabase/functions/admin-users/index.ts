@@ -29,8 +29,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
  *   supabase functions deploy admin-users
  *
  *   SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided to deployed
- *   functions automatically. Do not set them by hand and do not put either in
- *   the project's .env.
+ *   functions automatically, and neither belongs in the project's .env.
+ *
+ *   If you ever have to supply the key yourself, set it as SERVICE_ROLE_KEY —
+ *   the SUPABASE_ prefix is reserved and secrets cannot be set under it:
+ *
+ *     supabase secrets set SERVICE_ROLE_KEY=<the key>
  * ============================================================================
  */
 
@@ -66,7 +70,12 @@ Deno.serve(async (request: Request) => {
 
   const service = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    // SERVICE_ROLE_KEY first, SUPABASE_SERVICE_ROLE_KEY as the fallback.
+    // Supabase injects the SUPABASE_ prefixed one into deployed functions, but
+    // the prefix is reserved and cannot be set by hand — so a project that
+    // needs to supply the key itself has to use the unprefixed name. Reading
+    // both means either arrangement works without editing this file.
+    Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
