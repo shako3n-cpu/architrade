@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SupabaseConfigError } from '@/lib/supabase'
+import { SUPABASE_CONFIG_BODY_KEY, SupabaseConfigError } from '@/lib/supabase'
 import type { AsyncResult } from '@/hooks/use-async'
 import { Button } from './button'
 import { cn } from '@/lib/utils'
@@ -46,14 +46,14 @@ export function QueryState<T>({
   }
 
   if (status === 'error') {
-    // A missing .env is a developer mistake, not a network problem — saying so
-    // saves someone half an hour of checking their wifi.
+    // Missing keys are a configuration mistake, not a network problem — saying
+    // so saves someone half an hour of checking their wifi.
     const misconfigured = error instanceof SupabaseConfigError
 
     return (
       <Message
         title={t(misconfigured ? 'state.notConfiguredTitle' : 'state.errorTitle')}
-        body={t(misconfigured ? 'state.notConfiguredBody' : 'state.errorBody')}
+        body={t(misconfigured ? SUPABASE_CONFIG_BODY_KEY : 'state.errorBody')}
         detail={error?.message}
         action={
           misconfigured ? null : (

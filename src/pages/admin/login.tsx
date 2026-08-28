@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
-import { SupabaseConfigError } from '@/lib/supabase'
+import { SUPABASE_CONFIG_BODY_KEY, SupabaseConfigError } from '@/lib/supabase'
 import { takeSignOutReason } from '@/lib/auth'
 import { SITE_NAME } from '@/config/site'
 import { Button } from '@/components/ui/button'
@@ -130,7 +130,7 @@ export function AdminLogin() {
  * this keeps them together too, rather than trying to guess them apart.
  */
 function describe(cause: unknown, t: TFunction): string {
-  if (cause instanceof SupabaseConfigError) return t('state.notConfiguredBody')
+  if (cause instanceof SupabaseConfigError) return t(SUPABASE_CONFIG_BODY_KEY)
 
   const message = cause instanceof Error ? cause.message : String(cause)
 

@@ -166,7 +166,8 @@
     "emptyTitle": "ჯერ არაფერია",
     "emptyBody": "ამ განყოფილებაში პროდუქტები ჯერ არ დამატებულა.",
     "notConfiguredTitle": "ბაზა არ არის კონფიგურირებული",
-    "notConfiguredBody": "შექმენით .env ფაილი VITE_SUPABASE_URL და VITE_SUPABASE_ANON_KEY მნიშვნელობებით, შემდეგ გადატვირთეთ სერვერი."
+    "notConfiguredBody": "შექმენით .env ფაილი VITE_SUPABASE_URL და VITE_SUPABASE_ANON_KEY მნიშვნელობებით, შემდეგ გადატვირთეთ სერვერი.",
+    "notConfiguredDeployed": "ეს ვერსია Supabase-ის გასაღებების გარეშე აიწყო. Vercel-ში დაამატეთ VITE_SUPABASE_URL და VITE_SUPABASE_ANON_KEY განყოფილებაში Settings → Environment Variables, მონიშნეთ გარემო Preview და ხელახლა გაუშვით დეპლოი — ცვლადები აწყობის დროს იკითხება და არა გვერდის ჩატვირთვისას."
   },
   "admin": {
     "badge": "ადმინი",

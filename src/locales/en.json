@@ -166,7 +166,8 @@
     "emptyTitle": "Nothing here yet",
     "emptyBody": "No products have been added to this section yet.",
     "notConfiguredTitle": "The database is not configured",
-    "notConfiguredBody": "Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server."
+    "notConfiguredBody": "Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.",
+    "notConfiguredDeployed": "This deployment was built without the Supabase keys. In Vercel, add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY under Settings → Environment Variables with the Preview environment ticked, then redeploy — variables are read at build time, not at page load."
   },
   "admin": {
     "badge": "Admin",

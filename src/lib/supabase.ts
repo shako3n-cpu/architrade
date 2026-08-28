@@ -55,11 +55,29 @@ export class SupabaseConfigError extends Error {
 
   constructor() {
     super(
-      'Supabase is not configured. Copy .env.example to .env, fill in ' +
-        'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.',
+      import.meta.env.PROD
+        ? 'Supabase is not configured. This build was made without ' +
+          'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. On Vercel they must ' +
+          'be set for the environment being deployed — Preview and Production ' +
+          'are separate lists — and the deployment rebuilt afterwards.'
+        : 'Supabase is not configured. Copy .env.example to .env, fill in ' +
+          'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.',
     )
   }
 }
+
+/**
+ * Which explanation to show a human when the keys are missing.
+ *
+ * The advice is not the same in both places and the wrong one wastes real
+ * time: on a laptop the fix is a .env file, on a deployed preview there is no
+ * .env and no dev server to restart — the fix is in the host's environment
+ * variables. Vite folds `import.meta.env.PROD` to a literal at build time, so
+ * only one of these strings survives into the bundle.
+ */
+export const SUPABASE_CONFIG_BODY_KEY = import.meta.env.PROD
+  ? 'state.notConfiguredDeployed'
+  : 'state.notConfiguredBody'
 
 let client: SupabaseClient | null = null
 
