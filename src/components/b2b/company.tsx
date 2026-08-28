@@ -15,10 +15,10 @@ import { useLanguage } from '@/hooks/use-language'
  *   it; used twice it would just be a second font.
  *
  * THE NUMBERS ARE REAL
- *   Listen, plan, construct, deliver is a sequence — you cannot construct
- *   before you plan — so numbering it encodes something true. Numbering a set
- *   of features that happen in no order would be decoration, and is exactly
- *   what this avoids elsewhere on the page.
+ *   Brief, specify, supply, install is a sequence — you cannot ship what has
+ *   not been specified — so numbering it encodes something true. Numbering a
+ *   set of features that happen in no order would be decoration, and is
+ *   exactly what this avoids elsewhere on the page.
  */
 export function B2bCompany() {
   const { t } = useLanguage()

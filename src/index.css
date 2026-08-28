@@ -186,6 +186,34 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Headings, eyebrows and the small caps labels are read, never typed into
+     and almost never copied. Left alone they take the I-beam cursor, which
+     on a display line reads as a text caret sitting in the title — the thing
+     that made the navigation and the hero look editable. Default arrow, no
+     selection, same as the controls above. Body copy is untouched: addresses,
+     product names and specifications still select and copy normally. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .at-label {
+    cursor: default;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* The filter and sector tabs wear .at-label themselves, and a class beats
+     the bare `button` selector above — so hand the pointer back to anything
+     that is actually a control. */
+  a.at-label,
+  button.at-label,
+  [role='button'].at-label,
+  [role='tab'].at-label {
+    cursor: pointer;
+  }
+
   /* A disabled control is not pressable, and should not pretend to be. */
   button:disabled,
   [role='button'][aria-disabled='true'] {

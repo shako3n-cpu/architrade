@@ -2,9 +2,15 @@
  * ============================================================================
  * THE COMPANY, AS DATA
  * ----------------------------------------------------------------------------
- * What archtrade does, who it represents, and what it has built. Everything
- * here came off archtrade.ge — the services, the brand roster and the project
- * list are the real ones, not placeholders.
+ * archtrade is a contract furniture house: it specifies, supplies and installs
+ * furniture, lighting and acoustics for workplaces, hotels and homes. It is
+ * not a general contractor, and nothing in this file should read like one.
+ *
+ * The partner roster, the project list and the client list are the real ones,
+ * read off archtrade.ge. What has been narrowed is the SCOPE: the flooring
+ * and building-envelope partners the company also carries are kept at the
+ * bottom of this file, out of the site, because the site is now about
+ * furniture only. Nothing was thrown away — see LINES WE NO LONGER SHOW.
  *
  * WHAT IS AND IS NOT A TRANSLATABLE STRING
  *   Proper nouns are DATA and live here: "Herman Miller" and "Bank of Georgia
@@ -12,9 +18,15 @@
  *   through the locale files would mean maintaining two identical copies of
  *   sixty names.
  *
- *   Everything a reader could call interface text — service names, the sector
- *   headings, the discipline filters, city names — is a locale KEY resolved at
+ *   Everything a reader could call interface text — service names, sector
+ *   headings, discipline badges, city names — is a locale KEY resolved at
  *   render. Cities earn their place there because Tbilisi is თბილისი.
+ *
+ * ABOUT THE PHOTOGRAPHS
+ *   Every URL in this file was opened and looked at beside the thing it is
+ *   attached to. A lighting partner has a photograph of lighting on it; an
+ *   acoustics partner has a photograph of a booth. That check is the whole
+ *   reason this file reads like an inventory.
  * ============================================================================
  */
 
@@ -22,135 +34,295 @@
 /* Services                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export type ServiceId =
-  | 'construction'
-  | 'fitOut'
-  | 'envelope'
-  | 'trading'
+export type ServiceId = 'workplace' | 'fitOut' | 'lighting' | 'acoustics'
 
 export interface Service {
   id: ServiceId
-  /** Architectural photography, treated with a graphite scrim behind text. */
+  /** Interior photography, treated with a graphite scrim behind text. */
   image: string
 }
 
 export const SERVICES: readonly Service[] = [
   {
-    id: 'construction',
-    image: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1400&q=80',
+    id: 'workplace',
+    image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1400&q=80',
   },
   {
     id: 'fitOut',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1682617875405-cf931122be0a?w=1400&q=80',
   },
   {
-    id: 'envelope',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=80',
+    id: 'lighting',
+    image: 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?w=1400&q=80',
   },
   {
-    id: 'trading',
-    image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80',
+    id: 'acoustics',
+    image: 'https://images.unsplash.com/photo-1594235045856-a6315f0c4083?w=1400&q=80',
   },
 ] as const
 
 /* -------------------------------------------------------------------------- */
-/* How a project runs                                                         */
+/* How a supply job runs                                                      */
 /* -------------------------------------------------------------------------- */
 
 /**
  * Four steps, and they are NUMBERED because they genuinely happen in this
- * order — you cannot construct before you plan. Numbering that encodes nothing
- * is decoration; this numbering is the content.
+ * order — you cannot ship what has not been specified. Numbering that encodes
+ * nothing is decoration; this numbering is the content.
  */
-export const PROCESS_STEPS = ['listen', 'plan', 'construct', 'deliver'] as const
+export const PROCESS_STEPS = ['brief', 'specify', 'supply', 'install'] as const
 
 export type ProcessStep = (typeof PROCESS_STEPS)[number]
 
 /* -------------------------------------------------------------------------- */
-/* Solution partners                                                          */
+/* Partner houses                                                             */
 /* -------------------------------------------------------------------------- */
 
-export type Discipline = 'furniture' | 'lighting' | 'flooring' | 'facades' | 'acoustics'
+export type Discipline =
+  | 'office'
+  | 'hospitality'
+  | 'residential'
+  | 'lighting'
+  | 'outdoor'
+  | 'acoustics'
 
 export const DISCIPLINES: readonly Discipline[] = [
-  'furniture',
+  'office',
+  'hospitality',
+  'residential',
   'lighting',
-  'flooring',
-  'facades',
+  'outdoor',
   'acoustics',
 ] as const
 
 export interface Brand {
   name: string
+  /**
+   * One discipline per house, deliberately. Most of these manufacturers make
+   * more than one kind of thing, but a card carries one badge and one
+   * photograph, and a badge that hedges tells a specifier nothing. The
+   * discipline recorded here is the one archtrade leads with.
+   */
   discipline: Discipline
   /** Where the house is from. Shown small, under the name. */
   country: string
+  /** A room this house's work belongs in. Not their photography. */
+  image: string
+  /**
+   * A licensed logo file, if the office has one. When set, the card shows the
+   * mark instead of the wordmark. Left unset everywhere on purpose — see the
+   * note on CLIENTS below; the reasoning is identical.
+   */
+  logo?: string
 }
 
-/**
- * The real roster, read off the partner walls on archtrade.ge.
- *
- * No logo files. Sixty logos at sixty different weights and crops is the mess
- * every partner wall becomes, and licensing somebody else's mark to decorate a
- * page is a conversation nobody wants. Set as type, at one size, the wall
- * reads as an index — which is what it is.
- */
+const IMG = (id: string) => `https://images.unsplash.com/${id}?w=1200&q=80`
+
 export const BRANDS: readonly Brand[] = [
-  // Furniture
-  { name: 'Herman Miller', discipline: 'furniture', country: 'US' },
-  { name: 'Haworth', discipline: 'furniture', country: 'US' },
-  { name: 'Fritz Hansen', discipline: 'furniture', country: 'DK' },
-  { name: 'Fredericia', discipline: 'furniture', country: 'DK' },
-  { name: 'Muuto', discipline: 'furniture', country: 'DK' },
-  { name: 'Menu', discipline: 'furniture', country: 'DK' },
-  { name: 'Andreu World', discipline: 'furniture', country: 'ES' },
-  { name: 'Sancal', discipline: 'furniture', country: 'ES' },
-  { name: 'Barcelona Design', discipline: 'furniture', country: 'ES' },
-  { name: 'Magis', discipline: 'furniture', country: 'IT' },
-  { name: 'Pedrali', discipline: 'furniture', country: 'IT' },
-  { name: 'La Cividina', discipline: 'furniture', country: 'IT' },
-  { name: 'Frezza', discipline: 'furniture', country: 'IT' },
-  { name: 'DVO', discipline: 'furniture', country: 'IT' },
-  { name: 'Artifort', discipline: 'furniture', country: 'NL' },
-  { name: 'Enea', discipline: 'furniture', country: 'ES' },
-  { name: 'Figueras', discipline: 'furniture', country: 'ES' },
-  { name: 'Fursys', discipline: 'furniture', country: 'KR' },
+  // ------------------------------------------------------------- Office
+  {
+    name: 'Herman Miller',
+    discipline: 'office',
+    country: 'US',
+    image: IMG('photo-1688578735352-9a6f2ac3b70a'),
+  },
+  {
+    name: 'Haworth',
+    discipline: 'office',
+    country: 'US',
+    image: IMG('photo-1580480055273-228ff5388ef8'),
+  },
+  {
+    name: 'Andreu World',
+    discipline: 'office',
+    country: 'ES',
+    image: IMG('photo-1764810815228-b7f9432eec5c'),
+  },
+  {
+    name: 'Frezza',
+    discipline: 'office',
+    country: 'IT',
+    image: IMG('photo-1611269154421-4e27233ac5c7'),
+  },
+  {
+    name: 'DVO',
+    discipline: 'office',
+    country: 'IT',
+    image: IMG('photo-1577412647305-991150c7d163'),
+  },
+  {
+    name: 'Fursys',
+    discipline: 'office',
+    country: 'KR',
+    image: IMG('photo-1631193816258-28b44b21e78b'),
+  },
 
-  // Lighting
-  { name: 'Marset', discipline: 'lighting', country: 'ES' },
-  { name: 'Vibia', discipline: 'lighting', country: 'ES' },
-  { name: 'Gubi', discipline: 'lighting', country: 'DK' },
-  { name: '&Tradition', discipline: 'lighting', country: 'DK' },
-  { name: 'Zumtobel', discipline: 'lighting', country: 'AT' },
-  { name: 'Formalighting', discipline: 'lighting', country: 'IT' },
-  { name: 'Lamp83', discipline: 'lighting', country: 'TR' },
+  // -------------------------------------------------------- Hospitality
+  {
+    name: 'Fritz Hansen',
+    discipline: 'hospitality',
+    country: 'DK',
+    image: IMG('photo-1617364852223-75f57e78dc96'),
+  },
+  {
+    name: 'Artifort',
+    discipline: 'hospitality',
+    country: 'NL',
+    image: IMG('photo-1723804685588-b8a95b2044f3'),
+  },
+  {
+    name: 'La Cividina',
+    discipline: 'hospitality',
+    country: 'IT',
+    image: IMG('photo-1776362658611-2067c9ded1d1'),
+  },
+  {
+    name: 'Sancal',
+    discipline: 'hospitality',
+    country: 'ES',
+    image: IMG('photo-1616627547584-bf28cee262db'),
+  },
+  {
+    name: 'Figueras',
+    discipline: 'hospitality',
+    country: 'ES',
+    image: IMG('photo-1646215993365-125e6428e1dc'),
+  },
 
-  // Flooring
-  { name: 'Milliken', discipline: 'flooring', country: 'US' },
-  { name: 'Gerflor', discipline: 'flooring', country: 'FR' },
-  { name: 'Ege Carpets', discipline: 'flooring', country: 'DK' },
-  { name: 'Jacaranda', discipline: 'flooring', country: 'GB' },
-  { name: 'Condor', discipline: 'flooring', country: 'NL' },
-  { name: 'ntgrate', discipline: 'flooring', country: 'BE' },
+  // -------------------------------------------------------- Residential
+  {
+    name: 'Fredericia',
+    discipline: 'residential',
+    country: 'DK',
+    image: IMG('photo-1687262304525-02287047d4d6'),
+  },
+  {
+    name: 'Muuto',
+    discipline: 'residential',
+    country: 'DK',
+    image: IMG('photo-1742367539759-6e4fc2e39209'),
+  },
+  {
+    name: 'Menu',
+    discipline: 'residential',
+    country: 'DK',
+    image: IMG('photo-1567016376408-0226e4d0c1ea'),
+  },
+  {
+    name: 'Barcelona Design',
+    discipline: 'residential',
+    country: 'ES',
+    image: IMG('photo-1567016432779-094069958aa5'),
+  },
 
-  // Façades and building envelope
-  { name: 'Trespa', discipline: 'facades', country: 'NL' },
-  { name: 'NBK Keramik', discipline: 'facades', country: 'DE' },
-  { name: 'Swisspearl', discipline: 'facades', country: 'CH' },
-  { name: 'Flexbrick', discipline: 'facades', country: 'ES' },
-  { name: 'Solarlux', discipline: 'facades', country: 'DE' },
-  { name: 'Glassline', discipline: 'facades', country: 'DE' },
-  { name: 'Maars Living Walls', discipline: 'facades', country: 'NL' },
+  // ----------------------------------------------------------- Lighting
+  {
+    name: 'Marset',
+    discipline: 'lighting',
+    country: 'ES',
+    image: IMG('photo-1513506003901-1e6a229e2d15'),
+  },
+  {
+    name: 'Vibia',
+    discipline: 'lighting',
+    country: 'ES',
+    image: IMG('photo-1553797794-4c4d2c55dbfb'),
+  },
+  {
+    name: 'Gubi',
+    discipline: 'lighting',
+    country: 'DK',
+    image: IMG('photo-1592622515232-6e3e2a0d3d9a'),
+  },
+  {
+    name: '&Tradition',
+    discipline: 'lighting',
+    country: 'DK',
+    image: IMG('photo-1606170033648-5d55a3edf314'),
+  },
+  {
+    name: 'Zumtobel',
+    discipline: 'lighting',
+    country: 'AT',
+    image: IMG('photo-1497366754035-f200968a6e72'),
+  },
+  {
+    name: 'Formalighting',
+    discipline: 'lighting',
+    country: 'IT',
+    image: IMG('photo-1581784878214-8d5596b98a01'),
+  },
+  {
+    name: 'Lamp83',
+    discipline: 'lighting',
+    country: 'TR',
+    image: IMG('photo-1559924508-1461423083c5'),
+  },
 
-  // Acoustics
-  { name: 'Framery', discipline: 'acoustics', country: 'FI' },
-  { name: 'Caimi Snowsound', discipline: 'acoustics', country: 'IT' },
-  { name: 'BuzziSpace', discipline: 'acoustics', country: 'BE' },
-  { name: 'Cascando', discipline: 'acoustics', country: 'NL' },
+  // ------------------------------------------------------------ Outdoor
+  {
+    name: 'Pedrali',
+    discipline: 'outdoor',
+    country: 'IT',
+    image: IMG('photo-1762608675427-09ac2dbd1540'),
+  },
+  {
+    name: 'Magis',
+    discipline: 'outdoor',
+    country: 'IT',
+    image: IMG('photo-1758445041789-1d27c2f21a88'),
+  },
+  {
+    name: 'Enea',
+    discipline: 'outdoor',
+    country: 'ES',
+    image: IMG('photo-1765097732474-973a92d6fb4c'),
+  },
+
+  // ---------------------------------------------------------- Acoustics
+  {
+    name: 'Framery',
+    discipline: 'acoustics',
+    country: 'FI',
+    image: IMG('photo-1756480336914-c282fdc8372b'),
+  },
+  {
+    name: 'Caimi Snowsound',
+    discipline: 'acoustics',
+    country: 'IT',
+    image: IMG('photo-1773127962331-299cf7663a0b'),
+  },
+  {
+    name: 'BuzziSpace',
+    discipline: 'acoustics',
+    country: 'BE',
+    image: IMG('photo-1676477605752-224a26e6ec71'),
+  },
+  {
+    name: 'Cascando',
+    discipline: 'acoustics',
+    country: 'NL',
+    image: IMG('photo-1758800601600-f691cd1ba66d'),
+  },
 ] as const
 
+/**
+ * LINES WE NO LONGER SHOW
+ *
+ * archtrade also represents flooring and building-envelope manufacturers:
+ * Milliken, Gerflor, Ege Carpets, Jacaranda, Condor and ntgrate in flooring;
+ * Trespa, NBK Keramik, Swisspearl, Flexbrick, Solarlux, Glassline and Maars
+ * Living Walls in facades and partitions.
+ *
+ * They are real partners and they are kept here on purpose so nobody has to
+ * find them again. They are off the site because the site is a furniture
+ * house now, and a curtain-wall panel on a page about lounge seating is the
+ * thing that makes a visitor unsure what they are looking at. Moving one back
+ * is a matter of adding a discipline and pasting the row above.
+ */
+
 /* -------------------------------------------------------------------------- */
-/* Delivered projects                                                         */
+/* Furnished projects                                                         */
 /* -------------------------------------------------------------------------- */
 
 export type Sector = 'government' | 'finance' | 'hospitality' | 'enterprise'
@@ -189,7 +361,7 @@ export interface SectorGroup {
 export const PROJECTS: readonly SectorGroup[] = [
   {
     sector: 'government',
-    image: 'https://images.unsplash.com/photo-1523292562811-8fa7962a78c8?w=1400&q=80',
+    image: IMG('photo-1646215993365-125e6428e1dc'),
     projects: [
       { name: 'House of Justice', city: 'tbilisi' },
       { name: 'Ministry of Justice', city: 'tbilisi' },
@@ -204,7 +376,7 @@ export const PROJECTS: readonly SectorGroup[] = [
   },
   {
     sector: 'finance',
-    image: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1400&q=80',
+    image: IMG('photo-1771270759486-1f7703945072'),
     projects: [
       { name: 'Bank of Georgia Headquarters', city: 'tbilisi' },
       { name: 'Liberty Bank Headquarters', city: 'tbilisi' },
@@ -217,7 +389,7 @@ export const PROJECTS: readonly SectorGroup[] = [
   },
   {
     sector: 'hospitality',
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400&q=80',
+    image: IMG('photo-1759038086832-795644825e3a'),
     projects: [
       { name: 'Hilton Garden Inn', city: 'tbilisi' },
       { name: 'Hotel Moxy', city: 'tbilisi' },
@@ -232,7 +404,7 @@ export const PROJECTS: readonly SectorGroup[] = [
   },
   {
     sector: 'enterprise',
-    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80',
+    image: IMG('photo-1604328698692-f76ea9498e76'),
     projects: [
       { name: 'Booking.com', city: 'tbilisi' },
       { name: 'Deloitte', city: 'tbilisi' },

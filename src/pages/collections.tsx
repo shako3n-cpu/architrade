@@ -10,13 +10,13 @@ import { BRANDS, DISCIPLINES, type Discipline } from '@/data/company'
 import { useLanguage } from '@/hooks/use-language'
 
 /**
- * /collections — the five disciplines archtrade specifies within.
+ * /collections — the six settings archtrade furnishes.
  *
- * "Collection" on a furniture site means a designer's range. Here it means a
- * discipline: everything that goes into a floor, or an envelope, or the
- * acoustic treatment of an open plan. That is how the company's own site
- * divides its trading pages, and it is how a specifier thinks — nobody
- * procures "the Aria range", they procure flooring.
+ * "Collection" on a furniture site usually means one designer's range. Here
+ * it means a setting: everything that goes into a working floor, or a hotel
+ * lobby, or a terrace. That is how a specifier procures — nobody buys "the
+ * Aria range", they furnish an office — and it is how the trading pages on
+ * the company's own site divide.
  *
  * The manufacturer count on each row is COUNTED from the brand roster, so a
  * partner added to src/data/company.ts appears here without anyone editing
@@ -24,11 +24,12 @@ import { useLanguage } from '@/hooks/use-language'
  */
 
 const IMAGES: Record<Discipline, string> = {
-  furniture: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80',
-  lighting: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1400&q=80',
-  flooring: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80',
-  facades: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1400&q=80',
-  acoustics: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80',
+  office: 'https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=1400&q=80',
+  hospitality: 'https://images.unsplash.com/photo-1776361984994-089a9df800f6?w=1400&q=80',
+  residential: 'https://images.unsplash.com/photo-1597425842320-de0c26b33327?w=1400&q=80',
+  lighting: 'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=1400&q=80',
+  outdoor: 'https://images.unsplash.com/photo-1600210492090-a159ffa3aeaf?w=1400&q=80',
+  acoustics: 'https://images.unsplash.com/photo-1756480734230-a7680051fc26?w=1400&q=80',
 }
 
 export function Collections() {

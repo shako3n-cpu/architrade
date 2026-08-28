@@ -8,9 +8,11 @@ import { useLanguage } from '@/hooks/use-language'
 /**
  * The opening statement.
  *
- * A single architectural photograph under a flat graphite scrim — no video,
- * no gradient, no carousel. One building, held still, is the most honest thing
- * a contractor can lead with.
+ * A FURNISHED ROOM, NOT A SKYLINE
+ *   This used to be a photograph of a glass tower, which is what a general
+ *   contractor leads with. A furniture house has to show the thing it sells,
+ *   so the hero is now an interior: seating, timber and light, held still
+ *   under a flat graphite scrim. No video, no gradient, no carousel.
  *
  * THE FIGURES ARE COUNTED, NOT CLAIMED
  *   Every number in the rail below is derived from src/data/company.ts at
@@ -19,7 +21,7 @@ import { useLanguage } from '@/hooks/use-language'
  */
 
 const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=2000&q=80'
+  'https://images.unsplash.com/photo-1616611213095-58abb651f70c?w=2000&q=80'
 
 export function B2bHero() {
   const { t, localePath } = useLanguage()

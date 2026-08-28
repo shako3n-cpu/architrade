@@ -1,8 +1,9 @@
 -- ============================================================================
--- ARCHTRADE — B2B CATALOGUE SEED
+-- ARCHTRADE — CONTRACT FURNITURE SEED
 -- ----------------------------------------------------------------------------
--- Twenty-eight contract products across five new categories, drawn from the
--- houses archtrade actually represents.
+-- Thirty pieces across six new categories, drawn from the houses archtrade
+-- actually represents: office, hospitality, residential, lighting, outdoor
+-- and acoustics.
 --
 -- SAFE TO RUN, AND SAFE TO RUN TWICE
 --   Everything is `on conflict (slug) do nothing`. It ADDS; it never updates
@@ -18,10 +19,12 @@
 --   types, the admin form, the queries and a migration.
 --
 -- ABOUT THE PHOTOGRAPHS
---   Stock, and chosen by looking at each one beside the product it is
---   attached to — a lighting product has a photograph of lighting in it.
---   They are placeholders for real product photography all the same, and the
---   dashboard can replace any of them without touching this file.
+--   Every URL here was rendered in a captioned contact sheet and looked at
+--   beside the product it is attached to. A pendant has a photograph of a
+--   pendant; an acoustic pod has a photograph of a pod. They are stock, and
+--   they are placeholders for real product photography, but none of them is
+--   a picture of something else. The dashboard can replace any of them
+--   without touching this file.
 --
 -- PRICES ARE NULL, DELIBERATELY. This site shows "price on request" and has no
 -- cart. Nothing here sets a figure.
@@ -31,22 +34,26 @@
 -- ----------------------------------------------------------------------------
 -- 1. Categories
 -- ----------------------------------------------------------------------------
--- group_key is 'office' for all five: the app only knows 'home' and 'office',
--- and contract flooring is not domestic. Adding a third group would mean
--- changing CategoryGroup in src/data/types.ts and the home page with it.
+-- The app only knows two groups, 'home' and 'office', and every category has
+-- to pick one. Contract office, hospitality and acoustics sit under 'office';
+-- residential, lighting and outdoor sit under 'home', which is where somebody
+-- furnishing a flat would go looking. Adding a third group would mean changing
+-- CategoryGroup in src/data/types.ts and the home page with it.
 -- sort_order continues past the existing rooms, which stop at 60.
 insert into categories (slug, title_ka, title_en, group_key, image, sort_order)
 values
-  ('contract-furniture', 'საკონტრაქტო ავეჯი', 'Contract Furniture', 'office',
-   'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1600&q=80', 110),
-  ('architectural-lighting', 'არქიტექტურული განათება', 'Architectural Lighting', 'office',
-   'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1600&q=80', 120),
-  ('contract-flooring', 'იატაკის საფარი', 'Contract Flooring', 'office',
-   'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600&q=80', 130),
-  ('building-facades', 'ფასადები', 'Building Facades', 'office',
-   'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1600&q=80', 140),
+  ('office-furniture', 'საოფისე ავეჯი', 'Office Furniture', 'office',
+   'https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=1600&q=80', 110),
+  ('hospitality-furniture', 'სასტუმროს ავეჯი', 'Hospitality Furniture', 'office',
+   'https://images.unsplash.com/photo-1776361984994-089a9df800f6?w=1600&q=80', 120),
   ('acoustic-solutions', 'აკუსტიკური გადაწყვეტები', 'Acoustic Solutions', 'office',
-   'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&q=80', 150)
+   'https://images.unsplash.com/photo-1756480734230-a7680051fc26?w=1600&q=80', 130),
+  ('residential-collection', 'საცხოვრებელი კოლექცია', 'Residential Collection', 'home',
+   'https://images.unsplash.com/photo-1597425842320-de0c26b33327?w=1600&q=80', 140),
+  ('architectural-lighting', 'არქიტექტურული განათება', 'Architectural Lighting', 'home',
+   'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=1600&q=80', 150),
+  ('outdoor-furniture', 'გარე ავეჯი', 'Outdoor Furniture', 'home',
+   'https://images.unsplash.com/photo-1600210492090-a159ffa3aeaf?w=1600&q=80', 160)
 on conflict (slug) do nothing;
 
 
@@ -62,206 +69,221 @@ select
   v.materials_ka, v.materials_en, v.dimensions, v.images, v.featured, c.id
 from (values
 
-  -- ---------------------------------------------------------------- FURNITURE
+  -- ------------------------------------------------------- OFFICE FURNITURE
   ('hm-aeron-task-chair', 'Herman Miller Aeron — სამუშაო სავარძელი', 'Herman Miller Aeron Task Chair',
-   'ერგონომიული სავარძელი PostureFit SL საყრდენით და რვა ზომის დიაპაზონით. სამი ზომა A, B, C.',
+   'ერგონომიული სავარძელი PostureFit SL საყრდენით და რვა რეგულირების დიაპაზონით. სამი ზომა: A, B, C.',
    'The ergonomic benchmark, with PostureFit SL support and eight adjustment ranges. Sizes A, B and C.',
    'მწარმოებელი: Herman Miller. 8Z Pellicle ბადე, გადამუშავებული ალუმინი, 12 წლის გარანტია.',
    'Manufacturer: Herman Miller. 8Z Pellicle suspension, recycled aluminium, 12-year warranty.',
-   'W 68.6 x D 66 x H 94-104 cm', array['https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=1400&q=80','https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80'], true, 'contract-furniture'),
+   'W 68.6 x D 66 x H 94-104 cm', array['https://images.unsplash.com/photo-1688578735352-9a6f2ac3b70a?w=1400&q=80','https://images.unsplash.com/photo-1688578735122-f37256f1b8b0?w=1400&q=80'], true, 'office-furniture'),
 
-  ('haworth-fern-chair', 'Haworth Fern — სამუშაო სავარძელი', 'Haworth Fern Task Chair',
-   'Wave Suspension ზურგი, რომელიც მომხმარებლის მოძრაობას მიჰყვება ცალკეული რეგულირების გარეშე.',
+  ('haworth-fern-task-chair', 'Haworth Fern — სამუშაო სავარძელი', 'Haworth Fern Task Chair',
+   'Wave Suspension ზურგი, რომელიც მჯდომს მიჰყვება და ცალკეულ რეგულირებას არ ითხოვს.',
    'A Wave Suspension back that follows the sitter rather than asking them to adjust to it.',
    'მწარმოებელი: Haworth. Digital Knit ზურგი, პოლირებული ალუმინის ფუძე.',
    'Manufacturer: Haworth. Digital Knit back, polished aluminium base.',
-   'W 70 x D 68 x H 89-99 cm', array['https://images.unsplash.com/photo-1503602642458-232111445657?w=1400&q=80','https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80'], false, 'contract-furniture'),
+   'W 70 x D 68 x H 89-99 cm', array['https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=1400&q=80','https://images.unsplash.com/photo-1750306957820-f778b67c4e13?w=1400&q=80'], false, 'office-furniture'),
 
+  ('andreu-world-reverse-table', 'Andreu World Reverse — სათათბირო მაგიდა', 'Andreu World Reverse Meeting Table',
+   'მოდულური სათათბირო მაგიდა კაბელის ინტეგრირებული არხით, ხუთ მეტრამდე კონფიგურაციით.',
+   'A modular meeting table with an integrated cable spine, configurable to five metres.',
+   'მწარმოებელი: Andreu World. FSC მუხა, თერმოდამუშავებული კიდე.',
+   'Manufacturer: Andreu World. FSC oak, thermo-treated edge.',
+   'W 240-500 x D 110 x H 74 cm', array['https://images.unsplash.com/photo-1764810815228-b7f9432eec5c?w=1400&q=80','https://images.unsplash.com/photo-1771270759486-1f7703945072?w=1400&q=80'], true, 'office-furniture'),
+
+  ('frezza-forum-bench', 'Frezza Forum — ბენჩ-სისტემა', 'Frezza Forum Bench Desking',
+   'ორმხრივი ბენჩ-სისტემა ოთხიდან თექვსმეტ სამუშაო ადგილამდე, საერთო კაბელის არხით.',
+   'A double-sided bench system from four to sixteen positions on one shared cable tray.',
+   'მწარმოებელი: Frezza. მელამინის ზედაპირი, ფხვნილით დაფარული ფოლადის კარკასი.',
+   'Manufacturer: Frezza. Melamine tops, powder-coated steel frame.',
+   'W 160 x D 165 x H 74 cm per pair', array['https://images.unsplash.com/photo-1577412647305-991150c7d163?w=1400&q=80','https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?w=1400&q=80'], false, 'office-furniture'),
+
+  ('dvo-storage-wall', 'DVO — საცავი კედელი', 'DVO Storage Wall',
+   'იატაკიდან ჭერამდე საცავი კედელი, რომელიც ღია სივრცეს ჰყოფს და დოკუმენტაციას იტევს.',
+   'A floor-to-ceiling storage wall that divides an open floor and swallows the paperwork.',
+   'მწარმოებელი: DVO. ლამინირებული პანელი, დაბალხმაურიანი მიმმართველები.',
+   'Manufacturer: DVO. Laminate panels, soft-close runners.',
+   'W 200 x D 45 x H 220 cm', array['https://images.unsplash.com/photo-1708161885729-63faff807840?w=1400&q=80','https://images.unsplash.com/photo-1620388639945-990753377b58?w=1400&q=80'], false, 'office-furniture'),
+
+  -- -------------------------------------------------- HOSPITALITY FURNITURE
   ('fritz-hansen-series-7', 'Fritz Hansen Series 7 — დასაწყობებადი სკამი', 'Fritz Hansen Series 7 Chair',
    'არნე იაკობსენის 1955 წლის ფორმა. იწყობა თორმეტამდე და კონფერენც-დარბაზების სტანდარტად რჩება.',
    'Arne Jacobsen, 1955. Stacks twelve high and is still the default for a conference floor.',
    'მწარმოებელი: Fritz Hansen. ფორმაწნეხილი ხე, ქრომირებული ფოლადი.',
    'Manufacturer: Fritz Hansen. Pressure-moulded veneer, chromed steel.',
-   'W 50 x D 52 x H 78 cm', array['https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80','https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=1400&q=80'], true, 'contract-furniture'),
+   'W 50 x D 52 x H 78 cm', array['https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80','https://images.unsplash.com/photo-1598300042247-d888f8ab3a91?w=1400&q=80'], true, 'hospitality-furniture'),
 
-  ('muuto-fiber-chair', 'Muuto Fiber — საკონფერენციო სკამი', 'Muuto Fiber Conference Chair',
-   'ხის ბოჭკოს კომპოზიტის ნაჭუჭი, სურვილისამებრ შემობრუნებადი ფუძით.',
-   'A wood-fibre composite shell on an optional swivel base, for rooms used all day.',
-   'მწარმოებელი: Muuto. 25% ხის ბოჭკო, ფხვნილით დაფარული ფოლადი.',
-   'Manufacturer: Muuto. 25% wood fibre composite, powder-coated steel.',
-   'W 58 x D 55 x H 78 cm', array['https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80','https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80'], false, 'contract-furniture'),
+  ('artifort-mare-lounge-chair', 'Artifort Mare — სავარძელი', 'Artifort Mare Lounge Chair',
+   'ლობის სავარძელი დაბალი ზურგით — მოლოდინის სივრცისთვის, სადაც ხედვის ხაზი უნდა დარჩეს.',
+   'A low-backed lobby chair for waiting areas where the sight line has to survive the seating.',
+   'მწარმოებელი: Artifort. ცივად ჩამოსხმული ქაფი, მუხის ფეხები, საკონტრაქტო ქსოვილი.',
+   'Manufacturer: Artifort. Cold-cured foam, oak legs, contract-grade upholstery.',
+   'W 72 x D 76 x H 74 cm', array['https://images.unsplash.com/photo-1723804685588-b8a95b2044f3?w=1400&q=80','https://images.unsplash.com/photo-1687262304525-02287047d4d6?w=1400&q=80'], false, 'hospitality-furniture'),
 
-  ('andreu-world-reverse-table', 'Andreu World Reverse — სათათბირო მაგიდა', 'Andreu World Reverse Meeting Table',
-   'მოდულური სათათბირო მაგიდა კაბელის ინტეგრირებული არხით და ხუთამდე მეტრიანი კონფიგურაციით.',
-   'A modular meeting table with an integrated cable spine, configurable to five metres.',
-   'მწარმოებელი: Andreu World. FSC მუხის ხე, თერმოდამუშავებული კიდე.',
-   'Manufacturer: Andreu World. FSC oak, thermo-treated edge.',
-   'W 240-500 x D 110 x H 74 cm', array['https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=1400&q=80','https://images.unsplash.com/photo-1462826303086-329426d1aef5?w=1400&q=80'], true, 'contract-furniture'),
+  ('sancal-tiptoe-armchair', 'Sancal Tiptoe — სავარძელი', 'Sancal Tiptoe Armchair',
+   'მაღალი მხრებით სავარძელი, რომელიც ღია სივრცეში საკუთარ კუთხეს ქმნის.',
+   'A high-shouldered armchair that makes its own corner in the middle of an open room.',
+   'მწარმოებელი: Sancal. HR ქაფი, წიფლის კარკასი, მოსახსნელი შალის გადასაფარებელი.',
+   'Manufacturer: Sancal. HR foam, beech frame, removable wool cover.',
+   'W 78 x D 80 x H 96 cm', array['https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=1400&q=80','https://images.unsplash.com/photo-1665669959193-f7b95ee9fdab?w=1400&q=80'], true, 'hospitality-furniture'),
 
-  ('pedrali-arki-table', 'Pedrali Arki — სამუშაო მაგიდა', 'Pedrali Arki Desk',
-   'თხელი კიდის მაგიდა Fenix NTM ზედაპირით, რომელიც თითის ანაბეჭდს არ იჭერს.',
-   'A thin-edged desk in Fenix NTM, a surface that does not hold fingerprints.',
-   'მწარმოებელი: Pedrali. Fenix NTM ლამინატი, ფხვნილით დაფარული ფოლადი.',
-   'Manufacturer: Pedrali. Fenix NTM laminate, powder-coated steel.',
-   'W 160 x D 80 x H 74 cm', array['https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=1400&q=80','https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80'], false, 'contract-furniture'),
+  ('la-cividina-modular-sofa', 'La Cividina — მოდულური დივანი', 'La Cividina Modular Sofa',
+   'ლობის მოდულური დივანი, რომელიც სწორ, კუთხოვან ან წრიულ კონფიგურაციად იკრიბება.',
+   'A lobby sofa that assembles straight, cornered or in a ring, from the same modules.',
+   'მწარმოებელი: La Cividina. FSC ხის კარკასი, გადამუშავებული პოლიესტერის შიგთავსი.',
+   'Manufacturer: La Cividina. FSC timber frame, recycled polyester fill.',
+   'Module W 90 x D 85 x H 72 cm', array['https://images.unsplash.com/photo-1776362658611-2067c9ded1d1?w=1400&q=80','https://images.unsplash.com/photo-1772862012088-2263c8e46c42?w=1400&q=80'], false, 'hospitality-furniture'),
 
-  -- ----------------------------------------------------------------- LIGHTING
+  ('figueras-auditorium-seating', 'Figueras — საააქტო დარბაზის სავარძლები', 'Figueras Auditorium Seating',
+   'ავტომატურად აწეული სავარძლების რიგი — საააქტო და საკონფერენციო დარბაზებისთვის.',
+   'Self-rising tiered seating for auditoriums and conference halls, on a fixed rail.',
+   'მწარმოებელი: Figueras. ფოლადის კარკასი, დაუწვავი ქსოვილი, ხის ზურგი.',
+   'Manufacturer: Figueras. Steel frame, flame-retardant upholstery, timber back.',
+   'Seat W 52-60 cm, row pitch 90 cm', array['https://images.unsplash.com/photo-1646215993365-125e6428e1dc?w=1400&q=80','https://images.unsplash.com/photo-1759038086832-795644825e3a?w=1400&q=80'], false, 'hospitality-furniture'),
+
+  -- -------------------------------------------------- RESIDENTIAL COLLECTION
+  ('fredericia-spine-lounge-chair', 'Fredericia Spine — სავარძელი', 'Fredericia Spine Lounge Chair',
+   'ხერხემლის ფორმის ზურგი მუხის კარკასზე. ლობისთვისაც და მისაღებისთვისაც.',
+   'A spine-shaped back on a solid oak frame — as much a lobby chair as a living-room one.',
+   'მწარმოებელი: Fredericia. მასიური მუხა, ტყავი ან შალი.',
+   'Manufacturer: Fredericia. Solid oak, leather or wool.',
+   'W 66 x D 78 x H 82 cm', array['https://images.unsplash.com/photo-1617364852223-75f57e78dc96?w=1400&q=80','https://images.unsplash.com/photo-1682343864562-d0b9f3470fe3?w=1400&q=80'], true, 'residential-collection'),
+
+  ('muuto-outline-sofa', 'Muuto Outline — დივანი', 'Muuto Outline Sofa',
+   'თხელი ფორმა და მაღალი ფეხები — დივანი, რომელიც პატარა ოთახს არ ავსებს.',
+   'A thin silhouette on tall legs: a sofa that does not fill a small room.',
+   'მწარმოებელი: Muuto. ალუმინის ფეხები, ცივად ჩამოსხმული ქაფი.',
+   'Manufacturer: Muuto. Aluminium legs, cold-cured foam.',
+   'W 214 x D 84 x H 71 cm', array['https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400&q=80','https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=1400&q=80'], false, 'residential-collection'),
+
+  ('menu-passage-shelving', 'Menu Passage — თარო', 'Menu Passage Shelving',
+   'ღია თაროების სისტემა, რომელიც კედელს არ საჭიროებს და ოთახს ორად ჰყოფს.',
+   'An open shelving system that needs no wall and divides a room into two.',
+   'მწარმოებელი: Menu. ფხვნილით დაფარული ფოლადი, მუხის თაროები.',
+   'Manufacturer: Menu. Powder-coated steel, oak shelves.',
+   'W 180 x D 32 x H 195 cm', array['https://images.unsplash.com/photo-1567016376408-0226e4d0c1ea?w=1400&q=80','https://images.unsplash.com/photo-1515542706656-8e6ef17a1521?w=1400&q=80'], false, 'residential-collection'),
+
+  ('barcelona-design-modular-sofa', 'Barcelona Design — მოდულური დივანი', 'Barcelona Design Modular Sofa',
+   'დაბალი, ღრმა მოდულური დივანი — შერჩეული ჯდომისთვის და არა სწორად ჯდომისთვის.',
+   'A low, deep modular sofa, specified for sitting back rather than sitting up.',
+   'მწარმოებელი: Barcelona Design. წიფლის კარკასი, ბუმბულის ბალიშები.',
+   'Manufacturer: Barcelona Design. Beech frame, feather-wrapped cushions.',
+   'Module W 100 x D 100 x H 68 cm', array['https://images.unsplash.com/photo-1567016432779-094069958aa5?w=1400&q=80','https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?w=1400&q=80'], true, 'residential-collection'),
+
+  ('fredericia-post-console', 'Fredericia Post — კონსოლი', 'Fredericia Post Console',
+   'ვიწრო კონსოლი დერეფნისთვის ან ლობისთვის, სადაც სიღრმე არ არის.',
+   'A narrow console for a corridor or a lobby, where there is length but no depth.',
+   'მწარმოებელი: Fredericia. მასიური მუხა, ზეთით დაფარული.',
+   'Manufacturer: Fredericia. Solid oiled oak.',
+   'W 140 x D 35 x H 78 cm', array['https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1400&q=80','https://images.unsplash.com/photo-1618220252344-8ec99ac624b1?w=1400&q=80'], false, 'residential-collection'),
+
+  -- -------------------------------------------------- ARCHITECTURAL LIGHTING
   ('marset-discoco-pendant', 'Marset Discocó — დაკიდებული სანათი', 'Marset Discocó Pendant',
    'ოცდაათი დისკი, რომელიც სინათლეს ფანტავს და ნათურას ყოველი კუთხიდან მალავს.',
    'Thirty discs that scatter the light and hide the lamp from every angle in the room.',
    'მწარმოებელი: Marset. ლაქირებული ალუმინი, E27 LED.',
    'Manufacturer: Marset. Lacquered aluminium, E27 LED.',
-   'O 88 x H 34 cm', array['https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1400&q=80','https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1400&q=80'], true, 'architectural-lighting'),
+   'Ø 88 x H 34 cm', array['https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1400&q=80','https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=1400&q=80'], true, 'architectural-lighting'),
 
   ('vibia-match-linear', 'Vibia Match — წრფივი დაკიდებული სანათი', 'Vibia Match Linear Suspension',
    'ხაზოვანი სისტემა, რომელიც ერთი ჭერის წერტილიდან რამდენიმე მიმართულებით იშლება.',
    'A linear system that branches in several directions from a single ceiling point.',
    'მწარმოებელი: Vibia. ექსტრუდირებული ალუმინი, ინტეგრირებული LED, 2700K.',
    'Manufacturer: Vibia. Extruded aluminium, integrated LED, 2700K.',
-   'L 120-360 x H 6 cm', array['https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1400&q=80','https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?w=1400&q=80'], false, 'architectural-lighting'),
-
-  ('zumtobel-mirel-evolution', 'Zumtobel Mirel Evolution — ჩასაშენებელი სანათი', 'Zumtobel Mirel Evolution Luminaire',
-   'ოფისის ჩასაშენებელი სანათი UGR<19 მაჩვენებლით — ეკრანთან მუშაობის სტანდარტი.',
-   'A recessed office luminaire at UGR<19, the threshold for screen-based work.',
-   'მწარმოებელი: Zumtobel. ალუმინის კორპუსი, მიკროპრიზმული ოპტიკა, DALI.',
-   'Manufacturer: Zumtobel. Aluminium housing, micro-prismatic optic, DALI dimmable.',
-   'W 62.5 x D 62.5 x H 7 cm', array['https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80','https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80'], false, 'architectural-lighting'),
+   'L 120-360 x H 6 cm', array['https://images.unsplash.com/photo-1553797794-4c4d2c55dbfb?w=1400&q=80','https://images.unsplash.com/photo-1606170033648-5d55a3edf314?w=1400&q=80'], false, 'architectural-lighting'),
 
   ('gubi-semi-pendant', 'Gubi Semi — დაკიდებული სანათი', 'Gubi Semi Pendant',
    '1968 წლის დანიური ფორმა. ორმაგი მოხრილი ნაჭუჭი სინათლეს ქვევით მიმართავს.',
    'A 1968 Danish form. The double-curved shade throws the light straight down.',
    'მწარმოებელი: Gubi. ლაქირებული ფოლადი, მქრქალი დაფარვა.',
    'Manufacturer: Gubi. Lacquered steel, matt finish.',
-   'O 47 x H 33 cm', array['https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?w=1400&q=80','https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1400&q=80'], true, 'architectural-lighting'),
+   'Ø 47 x H 33 cm', array['https://images.unsplash.com/photo-1592622515232-6e3e2a0d3d9a?w=1400&q=80','https://images.unsplash.com/photo-1559924508-1461423083c5?w=1400&q=80'], true, 'architectural-lighting'),
+
+  ('zumtobel-mirel-evolution', 'Zumtobel Mirel Evolution — ჩასაშენებელი სანათი', 'Zumtobel Mirel Evolution Luminaire',
+   'ოფისის ჩასაშენებელი სანათი UGR<19 მაჩვენებლით — ეკრანთან მუშაობის ზღვარი.',
+   'A recessed office luminaire at UGR<19, the threshold for screen-based work.',
+   'მწარმოებელი: Zumtobel. ალუმინის კორპუსი, მიკროპრიზმული ოპტიკა, DALI.',
+   'Manufacturer: Zumtobel. Aluminium housing, micro-prismatic optic, DALI dimmable.',
+   'W 62.5 x D 62.5 x H 7 cm', array['https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80','https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1400&q=80'], false, 'architectural-lighting'),
 
   ('formalighting-cardo-spot', 'Formalighting Cardo — სამიმართულებო პროჟექტორი', 'Formalighting Cardo Track Spot',
-   'სამიმართულებო პროჟექტორი ცვლადი ოპტიკით — 15-დან 60 გრადუსამდე, ინსტრუმენტის გარეშე.',
+   'ლიანდაგის პროჟექტორი ცვლადი ოპტიკით — 15-დან 60 გრადუსამდე, ინსტრუმენტის გარეშე.',
    'A track spot with interchangeable optics, 15 to 60 degrees, swapped without tools.',
    'მწარმოებელი: Formalighting. დაწნეხილი ალუმინი, CRI 97 LED.',
    'Manufacturer: Formalighting. Die-cast aluminium, CRI 97 LED.',
-   'O 8 x H 19 cm', array['https://images.unsplash.com/photo-1462826303086-329426d1aef5?w=1400&q=80','https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80'], false, 'architectural-lighting'),
+   'Ø 8 x H 19 cm', array['https://images.unsplash.com/photo-1581784878214-8d5596b98a01?w=1400&q=80','https://images.unsplash.com/photo-1602145461313-26c587cc0ca9?w=1400&q=80'], false, 'architectural-lighting'),
 
-  ('lamp83-lineer-profile', 'Lamp83 Lineer — ჩასაშენებელი პროფილი', 'Lamp83 Lineer Recessed Profile',
-   'უწყვეტი ხაზოვანი პროფილი, რომელიც გაჯში იმალება და მხოლოდ სინათლის ხაზს ტოვებს.',
-   'A continuous linear profile that disappears into plasterboard, leaving only the line of light.',
-   'მწარმოებელი: Lamp83. ანოდირებული ალუმინი, ოპალის დიფუზორი.',
-   'Manufacturer: Lamp83. Anodised aluminium, opal diffuser.',
-   'L 100-300 x W 3.5 cm', array['https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1400&q=80','https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1400&q=80'], false, 'architectural-lighting'),
+  -- ------------------------------------------------------ OUTDOOR FURNITURE
+  ('pedrali-nolita-chair', 'Pedrali Nolita — გარე სკამი', 'Pedrali Nolita Outdoor Chair',
+   'დასაწყობებადი გარე სკამი — ტერასებისთვის, რომლებიც ყოველ საღამოს იკრიბება.',
+   'A stacking outdoor chair for terraces that are cleared away every evening.',
+   'მწარმოებელი: Pedrali. ფხვნილით დაფარული ალუმინი, UV-მედეგი.',
+   'Manufacturer: Pedrali. Powder-coated aluminium, UV-stable.',
+   'W 55 x D 53 x H 82 cm', array['https://images.unsplash.com/photo-1762608675427-09ac2dbd1540?w=1400&q=80','https://images.unsplash.com/photo-1782073425027-e099f12e3433?w=1400&q=80'], true, 'outdoor-furniture'),
 
-  -- ----------------------------------------------------------------- FLOORING
-  ('milliken-comfortable-concrete', 'Milliken Comfortable Concrete — ხალიჩის ფილა', 'Milliken Comfortable Concrete Carpet Tile',
-   'ბეტონის ფაქტურა ხალიჩის ფილაზე. WellBAC საფუძველი წებოს გარეშე იდება.',
-   'A concrete read in a carpet tile. The WellBAC backing lays without adhesive.',
-   'მწარმოებელი: Milliken. ნეილონი 6.6, WellBAC Comfort საფუძველი.',
-   'Manufacturer: Milliken. Nylon 6.6 with WellBAC Comfort cushion backing.',
-   '50 x 50 cm tile', array['https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80','https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1400&q=80'], true, 'contract-flooring'),
+  ('magis-air-armchair', 'Magis Air — გარე სავარძელი', 'Magis Air Armchair',
+   'ერთი ჩამოსხმის სავარძელი, რომელიც ზამთარს გარეთ ატარებს.',
+   'A single-mould armchair rated to stay outside through the winter.',
+   'მწარმოებელი: Magis. საჰაერო წნევით ჩამოსხმული პოლიპროპილენი.',
+   'Manufacturer: Magis. Air-moulded polypropylene.',
+   'W 57 x D 50 x H 77 cm', array['https://images.unsplash.com/photo-1758445041789-1d27c2f21a88?w=1400&q=80','https://images.unsplash.com/photo-1785753734700-a8f22bfc256b?w=1400&q=80'], false, 'outdoor-furniture'),
 
-  ('gerflor-taralay-impression', 'Gerflor Taralay Impression — ვინილის საფარი', 'Gerflor Taralay Impression Vinyl',
-   'ჰეტეროგენული ვინილი მაღალი გამტარიანობის სივრცეებისთვის. კლასი 34/43.',
-   'Heterogeneous vinyl for heavy traffic. Classification 34/43 — airports and hospitals.',
-   'მწარმოებელი: Gerflor. Protecsol 2 დამუშავება, 0.65 მმ ცვეთის ფენა.',
-   'Manufacturer: Gerflor. Protecsol 2 treatment, 0.65 mm wear layer.',
-   'Roll W 200 cm', array['https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1400&q=80','https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80'], false, 'contract-flooring'),
+  ('enea-lottus-outdoor-table', 'Enea Lottus — გარე მაგიდა', 'Enea Lottus Outdoor Table',
+   'ტერასის მაგიდა კომპაქტური ლამინატის ზედაპირით, რომელსაც წვიმა არ შლის.',
+   'A terrace table with a compact laminate top that rain does not lift.',
+   'მწარმოებელი: Enea. ჩამოსხმული ალუმინის ფუძე, კომპაქტური ლამინატი.',
+   'Manufacturer: Enea. Cast aluminium base, compact laminate top.',
+   'Ø 70 x H 73 cm', array['https://images.unsplash.com/photo-1765097732474-973a92d6fb4c?w=1400&q=80','https://images.unsplash.com/photo-1759471606534-cbd4aca4d4cb?w=1400&q=80'], false, 'outdoor-furniture'),
 
-  ('ege-highline-tile', 'Ege Highline — ხალიჩის ფილა', 'Ege Highline Carpet Tile',
-   'ECONYL გადამუშავებული ნეილონი. ნახატის თავისუფალი შერჩევა მინიმალური ტირაჟიდან.',
-   'ECONYL regenerated nylon, with bespoke patterning from a low minimum order.',
-   'მწარმოებელი: Ege Carpets. 100% ECONYL, Ecotrust საფუძველი.',
-   'Manufacturer: Ege Carpets. 100% ECONYL yarn, Ecotrust backing.',
-   '50 x 50 cm tile', array['https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80','https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80'], false, 'contract-flooring'),
+  ('pedrali-reva-lounge', 'Pedrali Reva — გარე სავარძელი', 'Pedrali Reva Outdoor Lounge',
+   'ხელით მოქსოვილი თოკის სავარძელი სასტუმროს ეზოსა და სახურავის ბარისთვის.',
+   'A hand-woven rope lounge chair for hotel courtyards and roof bars.',
+   'მწარმოებელი: Pedrali. ალუმინის კარკასი, პოლიპროპილენის თოკი, გარე ქაფი.',
+   'Manufacturer: Pedrali. Aluminium frame, polypropylene rope, outdoor foam.',
+   'W 76 x D 80 x H 72 cm', array['https://images.unsplash.com/photo-1600210492090-a159ffa3aeaf?w=1400&q=80','https://images.unsplash.com/photo-1715090576114-c07384af2069?w=1400&q=80'], true, 'outdoor-furniture'),
 
-  ('jacaranda-sakura-broadloom', 'Jacaranda Sakura — შალის ხალიჩა', 'Jacaranda Sakura Wool Broadloom',
-   'ხელით მოქსოვილი შალის ხალიჩა სასტუმროების საერთო სივრცეებისთვის.',
-   'Hand-loomed wool broadloom for hotel public areas, where a tile line would show.',
-   'მწარმოებელი: Jacaranda. 100% ახალი მატყლი, ჯუთის საფუძველი.',
-   'Manufacturer: Jacaranda. 100% new wool, jute backing.',
-   'Roll W 400 cm', array['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400&q=80','https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80'], true, 'contract-flooring'),
+  ('enea-terrace-bench', 'Enea Altzo — ტერასის სკამი', 'Enea Altzo Terrace Bench',
+   'ორმეტრიანი გარე სკამი ზურგის გარეშე — გასასვლელებისა და ეზოებისთვის.',
+   'A two-metre backless outdoor bench for entrances and courtyards.',
+   'მწარმოებელი: Enea. თერმოდამუშავებული იფანი, უჟანგავი ფოლადი.',
+   'Manufacturer: Enea. Thermo-treated ash, stainless steel.',
+   'W 200 x D 40 x H 45 cm', array['https://images.unsplash.com/photo-1759471606534-cbd4aca4d4cb?w=1400&q=80','https://images.unsplash.com/photo-1600210492090-a159ffa3aeaf?w=1400&q=80'], false, 'outdoor-furniture'),
 
-  ('ntgrate-sublime-woven', 'ntgrate Sublime — ნაქსოვი ვინილი', 'ntgrate Sublime Woven Vinyl',
-   'ნაქსოვი ვინილი ხალიჩის იერით და მყარი საფარის მოვლით.',
-   'Woven vinyl: the look of a textile, cleaned like a hard floor.',
-   'მწარმოებელი: ntgrate. ნაქსოვი PVC, აკუსტიკური საფუძველი.',
-   'Manufacturer: ntgrate. Woven PVC, acoustic backing.',
-   '50 x 50 cm tile', array['https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80','https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1400&q=80'], false, 'contract-flooring'),
-
-  ('condor-graphic-loop', 'Condor Graphic Loop — ხალიჩის ფილა', 'Condor Graphic Loop Carpet Tile',
-   'მარყუჟოვანი ხალიჩის ფილა ღია გეგმის ოფისებისთვის. ბიტუმის გარეშე.',
-   'A loop-pile tile for open-plan floors. Bitumen-free, so it can be lifted and reused.',
-   'მწარმოებელი: Condor. პოლიამიდი, Ecoback საფუძველი.',
-   'Manufacturer: Condor. Polyamide, Ecoback backing.',
-   '50 x 50 cm tile', array['https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80','https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80'], false, 'contract-flooring'),
-
-  -- ------------------------------------------------------------------ FACADES
-  ('trespa-meteon-panel', 'Trespa Meteon — ფასადის პანელი', 'Trespa Meteon Facade Panel',
-   'მაღალი წნევის ლამინატის ვენტილირებადი ფასადი. ათწლეულების ფერმყარობა.',
-   'A high-pressure laminate rainscreen. Colour-stable for decades in direct sun.',
-   'მწარმოებელი: Trespa. HPL, EBC ზედაპირი, სისქე 8 მმ.',
-   'Manufacturer: Trespa. HPL with Electron Beam Curing surface, 8 mm.',
-   '3650 x 1860 x 8 mm', array['https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1400&q=80','https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=80'], true, 'building-facades'),
-
-  ('nbk-terart-baguette', 'NBK Terart — ტერაკოტის ბაგეტი', 'NBK Terart Terracotta Baguette',
-   'ექსტრუდირებული ტერაკოტის მზისგან დამცავი ბაგეტი. ბუნებრივი, დაუფარავი ფერი.',
-   'Extruded terracotta sun-shading baguettes in natural, unglazed colour.',
-   'მწარმოებელი: NBK Keramik. ექსტრუდირებული თიხა, ალუმინის ქვესაკიდი.',
-   'Manufacturer: NBK Keramik. Extruded clay on aluminium sub-construction.',
-   'O 40-80 x L up to 150 cm', array['https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=80','https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1400&q=80'], false, 'building-facades'),
-
-  ('swisspearl-carat-panel', 'Swisspearl Carat — ბოჭკოვან-ცემენტის პანელი', 'Swisspearl Carat Fibre Cement Panel',
-   'შეღებილი ბოჭკოვან-ცემენტის პანელი, დაუწვავი და ვენტილირებადი ფასადისთვის.',
-   'Through-coloured fibre cement, non-combustible, for a ventilated facade.',
-   'მწარმოებელი: Swisspearl. პორტლანდცემენტი, ცელულოზის ბოჭკო. A2-s1,d0.',
-   'Manufacturer: Swisspearl. Portland cement and cellulose fibre. A2-s1,d0.',
-   '3050 x 1250 x 8 mm', array['https://images.unsplash.com/photo-1523292562811-8fa7962a78c8?w=1400&q=80','https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=80'], false, 'building-facades'),
-
-  ('flexbrick-ceramic-mesh', 'Flexbrick — კერამიკული ბადე', 'Flexbrick Ceramic Mesh Facade',
-   'ფოლადის ბადეზე აწყობილი კერამიკა, რომელიც რულონად მიეწოდება და ერთიანად იდება.',
-   'Ceramic laid onto a steel mesh, delivered as a roll and hung in one piece.',
-   'მწარმოებელი: Flexbrick. კერამიკული ნაწილები, უჟანგავი ფოლადის ბადე.',
-   'Manufacturer: Flexbrick. Ceramic pieces on stainless steel mesh.',
-   'Roll W up to 300 cm', array['https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1400&q=80','https://images.unsplash.com/photo-1523292562811-8fa7962a78c8?w=1400&q=80'], false, 'building-facades'),
-
-  ('solarlux-cero-glass-wall', 'Solarlux Cero — მინის კედელი', 'Solarlux Cero Sliding Glass Wall',
-   'მინიმალური პროფილის მოცურებადი მინის კედელი — 34 მმ ხედის ხაზი.',
-   'A minimal sliding glass wall with a 34 mm sight line, so the frame all but disappears.',
-   'მწარმოებელი: Solarlux. თერმულად გაწყვეტილი ალუმინი, სამმაგი შემინვა.',
-   'Manufacturer: Solarlux. Thermally broken aluminium, triple glazing.',
-   'Panel up to W 300 x H 400 cm', array['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1400&q=80','https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=1400&q=80'], true, 'building-facades'),
-
-  -- ---------------------------------------------------------------- ACOUSTICS
+  -- ------------------------------------------------------ ACOUSTIC SOLUTIONS
   ('framery-o-pod', 'Framery O — სატელეფონო კაბინა', 'Framery O Meeting Pod',
    'ერთადგილიანი აკუსტიკური კაბინა ღია ოფისისთვის. მონტაჟი ორ საათში.',
    'A single-person acoustic pod for an open floor. Two hours to install, no building work.',
    'მწარმოებელი: Framery. ფოლადის კარკასი, 32 dB ხმის შთანთქმა.',
    'Manufacturer: Framery. Steel frame, 32 dB sound reduction.',
-   'W 100 x D 100 x H 220 cm', array['https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80','https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1400&q=80'], true, 'acoustic-solutions'),
+   'W 100 x D 100 x H 220 cm', array['https://images.unsplash.com/photo-1756480336914-c282fdc8372b?w=1400&q=80','https://images.unsplash.com/photo-1756480734230-a7680051fc26?w=1400&q=80'], true, 'acoustic-solutions'),
 
   ('framery-q-flow-pod', 'Framery Q Flow — სამუშაო კაბინა', 'Framery Q Flow Work Pod',
    'ოთხადგილიანი კაბინა ვიდეოზარებისთვის, ინტეგრირებული განათებითა და ვენტილაციით.',
    'A four-person pod for video calls, with integrated lighting and ventilation.',
    'მწარმოებელი: Framery. აკუსტიკური მინა, 38 dB ხმის შთანთქმა.',
    'Manufacturer: Framery. Acoustic glazing, 38 dB sound reduction.',
-   'W 225 x D 140 x H 224 cm', array['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1400&q=80','https://images.unsplash.com/photo-1462826303086-329426d1aef5?w=1400&q=80'], false, 'acoustic-solutions'),
+   'W 225 x D 140 x H 224 cm', array['https://images.unsplash.com/photo-1756480089667-3db4864409ab?w=1400&q=80','https://images.unsplash.com/photo-1756368881750-e9e065a1d1ec?w=1400&q=80'], false, 'acoustic-solutions'),
 
   ('caimi-snowsound-flat', 'Caimi Snowsound Flat — აკუსტიკური პანელი', 'Caimi Snowsound Flat Acoustic Panel',
-   'ცვლადი სისქის პანელი, რომელიც სიხშირეთა სრულ დიაპაზონს ერთნაირად შთანთქავს.',
+   'ცვლადი სისქის პანელი, რომელიც სიხშირეთა სრულ დიაპაზონს თანაბრად შთანთქავს.',
    'A variable-density panel that absorbs evenly across the frequency range, not just the highs.',
    'მწარმოებელი: Caimi. პოლიესტერის ბოჭკო, ქსოვილის დაფარვა. კლასი A.',
    'Manufacturer: Caimi. Polyester fibre, fabric covered. Absorption class A.',
-   'W 120 x H 60 x D 4 cm', array['https://images.unsplash.com/photo-1462826303086-329426d1aef5?w=1400&q=80','https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80'], false, 'acoustic-solutions'),
+   'W 120 x H 60 x D 4 cm', array['https://images.unsplash.com/photo-1773127962331-299cf7663a0b?w=1400&q=80','https://images.unsplash.com/photo-1594235045856-a6315f0c4083?w=1400&q=80'], false, 'acoustic-solutions'),
 
   ('buzzispace-buzziblox', 'BuzziSpace BuzziBlox — აკუსტიკური ბაფლი', 'BuzziSpace BuzziBlox Baffle',
    'ჭერზე დაკიდებული ბაფლები, რომლებიც ღია ჭერს ტოვებს და რევერბერაციას ამცირებს.',
    'Ceiling baffles that cut reverberation while leaving the soffit and services exposed.',
    'მწარმოებელი: BuzziSpace. გადამუშავებული PET ბოჭკო.',
    'Manufacturer: BuzziSpace. Recycled PET felt.',
-   'W 100 x H 40 x D 4 cm', array['https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1400&q=80','https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80'], false, 'acoustic-solutions'),
+   'W 100 x H 40 x D 4 cm', array['https://images.unsplash.com/photo-1676477605752-224a26e6ec71?w=1400&q=80','https://images.unsplash.com/photo-1758800601600-f691cd1ba66d?w=1400&q=80'], true, 'acoustic-solutions'),
 
   ('cascando-pillow-screen', 'Cascando Pillow — აკუსტიკური ეკრანი', 'Cascando Pillow Acoustic Screen',
-   'მაგიდის აკუსტიკური ეკრანი, რომელიც სამუშაო ადგილს კედლის აშენების გარეშე ჰყოფს.',
+   'სამაგიდო აკუსტიკური ეკრანი, რომელიც სამუშაო ადგილს კედლის აშენების გარეშე ჰყოფს.',
    'A desk screen that divides a workstation without building a wall.',
    'მწარმოებელი: Cascando. აკუსტიკური ქაფი, შალის ქსოვილი.',
    'Manufacturer: Cascando. Acoustic foam, wool upholstery.',
-   'W 160 x H 40 x D 4 cm', array['https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80','https://images.unsplash.com/photo-1462826303086-329426d1aef5?w=1400&q=80'], false, 'acoustic-solutions')
+   'W 160 x H 40 x D 4 cm', array['https://images.unsplash.com/photo-1646153389640-958d7ba1a864?w=1400&q=80','https://images.unsplash.com/photo-1681783165686-76e8d1f7663d?w=1400&q=80'], false, 'acoustic-solutions')
 
 ) as v(slug, title_ka, title_en, description_ka, description_en,
        materials_ka, materials_en, dimensions, images, featured, category_slug)
@@ -279,18 +301,13 @@ on conflict (slug) do nothing;
 --     from categories c left join products p on p.category_id = c.id
 --     group by c.title_en order by c.title_en;
 --
--- The five new categories appear on the home page under "Office furniture",
--- because the app only knows two groups. If they deserve their own heading,
--- that is a change to CategoryGroup in src/data/types.ts, categoryGroup() in
--- src/lib/localize.ts and the two panels on the home page — not to this file.
---
 -- TO REMOVE EVERYTHING THIS FILE ADDED, and nothing else:
 --
 --     delete from products where category_id in (
 --       select id from categories where slug in
---         ('contract-furniture','architectural-lighting','contract-flooring',
---          'building-facades','acoustic-solutions'));
+--         ('office-furniture','hospitality-furniture','acoustic-solutions',
+--          'residential-collection','architectural-lighting','outdoor-furniture'));
 --     delete from categories where slug in
---       ('contract-furniture','architectural-lighting','contract-flooring',
---        'building-facades','acoustic-solutions');
+--       ('office-furniture','hospitality-furniture','acoustic-solutions',
+--        'residential-collection','architectural-lighting','outdoor-furniture');
 -- ============================================================================

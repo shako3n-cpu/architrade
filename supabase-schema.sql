@@ -176,7 +176,7 @@ from (
      'A three-seater with clean lines under a natural linen cover. The oak frame is hand-assembled and built to last decades.',
      'მუხის მასივი, სელის ქსოვილი', 'Solid oak, linen upholstery', 'W 220 × D 95 × H 85 cm',
      array['https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400&q=80',
-           'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1616486338812-3dadae4b4aca?w=1400&q=80'],
      true, 'living-room'),
 
     ('terra-leather-sofa', 'ტერას ტყავის დივანი', 'Terra Leather Sofa',
@@ -184,15 +184,15 @@ from (
      'Full-aniline leather that gains a patina over the years. A soft seat inside a strict silhouette.',
      'სრული ანილინის ტყავი, მუხის ფეხები', 'Full-aniline leather, oak legs', 'W 210 × D 92 × H 80 cm',
      array['https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=1400&q=80',
-           'https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1597425842320-de0c26b33327?w=1400&q=80'],
      true, 'living-room'),
 
     ('lume-armchair', 'ლუმეს სავარძელი', 'Lume Bouclé Armchair',
      'ბუკლეს ქსოვილის სავარძელი მრგვალი ზურგით. კომპაქტური საკითხავი კუთხისთვის ან ოფისის მისაღებისთვის.',
      'A bouclé armchair with a rounded back. Compact enough for a reading corner or an office reception.',
      'ბუკლეს ქსოვილი, წიფლის კარკასი', 'Bouclé fabric, beech frame', 'W 78 × D 82 × H 74 cm',
-     array['https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=1400&q=80',
-           'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=1400&q=80',
+           'https://images.unsplash.com/photo-1723804685588-b8a95b2044f3?w=1400&q=80'],
      false, 'living-room'),
 
     ('orbit-coffee-table', 'ორბიტის ჟურნალის მაგიდა', 'Orbit Oak Coffee Table',
@@ -208,7 +208,7 @@ from (
      'მინიმალისტური ორადგილიანი საწოლი მუხის მასივისგან, დაბალი თავსაფარით და ჩაშენებული ლამელებით.',
      'A minimalist double bed in solid oak, with a low headboard and integrated slats.',
      'მუხის მასივი', 'Solid oak', 'W 168 × L 210 × H 95 cm',
-     array['https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?w=1400&q=80',
+     array['https://images.unsplash.com/photo-1505693416388-ac5cc068fe85?w=1400&q=80',
            'https://images.unsplash.com/photo-1586105251261-72a756497a11?w=1400&q=80'],
      true, 'bedroom'),
 
@@ -217,7 +217,7 @@ from (
      'A three-door wardrobe with the timber grain left visible. Adjustable shelves and a full-length rail inside.',
      'მუხის შპონი, მუხის მასივის ჩარჩო', 'Oak veneer, solid oak frame', 'W 180 × D 60 × H 210 cm',
      array['https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=1400&q=80',
-           'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1595526114035-0d45ad16cfbf?w=1400&q=80'],
      false, 'bedroom'),
 
     ('mira-nightstand', 'მირას საწოლისპირა მაგიდა', 'Mira Walnut Nightstand',
@@ -225,7 +225,7 @@ from (
      'A two-drawer nightstand in walnut. Soft-close runners and a hand-polished top.',
      'კაკლის ხე, ლითონის ფეხები', 'Walnut, steel legs', 'W 48 × D 40 × H 55 cm',
      array['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1400&q=80',
-           'https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1550226891-ef816aed4a98?w=1400&q=80'],
      false, 'bedroom'),
 
     -- ---- Dining ----------------------------------------------------------
@@ -234,15 +234,15 @@ from (
      'An eight-seat dining table in solid oak, with a thick top and tapered legs.',
      'მუხის მასივი, ბუნებრივი ზეთი', 'Solid oak, natural oil', 'W 220 × D 95 × H 75 cm',
      array['https://images.unsplash.com/photo-1487015307662-6ce6210680f1?w=1400&q=80',
-           'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1617806118233-d8e1de247200?w=1400&q=80'],
      true, 'dining'),
 
     ('sella-dining-chair', 'სელას სასადილო სკამი', 'Sella Dining Chair',
      'მოხრილი ხის ზურგი რბილ ჯდომაზე. ერთმანეთზე არ იდგმება, მაგრამ მაგიდის ქვეშ სრულად შედის.',
      'A bent-timber back over an upholstered seat. It does not stack, but it tucks fully under the table.',
      'მოხრილი წიფელი, ქსოვილის ჯდომა', 'Bent beech, fabric seat', 'W 46 × D 52 × H 82 cm',
-     array['https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80',
-           'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1598300042247-d888f8ab3a91?w=1400&q=80',
+           'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80'],
      false, 'dining'),
 
     ('iveria-sideboard', 'ივერიის სერვანტი', 'Iveria Walnut Sideboard',
@@ -250,7 +250,7 @@ from (
      'A low four-door sideboard for a dining room or a lounge. Walnut veneer on a steel base.',
      'კაკლის შპონი, ფხვნილით შეღებილი ლითონი', 'Walnut veneer, powder-coated steel', 'W 180 × D 45 × H 72 cm',
      array['https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1400&q=80',
-           'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1618220252344-8ec99ac624b1?w=1400&q=80'],
      false, 'dining'),
 
     -- ---- Office desks ----------------------------------------------------
@@ -259,23 +259,23 @@ from (
      'A light writing desk on oak trestles. Small enough for a home study, solid enough for daily work.',
      'მუხის მასივი', 'Solid oak', 'W 140 × D 65 × H 74 cm',
      array['https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?w=1400&q=80',
-           'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=1400&q=80'],
      true, 'office-desks'),
 
     ('studio-adjustable-desk', 'სტუდიოს რეგულირებადი მაგიდა', 'Studio Height-Adjustable Desk',
      'ელექტრულად რეგულირებადი მაგიდა 68-დან 118 სმ-მდე. ოთხი დასამახსოვრებელი პოზიცია და კაბელის არხი უკანა კიდეზე.',
      'Electrically adjustable from 68 to 118 cm. Four memory positions and a cable channel along the back edge.',
      'მუხის შპონი, ფხვნილით შეღებილი ფოლადი', 'Oak veneer, powder-coated steel', 'W 160 × D 80 × H 68–118 cm',
-     array['https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=1400&q=80',
-           'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1600494603989-9650cf6ddd3d?w=1400&q=80',
+           'https://images.unsplash.com/photo-1688578735427-994ecdea3ea4?w=1400&q=80'],
      true, 'office-desks'),
 
     ('kvira-compact-desk', 'კვირას კომპაქტური მაგიდა', 'Kvira Compact Desk',
      'კომპაქტური სამუშაო მაგიდა პატარა ოთახისთვის. ერთი უჯრა და კაბელის გამოსაყვანი ხვრელი.',
      'A compact work desk for a small room. One drawer and a cable grommet.',
      'მუხის შპონი, ლითონის ფეხები', 'Oak veneer, steel legs', 'W 110 × D 60 × H 74 cm',
-     array['https://images.unsplash.com/photo-1449247709967-d4461a6a6103?w=1400&q=80',
-           'https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=1400&q=80',
+           'https://images.unsplash.com/photo-1449247709967-d4461a5a6103?w=1400&q=80'],
      false, 'office-desks'),
 
     -- ---- Ergonomic chairs ------------------------------------------------
@@ -284,22 +284,23 @@ from (
      'A breathable mesh back, adjustable lumbar support and a synchronised tilt. Built for an eight-hour day.',
      'ბადისებრი ქსოვილი, ალუმინის ფუძე', 'Mesh fabric, aluminium base', 'W 68 × D 68 × H 108–118 cm',
      array['https://images.unsplash.com/photo-1541558869434-2840d308329a?w=1400&q=80',
-           'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1750306957820-f778b67c4e13?w=1400&q=80'],
      true, 'ergonomic-chairs'),
 
     ('alta-executive-chair', 'ალტას ხელმძღვანელის სავარძელი', 'Alta Executive Chair',
      'სრულად გადაკრული სავარძელი მაღალი ზურგით. სიმაღლე, დახრა და ხელსაყრდენები რეგულირდება.',
      'A fully upholstered chair with a high back. Height, tilt and armrests all adjust.',
      'გადასაკრავი ქსოვილი, გაპრიალებული ალუმინი', 'Upholstery fabric, polished aluminium', 'W 70 × D 72 × H 112–122 cm',
-     array['https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=1400&q=80',
-           'https://images.unsplash.com/photo-1517705008128-361805f42e86?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1641794008048-d863bb4a23d3?w=1400&q=80',
+           'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=1400&q=80'],
      false, 'ergonomic-chairs'),
 
     ('kalo-drafting-stool', 'კალოს მაღალი სკამი', 'Kalo Drafting Stool',
      'მაღალი სკამი მდგომარე მაგიდისთვის ან მიმღების დახლისთვის. ფეხის საყრდენი და რბილი ჯდომა.',
      'A high stool for a standing desk or a reception counter. Footrest and a padded seat.',
      'წიფლის ხე, ლითონის ფეხის რგოლი', 'Beech, steel footring', 'W 40 × D 40 × H 65–78 cm',
-     array['https://images.unsplash.com/photo-1503602642458-232111445657?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1503602642458-232111445657?w=1400&q=80',
+           'https://images.unsplash.com/photo-1776548759644-5da0988a7874?w=1400&q=80'],
      false, 'ergonomic-chairs'),
 
     -- ---- Executive suites ------------------------------------------------
@@ -307,8 +308,8 @@ from (
      'მაგიდა და მისი შესაბამისი გვერდითი კარადა ერთ კომპლექტში. სქელი მუხის ზედაპირი დაფარული კაბელის არხით.',
      'A desk and its matching side cabinet as one suite. A thick oak top with a concealed cable channel.',
      'მუხის მასივი, კაკლის შპონი', 'Solid oak, walnut veneer', 'W 200 × D 90 × H 75 cm',
-     array['https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1400&q=80',
-           'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1682617875405-cf931122be0a?w=1400&q=80',
+           'https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=1400&q=80'],
      true, 'executive-suites'),
 
     ('forum-boardroom-table', 'ფორუმის სათათბირო მაგიდა', 'Forum Boardroom Table',
@@ -316,15 +317,15 @@ from (
      'A twelve-seat boardroom table with power and data outlets built into the top.',
      'მუხის შპონი, ფოლადის ფუძე', 'Oak veneer, steel base', 'W 360 × D 120 × H 75 cm',
      array['https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=1400&q=80',
-           'https://images.unsplash.com/photo-1462826303086-329426d1aef5?w=1400&q=80'],
+           'https://images.unsplash.com/photo-1764810815228-b7f9432eec5c?w=1400&q=80'],
      false, 'executive-suites'),
 
     ('folio-bookcase', 'ფოლიოს წიგნის კარადა', 'Folio Executive Bookcase',
      'ღია თაროიანი კარადა კაბინეტისთვის. ხუთი დონე და კედლის ფიქსატორი კომპლექტში.',
      'An open shelving unit for a study. Five levels, with a wall anchor included.',
      'მუხის მასივი, ფხვნილით შეღებილი ლითონი', 'Solid oak, powder-coated steel', 'W 90 × D 35 × H 200 cm',
-     array['https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=1400&q=80',
-           'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1708161885729-63faff807840?w=1400&q=80',
+           'https://images.unsplash.com/photo-1515542706656-8e6ef17a1521?w=1400&q=80'],
      false, 'executive-suites')
 ) as v (
   slug, title_ka, title_en, description_ka, description_en,

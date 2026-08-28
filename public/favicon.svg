@@ -2,9 +2,10 @@
   <!--
     ARCHTRADE monogram.
 
-    An A drawn as a roof truss rather than as a letterform: two rafters and a
-    tie beam, which is the member that stops the rafters spreading and is the
-    only reason the shape stands up. The tie beam is the bronze one.
+    An A built rather than lettered: two members meeting at an apex, held
+    apart by a third. The crossbar is the bronze one, because it is the piece
+    doing the work — the same logic that makes a stretcher, not a leg, the
+    part of a chair that decides whether it survives a decade of use.
 
     Square caps, no rounded joins, no gradient — the same rules the site is
     built on. Full-bleed graphite because a favicon sits against a browser
@@ -13,9 +14,9 @@
   -->
   <rect width="32" height="32" fill="#23262A"/>
   <g fill="none" stroke-linecap="square">
-    <!-- The two rafters, meeting at the apex. -->
+    <!-- The two members, meeting at the apex. -->
     <path d="M6 25.5 16 6.5 26 25.5" stroke="#FBF9F5" stroke-width="2.6"/>
-    <!-- The tie beam. Bronze, because it is the member doing the work. -->
+    <!-- The crossbar. Bronze, because it is the member doing the work. -->
     <path d="M10.4 18.2h11.2" stroke="#8C6D46" stroke-width="3.2"/>
   </g>
 </svg>

@@ -7,9 +7,9 @@ import { useLanguage } from '@/hooks/use-language'
 /**
  * The four disciplines.
  *
- * Photographs rather than icons. A line drawing of a hard hat says "we are a
- * construction company"; a picture of a curtain wall says which curtain wall.
- * The scrim keeps the type legible without a gradient.
+ * Photographs rather than icons. A line drawing of a chair says "furniture";
+ * a photograph of a floor full of it says which furniture, in what room, at
+ * what quality. The scrim keeps the type legible without a gradient.
  *
  * Two columns on desktop, not four. Four would make each card a thumbnail, and
  * these are the four things the company sells.
