@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { DEFAULT_LANGUAGE, LANGUAGE_TAGS } from '@/config/site'
@@ -33,11 +33,26 @@ export function RootLayout() {
     setStoredLanguage(lang)
   }, [lang, valid, i18n])
 
+  /*
+   * Everything after the language segment. /ka/about and /en/about are the
+   * same PAGE in two languages, and this is what says so.
+   */
+  const page = location.pathname.split('/').filter(Boolean).slice(1).join('/')
+  const lastPage = useRef(page)
+
   useEffect(() => {
-    // A new page should start at the top. Skipped when the URL carries a hash,
-    // so in-page anchors still work.
+    const changedPage = lastPage.current !== page
+    lastPage.current = page
+
+    // Switching language rewrites the URL, which used to look like navigation
+    // and threw the reader back to the top of the page — the one moment they
+    // most want to stay where they were, since they are re-reading the passage
+    // they were already on. Only a genuine change of page scrolls now.
+    if (!changedPage) return
+
+    // Skipped when the URL carries a hash, so in-page anchors still work.
     if (!location.hash) window.scrollTo(0, 0)
-  }, [location.pathname, location.hash])
+  }, [page, location.hash])
 
   // An unknown language code is not a 404 — send the visitor to the Georgian
   // version of the same page instead.

@@ -20,8 +20,31 @@ import { useLanguage } from '@/hooks/use-language'
  *   is added, and the page cannot drift into saying something untrue.
  */
 
-const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1616611213095-58abb651f70c?w=2000&q=80'
+/**
+ * The sunlit living room the original site opened with — a linen sofa, an oak
+ * table and tall windows — carried over here at the client's request. Lighter
+ * than the graphite interior it replaces, so the scrim over it is doing real
+ * work: check `at-scrim` in index.css before swapping this for anything
+ * brighter still, or the headline starts to lose the background.
+ */
+const HERO_PHOTO_ID = 'photo-1618221195710-dd6b41faaea6'
+
+/** One width of the hero photograph. */
+const heroSrc = (width: number) =>
+  `https://images.unsplash.com/${HERO_PHOTO_ID}?w=${width}&q=80`
+
+/**
+ * The hero is full-bleed and now full-height, so its width is the width of the
+ * window — anywhere from a 360px phone to a 5K display. A single 2000px file
+ * was the wrong size for nearly all of them: soft on a large or retina screen,
+ * and several hundred wasted kilobytes on a phone.
+ *
+ * Offering the widths lets the browser pick using the screen AND the device
+ * pixel ratio, which is something no fixed `src` can do. `sizes="100vw"` is
+ * the honest declaration here: the image really is the full viewport width.
+ */
+const HERO_WIDTHS = [640, 960, 1280, 1600, 2000, 2560, 3200] as const
+const HERO_SRCSET = HERO_WIDTHS.map((w) => `${heroSrc(w)} ${w}w`).join(', ')
 
 export function B2bHero() {
   const { t, localePath } = useLanguage()
@@ -34,10 +57,25 @@ export function B2bHero() {
     { value: SECTORS.length, label: t('b2b.hero.statSectors') },
   ]
 
+  /*
+   * FULL SCREEN, MINUS THE HEADER.
+   *   The header is fixed and <main> already pads itself down by its height,
+   *   so a plain 100dvh on the section would run exactly one header past the
+   *   bottom of the window. Subtracting it makes the photograph finish flush
+   *   with the fold instead.
+   *
+   *   Still `min-h`, not `h`. On a short window — a laptop at 1280x600, a
+   *   phone in landscape — the headline, description, buttons and figures
+   *   together are taller than the screen, and a hard height would crop them.
+   *   This way the hero fills the screen when there is room and grows when
+   *   there is not.
+   */
   return (
-    <section className="relative isolate flex min-h-[38rem] flex-col justify-end overflow-hidden bg-graphite-deep lg:min-h-[44rem]">
+    <section className="relative isolate flex min-h-[calc(100dvh-var(--at-header-height))] flex-col justify-end overflow-hidden bg-graphite-deep">
       <img
-        src={HERO_IMAGE}
+        src={heroSrc(2000)}
+        srcSet={HERO_SRCSET}
+        sizes="100vw"
         alt=""
         // The one image on the site that must never lazy-load: it is the first
         // thing above the fold and the page is mostly it.
@@ -53,7 +91,12 @@ export function B2bHero() {
         className="at-survey pointer-events-none absolute inset-x-5 inset-y-8 -z-10 sm:inset-x-8 lg:inset-x-12"
       />
 
-      <Container className="pt-32 pb-14 md:pt-44 md:pb-20">
+      {/* The top padding used to be pt-44, which was how the text got pushed
+          down the screen back when the section was only 44rem tall. The
+          section is now full-height and `justify-end` does that job, so all
+          that padding did was make the content taller than the screen it is
+          supposed to fit inside — 850px of content in 828px of room. */}
+      <Container className="pt-24 pb-14 md:pt-28 md:pb-20">
         {/* Wider measure than the old max-w-3xl. The Georgian headline is a
             third longer than the English one, and at 3xl it had nowhere to go
             but downwards. */}
@@ -92,8 +135,20 @@ export function B2bHero() {
             {t('b2b.hero.description')}
           </p>
 
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
-            <Button asChild size="lg">
+          {/*
+           * A TWO-COLUMN GRID, NOT A FLEX ROW, AND THAT IS THE FIX
+           *   Laid out with flex, each button was exactly as wide as its own
+           *   label — so the Georgian pair came out visibly wider than the
+           *   English pair and the buttons changed size under you when you
+           *   switched language.
+           *
+           *   Equal columns inside a capped container decouples the size of
+           *   the buttons from the length of the words: the two are always
+           *   half the container each, in either language. The cap is what
+           *   stops them stretching the full measure of the text above.
+           */}
+          <div className="mt-10 grid gap-3 sm:max-w-2xl sm:grid-cols-2 sm:gap-4">
+            <Button asChild size="lg" className="w-full">
               <Link to={localePath('/catalog')}>{t('b2b.hero.ctaCatalog')}</Link>
             </Button>
 
@@ -103,7 +158,7 @@ export function B2bHero() {
               asChild
               size="lg"
               variant="outline"
-              className="border-background/50 text-background hover:border-background hover:bg-background hover:text-ink"
+              className="w-full border-background/50 text-background hover:border-background hover:bg-background hover:text-ink"
             >
               <Link to={localePath('/contact')}>{t('b2b.hero.ctaConsult')}</Link>
             </Button>
