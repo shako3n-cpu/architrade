@@ -168,7 +168,7 @@ export const BRANDS: readonly Brand[] = [
     name: 'Artifort',
     discipline: 'hospitality',
     country: 'NL',
-    image: IMG('photo-1723804685588-b8a95b2044f3'),
+    image: IMG('photo-1648960456182-00643d5d20eb'),
   },
   {
     name: 'La Cividina',
@@ -212,7 +212,7 @@ export const BRANDS: readonly Brand[] = [
     name: 'Barcelona Design',
     discipline: 'residential',
     country: 'ES',
-    image: IMG('photo-1567016432779-094069958aa5'),
+    image: IMG('photo-1616137148650-4aa14651e02b'),
   },
 
   // ----------------------------------------------------------- Lighting

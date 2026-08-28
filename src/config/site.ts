@@ -105,8 +105,8 @@ export const SOCIAL = [
 export const MAIN_NAV = [
   { to: '/catalog', labelKey: 'nav.catalog' },
   { to: '/collections', labelKey: 'nav.collections' },
-  { to: '/about', labelKey: 'nav.about' },
   { to: '/services', labelKey: 'nav.services' },
+  { to: '/about', labelKey: 'nav.about' },
 ] as const
 
 /** Extra links that appear only in the footer's "quick links" column. */

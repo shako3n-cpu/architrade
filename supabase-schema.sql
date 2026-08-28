@@ -175,8 +175,7 @@ from (
      'სამადგილიანი დივანი სუფთა ხაზებით და ბუნებრივი სელის გადასაკრავით. მუხის ჩარჩო ხელით არის აწყობილი და ათწლეულებზეა გათვლილი.',
      'A three-seater with clean lines under a natural linen cover. The oak frame is hand-assembled and built to last decades.',
      'მუხის მასივი, სელის ქსოვილი', 'Solid oak, linen upholstery', 'W 220 × D 95 × H 85 cm',
-     array['https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400&q=80',
-           'https://images.unsplash.com/photo-1616486338812-3dadae4b4aca?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400&q=80'],
      true, 'living-room'),
 
     ('terra-leather-sofa', 'ტერას ტყავის დივანი', 'Terra Leather Sofa',
@@ -191,8 +190,7 @@ from (
      'ბუკლეს ქსოვილის სავარძელი მრგვალი ზურგით. კომპაქტური საკითხავი კუთხისთვის ან ოფისის მისაღებისთვის.',
      'A bouclé armchair with a rounded back. Compact enough for a reading corner or an office reception.',
      'ბუკლეს ქსოვილი, წიფლის კარკასი', 'Bouclé fabric, beech frame', 'W 78 × D 82 × H 74 cm',
-     array['https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=1400&q=80',
-           'https://images.unsplash.com/photo-1723804685588-b8a95b2044f3?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=1400&q=80'],
      false, 'living-room'),
 
     ('orbit-coffee-table', 'ორბიტის ჟურნალის მაგიდა', 'Orbit Oak Coffee Table',
@@ -208,7 +206,7 @@ from (
      'მინიმალისტური ორადგილიანი საწოლი მუხის მასივისგან, დაბალი თავსაფარით და ჩაშენებული ლამელებით.',
      'A minimalist double bed in solid oak, with a low headboard and integrated slats.',
      'მუხის მასივი', 'Solid oak', 'W 168 × L 210 × H 95 cm',
-     array['https://images.unsplash.com/photo-1505693416388-ac5cc068fe85?w=1400&q=80',
+     array['https://images.unsplash.com/photo-1613940512699-fc9150817bb2?w=1400&q=80',
            'https://images.unsplash.com/photo-1586105251261-72a756497a11?w=1400&q=80'],
      true, 'bedroom'),
 
@@ -216,8 +214,7 @@ from (
      'სამკარიანი გარდერობი ხის ბუნებრივი ტექსტურით. შიგნით — რეგულირებადი თაროები და სრული სიგრძის საკიდი.',
      'A three-door wardrobe with the timber grain left visible. Adjustable shelves and a full-length rail inside.',
      'მუხის შპონი, მუხის მასივის ჩარჩო', 'Oak veneer, solid oak frame', 'W 180 × D 60 × H 210 cm',
-     array['https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=1400&q=80',
-           'https://images.unsplash.com/photo-1595526114035-0d45ad16cfbf?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=1400&q=80'],
      false, 'bedroom'),
 
     ('mira-nightstand', 'მირას საწოლისპირა მაგიდა', 'Mira Walnut Nightstand',
@@ -233,15 +230,14 @@ from (
      'რვაადგილიანი სასადილო მაგიდა მუხის მასივისგან, სქელი ზედაპირით და ტრაპეციული ფეხებით.',
      'An eight-seat dining table in solid oak, with a thick top and tapered legs.',
      'მუხის მასივი, ბუნებრივი ზეთი', 'Solid oak, natural oil', 'W 220 × D 95 × H 75 cm',
-     array['https://images.unsplash.com/photo-1487015307662-6ce6210680f1?w=1400&q=80',
-           'https://images.unsplash.com/photo-1617806118233-d8e1de247200?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1487015307662-6ce6210680f1?w=1400&q=80'],
      true, 'dining'),
 
     ('sella-dining-chair', 'სელას სასადილო სკამი', 'Sella Dining Chair',
      'მოხრილი ხის ზურგი რბილ ჯდომაზე. ერთმანეთზე არ იდგმება, მაგრამ მაგიდის ქვეშ სრულად შედის.',
      'A bent-timber back over an upholstered seat. It does not stack, but it tucks fully under the table.',
      'მოხრილი წიფელი, ქსოვილის ჯდომა', 'Bent beech, fabric seat', 'W 46 × D 52 × H 82 cm',
-     array['https://images.unsplash.com/photo-1598300042247-d888f8ab3a91?w=1400&q=80',
+     array['https://images.unsplash.com/photo-1614066537969-7ae2fae81ace?w=1400&q=80',
            'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80'],
      false, 'dining'),
 
@@ -249,8 +245,7 @@ from (
      'დაბალი სერვანტი ოთხი კარით — სასადილოსთვის ან მისაღებისთვის. კაკლის შპონი ლითონის ფუძეზე.',
      'A low four-door sideboard for a dining room or a lounge. Walnut veneer on a steel base.',
      'კაკლის შპონი, ფხვნილით შეღებილი ლითონი', 'Walnut veneer, powder-coated steel', 'W 180 × D 45 × H 72 cm',
-     array['https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1400&q=80',
-           'https://images.unsplash.com/photo-1618220252344-8ec99ac624b1?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1400&q=80'],
      false, 'dining'),
 
     -- ---- Office desks ----------------------------------------------------
@@ -274,8 +269,7 @@ from (
      'კომპაქტური სამუშაო მაგიდა პატარა ოთახისთვის. ერთი უჯრა და კაბელის გამოსაყვანი ხვრელი.',
      'A compact work desk for a small room. One drawer and a cable grommet.',
      'მუხის შპონი, ლითონის ფეხები', 'Oak veneer, steel legs', 'W 110 × D 60 × H 74 cm',
-     array['https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=1400&q=80',
-           'https://images.unsplash.com/photo-1449247709967-d4461a5a6103?w=1400&q=80'],
+     array['https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=1400&q=80'],
      false, 'office-desks'),
 
     -- ---- Ergonomic chairs ------------------------------------------------

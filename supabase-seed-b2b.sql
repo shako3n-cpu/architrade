@@ -111,14 +111,14 @@ from (values
    'Arne Jacobsen, 1955. Stacks twelve high and is still the default for a conference floor.',
    'მწარმოებელი: Fritz Hansen. ფორმაწნეხილი ხე, ქრომირებული ფოლადი.',
    'Manufacturer: Fritz Hansen. Pressure-moulded veneer, chromed steel.',
-   'W 50 x D 52 x H 78 cm', array['https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80','https://images.unsplash.com/photo-1598300042247-d888f8ab3a91?w=1400&q=80'], true, 'hospitality-furniture'),
+   'W 50 x D 52 x H 78 cm', array['https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=80','https://images.unsplash.com/photo-1614066537969-7ae2fae81ace?w=1400&q=80'], true, 'hospitality-furniture'),
 
   ('artifort-mare-lounge-chair', 'Artifort Mare — სავარძელი', 'Artifort Mare Lounge Chair',
    'ლობის სავარძელი დაბალი ზურგით — მოლოდინის სივრცისთვის, სადაც ხედვის ხაზი უნდა დარჩეს.',
    'A low-backed lobby chair for waiting areas where the sight line has to survive the seating.',
    'მწარმოებელი: Artifort. ცივად ჩამოსხმული ქაფი, მუხის ფეხები, საკონტრაქტო ქსოვილი.',
    'Manufacturer: Artifort. Cold-cured foam, oak legs, contract-grade upholstery.',
-   'W 72 x D 76 x H 74 cm', array['https://images.unsplash.com/photo-1723804685588-b8a95b2044f3?w=1400&q=80','https://images.unsplash.com/photo-1687262304525-02287047d4d6?w=1400&q=80'], false, 'hospitality-furniture'),
+   'W 72 x D 76 x H 74 cm', array['https://images.unsplash.com/photo-1687262304525-02287047d4d6?w=1400&q=80'], false, 'hospitality-furniture'),
 
   ('sancal-tiptoe-armchair', 'Sancal Tiptoe — სავარძელი', 'Sancal Tiptoe Armchair',
    'მაღალი მხრებით სავარძელი, რომელიც ღია სივრცეში საკუთარ კუთხეს ქმნის.',
@@ -168,14 +168,14 @@ from (values
    'A low, deep modular sofa, specified for sitting back rather than sitting up.',
    'მწარმოებელი: Barcelona Design. წიფლის კარკასი, ბუმბულის ბალიშები.',
    'Manufacturer: Barcelona Design. Beech frame, feather-wrapped cushions.',
-   'Module W 100 x D 100 x H 68 cm', array['https://images.unsplash.com/photo-1567016432779-094069958aa5?w=1400&q=80','https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?w=1400&q=80'], true, 'residential-collection'),
+   'Module W 100 x D 100 x H 68 cm', array['https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?w=1400&q=80'], true, 'residential-collection'),
 
   ('fredericia-post-console', 'Fredericia Post — კონსოლი', 'Fredericia Post Console',
    'ვიწრო კონსოლი დერეფნისთვის ან ლობისთვის, სადაც სიღრმე არ არის.',
    'A narrow console for a corridor or a lobby, where there is length but no depth.',
    'მწარმოებელი: Fredericia. მასიური მუხა, ზეთით დაფარული.',
    'Manufacturer: Fredericia. Solid oiled oak.',
-   'W 140 x D 35 x H 78 cm', array['https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1400&q=80','https://images.unsplash.com/photo-1618220252344-8ec99ac624b1?w=1400&q=80'], false, 'residential-collection'),
+   'W 140 x D 35 x H 78 cm', array['https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1400&q=80'], false, 'residential-collection'),
 
   -- -------------------------------------------------- ARCHITECTURAL LIGHTING
   ('marset-discoco-pendant', 'Marset Discocó — დაკიდებული სანათი', 'Marset Discocó Pendant',
