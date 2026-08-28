@@ -10,6 +10,8 @@ type SectionProps = {
   bordered?: boolean
   id?: string
   'aria-labelledby'?: string
+  /** For a section whose heading is rendered by its parent page instead. */
+  'aria-label'?: string
 }
 
 const SPACING = {

@@ -29,7 +29,8 @@ export function Brands() {
         description={t('brands.description')}
       />
 
-      <B2bBrandCards />
+      {/* The page header above already carries the title and the subtitle. */}
+      <B2bBrandCards showHeading={false} />
       <ContactBand />
     </>
   )

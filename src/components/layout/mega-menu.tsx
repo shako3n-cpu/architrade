@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { Media } from '@/components/ui/media'
@@ -10,6 +10,12 @@ import { cn } from '@/lib/utils'
 /** Featured branches shown as photographs down the right-hand rail. */
 const FEATURE_LIMIT = 2
 
+/** Grace period before a hover-opened menu closes, in ms. */
+const CLOSE_DELAY = 220
+
+/** How far the page must move before a locked menu gives up, in px. */
+const SCROLL_TOLERANCE = 120
+
 /**
  * The catalogue mega menu.
  *
@@ -20,51 +26,99 @@ const FEATURE_LIMIT = 2
  *   answers "what is in this shop" in a single look — which is the whole point
  *   when there is no search box to fall back on.
  *
- * OPENS ON HOVER, BUT NOT ONLY ON HOVER
- *   Hover is how a mouse expects this to work, so it opens on pointer enter.
- *   That is useless to a keyboard and hostile on a touchscreen, so the trigger
- *   is also a real button: Enter and Space toggle it, Escape closes it and
- *   returns focus, and moving focus out of the panel closes it. The trigger
- *   itself always navigates to /catalog when activated by click, so the menu
- *   never becomes the only way to reach the catalogue.
+ * THE DEAD STRIP, WHICH IS WHY THIS USED TO SHUT IN YOUR FACE
+ *   The panel hangs off the BOTTOM OF THE HEADER, while the trigger is a
+ *   button centred inside it. That left a strip — header padding, ~20px — that
+ *   belonged to neither: moving the cursor down from the word "Catalogue"
+ *   crossed it, `pointerleave` fired, and the menu closed before the pointer
+ *   ever reached the links it was aimed at.
  *
- * CLOSING ON NAVIGATION
- *   Tied to `location`, not to the click handler — a link inside the panel, a
- *   browser back button and a redirect all have to close it, and only the
- *   first of those goes through a handler this component owns.
+ *   Two fixes, and both are wanted. The wrapper is now the FULL HEIGHT of the
+ *   header, so the strip is inside it and the descent never leaves the
+ *   element at all. And closing is on a timer, so a cursor that clips a corner
+ *   on the way down has ~220ms to come back before anything happens.
+ *
+ * HOVER OPENS IT, A CLICK PINS IT
+ *   Hover alone is a poor contract: it is useless to a keyboard, hostile on a
+ *   touchscreen, and it means the menu can never be read at leisure. So a
+ *   click LOCKS it open and it stays until the visitor says otherwise —
+ *   clicking the trigger again, clicking anywhere outside it, pressing Escape,
+ *   or scrolling the page more than a screen-corner's worth. While locked,
+ *   pointer-out does nothing.
  */
 export function MegaMenu({ tree, className }: { tree: CategoryNode[]; className?: string }) {
   const [open, setOpen] = useState(false)
+  const [locked, setLocked] = useState(false)
   const location = useLocation()
   const { localePath, t } = useLanguage()
   const wrapper = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
+  const closeTimer = useRef<number | undefined>(undefined)
 
-  useEffect(() => {
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current === undefined) return
+    window.clearTimeout(closeTimer.current)
+    closeTimer.current = undefined
+  }, [])
+
+  const closeNow = useCallback(() => {
+    cancelClose()
     setOpen(false)
-  }, [location.pathname])
+    setLocked(false)
+  }, [cancelClose])
+
+  // Navigating closes it: a link inside the panel, the back button and a
+  // redirect all have to, and only the first goes through a handler here.
+  useEffect(() => {
+    closeNow()
+  }, [location.pathname, closeNow])
+
+  // Timers outlive the component if the visitor navigates mid-countdown.
+  useEffect(() => cancelClose, [cancelClose])
 
   useEffect(() => {
     if (!open) return
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      setOpen(false)
-      // Focus would otherwise be left on a panel that no longer exists, which
-      // drops the keyboard user back at the top of the document.
+      closeNow()
+      // Focus would otherwise be stranded on a panel that is no longer there,
+      // dropping the keyboard user back at the top of the document.
       trigger.current?.focus()
     }
 
+    const onPointerDown = (event: PointerEvent) => {
+      if (wrapper.current?.contains(event.target as Node)) return
+      closeNow()
+    }
+
+    // Anchored to where the page was when it opened, so the menu survives the
+    // small scroll a trackpad emits while the pointer is only resting.
+    const openedAt = window.scrollY
+    const onScroll = () => {
+      if (Math.abs(window.scrollY - openedAt) > SCROLL_TOLERANCE) closeNow()
+    }
+
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open])
+    document.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [open, closeNow])
 
   // An empty tree means the catalogue has not loaded, or every branch is
   // hidden. Either way there is nothing to drop down, so the trigger degrades
-  // to the plain link it would have been.
+  // to the plain link it would otherwise have been.
   if (tree.length === 0) {
     return (
-      <Link to={localePath('/catalog')} className={cn('at-label py-2 text-muted hover:text-ink', className)}>
+      <Link
+        to={localePath('/catalog')}
+        className={cn('at-label py-2 text-muted hover:text-ink', className)}
+      >
         {t('nav.catalog')}
       </Link>
     )
@@ -75,13 +129,23 @@ export function MegaMenu({ tree, className }: { tree: CategoryNode[]; className?
   return (
     <div
       ref={wrapper}
-      className={cn('static', className)}
-      onPointerEnter={() => setOpen(true)}
-      onPointerLeave={() => setOpen(false)}
+      // Full header height, so the strip under the button is inside the
+      // element and moving down into the panel never leaves it. `static` keeps
+      // the panel positioned against the header rather than against this.
+      className={cn('static flex h-[var(--at-header-height)] items-center', className)}
+      onPointerEnter={() => {
+        cancelClose()
+        setOpen(true)
+      }}
+      onPointerLeave={() => {
+        if (locked) return
+        cancelClose()
+        closeTimer.current = window.setTimeout(() => setOpen(false), CLOSE_DELAY)
+      }}
       onBlur={(event) => {
-        // relatedTarget is where focus is going. Inside the panel means the
-        // visitor is still using it; anywhere else means they have left.
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false)
+        if (locked) return
+        // relatedTarget is where focus is going: inside means still in use.
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeNow()
       }}
     >
       <button
@@ -89,7 +153,15 @@ export function MegaMenu({ tree, className }: { tree: CategoryNode[]; className?
         type="button"
         aria-expanded={open}
         aria-controls="mega-menu"
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (locked) {
+            closeNow()
+            return
+          }
+          cancelClose()
+          setOpen(true)
+          setLocked(true)
+        }}
         className={cn(
           'at-label relative flex items-center gap-1.5 py-2 transition-colors duration-300',
           'after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left',
@@ -110,7 +182,7 @@ export function MegaMenu({ tree, className }: { tree: CategoryNode[]; className?
         // links, and a crawler that never fires a pointer event should still
         // find them.
         hidden={!open}
-        className="absolute inset-x-0 top-full z-40 border-t border-hairline bg-background shadow-none"
+        className="absolute inset-x-0 top-full z-40 border-t border-hairline bg-background"
       >
         <div className="mx-auto w-full max-w-[90rem] px-5 py-12 sm:px-8 lg:px-12">
           <div className={cn('grid gap-10', featured.length > 0 ? 'lg:grid-cols-[1fr_20rem]' : '')}>

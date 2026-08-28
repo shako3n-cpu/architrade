@@ -11,6 +11,7 @@ import { useCatalogue } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category, Product } from '@/data/types'
 import { countByCategory, filterProducts, type CatalogFilters } from '@/lib/catalog-filter'
+import { buildCategoryTree, publicTree } from '@/lib/category-tree'
 
 /**
  * /catalog — the whole catalogue, filterable.
@@ -113,6 +114,12 @@ function CatalogBody({
     () => new Map(categories.map((entry) => [entry.id, entry])),
     [categories],
   )
+  // Built HERE, where the products are, because publicTree needs the counts to
+  // decide what is worth showing. See the note on `branches` in the rail.
+  const branches = useMemo(
+    () => publicTree(buildCategoryTree(categories, products)),
+    [categories, products],
+  )
 
   return (
     <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
@@ -120,7 +127,7 @@ function CatalogBody({
           simply stacked above it on a phone, where sticky would eat the screen. */}
       <aside className="lg:col-span-3 lg:sticky lg:top-28 lg:self-start">
         <CatalogFilterRail
-          categories={categories}
+          branches={branches}
           counts={counts}
           total={products.length}
           filters={filters}

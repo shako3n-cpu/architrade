@@ -346,15 +346,15 @@
     },
     "services": {
       "eyebrow": "What we do",
-      "title": "Four things, and all of them are furniture.",
-      "description": "Most projects need more than one. Taking them from one supplier is what keeps a lobby, a boardroom and an open floor looking like one building.",
-      "fitOutName": "Fit-out supply",
+      "title": "Complete furnishing for commercial and architectural interiors",
+      "description": "Furniture, lighting and acoustic systems from European manufacturers, specified to the project.",
+      "fitOutName": "HoReCa & hotels",
       "fitOutBody": "Whole floors quoted, warehoused and installed against your programme. One order, one delivery schedule, one snag list.",
-      "workplaceName": "Workplace furniture",
+      "workplaceName": "Workplace solutions",
       "workplaceBody": "Task seating, bench desking, storage walls and meeting tables, specified for eight-hour days and a ten-year life rather than for a photograph.",
-      "lightingName": "Architectural lighting",
+      "lightingName": "Technical and decorative lighting",
       "lightingBody": "Decorative and technical fittings together — from UGR<19 office luminaires to the pendant a lobby is remembered by.",
-      "acousticsName": "Acoustic solutions",
+      "acousticsName": "Acoustic systems",
       "acousticsBody": "Pods, baffles, panels and desk screens. The line most often cut from a budget and most often complained about six months after handover.",
       "teaserCta": "All services"
     },
@@ -374,8 +374,8 @@
     },
     "about": {
       "eyebrow": "The company",
-      "title": "We are the supplier, not the intermediary.",
-      "statement": "A selective, high-grade product range. Conformity with international standards. Effective project management and resource allocation. Prompt, cost-effective service and rational, practical solutions — chosen once, and then held to.",
+      "title": "The direct representative of European brands in Georgia",
+      "statement": "We manage the whole of supply — from the manufacturer to installation on site. International standards of quality, held to the budget and to the programme.",
       "processEyebrow": "How an order runs",
       "processTitle": "Four steps, in this order.",
       "briefName": "Brief",
@@ -430,7 +430,7 @@
     "clients": {
       "eyebrow": "References",
       "title": "Our partners",
-      "description": "Ministries, bank headquarters, hotel groups and head offices. Most of them came back for a second building.",
+      "description": "A trusted partner on large private and public projects.",
       "note": "Names are listed with our clients' permission. Full references and site visits can be arranged on request."
     },
     "pages": {
@@ -458,8 +458,8 @@
   },
   "brands": {
     "eyebrow": "Manufacturers",
-    "title": "The houses whose work we hold.",
-    "description": "Twenty-nine European and American manufacturers, held under agency and specified into buildings across Georgia. Filter by what a project needs and ask for a quotation against any of them.",
+    "title": "International partner brands",
+    "description": "Twenty-nine European and American manufacturers we represent officially in Georgia. Choose the products for your project.",
     "allDisciplines": "All",
     "countLabel_one": "{{count}} manufacturer",
     "countLabel_other": "{{count}} manufacturers",

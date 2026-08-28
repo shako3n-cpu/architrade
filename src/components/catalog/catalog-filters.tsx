@@ -4,7 +4,7 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category } from '@/data/types'
 import { categoryTitle } from '@/lib/localize'
-import { buildCategoryTree, publicTree, type CategoryNode } from '@/lib/category-tree'
+import type { CategoryNode } from '@/lib/category-tree'
 import { isUnfiltered, type CatalogFilters } from '@/lib/catalog-filter'
 import { cn } from '@/lib/utils'
 
@@ -30,13 +30,20 @@ import { cn } from '@/lib/utils'
  *   path, and the category list is the browsing one.
  */
 export function CatalogFilterRail({
-  categories,
+  branches,
   counts,
   total,
   filters,
   onChange,
 }: {
-  categories: Category[]
+  /*
+   * The tree ARRIVES BUILT. It used to be built here from `categories`
+   * alone — and `publicTree` hides any branch holding no products, so with
+   * no products passed in every count was zero and it hid the entire tree.
+   * The rail rendered "All products" and not one category. Whoever owns the
+   * products owns the tree; this component only draws it.
+   */
+  branches: CategoryNode[]
   counts: Record<string, number>
   /** Pieces in the whole catalogue, for the "all" row. */
   total: number
@@ -45,10 +52,6 @@ export function CatalogFilterRail({
 }) {
   const { t } = useLanguage()
   const [open, setOpen] = useState(false)
-
-  // Only branches the public can see, so the rail and the menu agree on what
-  // the catalogue contains.
-  const branches = publicTree(buildCategoryTree(categories))
 
   return (
     <div className="flex flex-col gap-6 lg:gap-10">

@@ -14,6 +14,14 @@ import { FooterColumn } from './footer-column'
  * Four columns on desktop, stacking to one on mobile. Category links come from
  * the `categories` table, so adding a category in Supabase adds it here with
  * no edit to this file.
+ *
+ * TOP-LEVEL CATEGORIES ONLY
+ *   This mapped the whole table, which was right when the table was six flat
+ *   rows. Against the tree it emitted all twenty-nine — leaves listed beside
+ *   their own parents, and the hidden branches too — as one column that ran
+ *   several times the height of everything next to it and pulled the footer
+ *   grid apart. A footer is a map, not an index: it names the four doors and
+ *   lets the mega menu carry the rest.
  */
 export function Footer() {
   const { lang, localePath, t } = useLanguage()
@@ -28,10 +36,19 @@ export function Footer() {
   // The footer sits on every page, so it must never be the thing that breaks
   // one. While the query is in flight, or if it fails, the column simply has
   // no links — no skeleton, no error panel, nothing for the visitor to read.
-  const categoryLinks = (categories.data ?? []).map((category) => ({
-    to: localePath(`/catalog/${category.slug}`),
-    label: categoryTitle(category, lang),
-  }))
+  //
+  // Filtered on the two columns directly rather than through publicTree,
+  // because that helper hides a branch holding no products and would need the
+  // products fetched here to know. The footer does not need that precision,
+  // and a second catalogue request on every page to get it would be a poor
+  // trade. `is_active` alone already excludes the branches with nothing in
+  // them, since those are exactly the ones seeded off.
+  const categoryLinks = (categories.data ?? [])
+    .filter((category) => !category.parent_id && category.is_active !== false)
+    .map((category) => ({
+      to: localePath(`/catalog/${category.slug}`),
+      label: categoryTitle(category, lang),
+    }))
 
   return (
     <footer className="border-t border-hairline">

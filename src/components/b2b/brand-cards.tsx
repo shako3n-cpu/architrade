@@ -33,7 +33,7 @@ type Filter = Discipline | 'all'
  *   reference wall, so the page has one idea of what pointing at something
  *   looks like.
  */
-export function B2bBrandCards() {
+export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean }) {
   const { t } = useLanguage()
   const [filter, setFilter] = useState<Filter>('all')
 
@@ -45,14 +45,27 @@ export function B2bBrandCards() {
   const filters: Filter[] = ['all', ...DISCIPLINES]
 
   return (
-    <Section spacing="lg" bordered id="partners" aria-labelledby="partners-title">
+    <Section
+      spacing="lg"
+      bordered
+      id="partners"
+      {...(showHeading
+        ? { 'aria-labelledby': 'partners-title' }
+        : { 'aria-label': t('b2b.brands.eyebrow') })}
+    >
       <Container>
-        <SectionHeading
-          id="partners-title"
-          eyebrow={t('b2b.brands.eyebrow')}
-          title={t('b2b.brands.title')}
-          description={t('b2b.brands.description')}
-        />
+        {/* Off on /brands, where the page header directly above says the same
+            thing. Two headings stacked is what happens when a section that was
+            written to sit INSIDE another page becomes a page of its own; the
+            component keeps its heading for anywhere else it gets used. */}
+        {showHeading && (
+          <SectionHeading
+            id="partners-title"
+            eyebrow={t('b2b.brands.eyebrow')}
+            title={t('b2b.brands.title')}
+            description={t('b2b.brands.description')}
+          />
+        )}
 
         <div className="mt-12 flex flex-wrap items-center gap-x-2 gap-y-3">
           {filters.map((value) => {
