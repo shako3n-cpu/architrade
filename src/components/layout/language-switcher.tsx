@@ -26,34 +26,32 @@ export function LanguageSwitcher({
     <div
       role="group"
       aria-label={t('header.languageLabel')}
-      className={cn('flex items-center', className)}
+      className={cn('flex items-center gap-1.5', className)}
     >
-      {LANGUAGES.map((code: Language, index) => {
+      {LANGUAGES.map((code: Language) => {
         const isActive = code === lang
 
         return (
-          <div key={code} className="flex items-center">
-            {/* Hairline separator between the codes, never before the first. */}
-            {index > 0 && <span aria-hidden="true" className="h-3 w-px bg-hairline" />}
-
-            <button
-              type="button"
-              onClick={() => switchLanguage(code)}
-              // Tells assistive tech which language is currently applied.
-              aria-current={isActive ? 'true' : undefined}
-              lang={code}
-              className={cn(
-                'at-label inline-flex items-center transition-colors duration-300',
-                // The label is 10px, so without a floor these are a ~20px
-                // target sitting right next to each other.
-                'min-h-11 sm:min-h-0',
-                size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5',
-                isActive ? 'text-brass' : 'text-muted hover:text-ink',
-              )}
-            >
-              {LANGUAGE_LABELS[code]}
-            </button>
-          </div>
+          <button
+            key={code}
+            type="button"
+            onClick={() => switchLanguage(code)}
+            // Tells assistive tech which language is currently applied.
+            aria-current={isActive ? 'true' : undefined}
+            lang={code}
+            className={cn(
+              'at-label inline-flex items-center justify-center rounded-xs border transition-colors duration-300',
+              // The label is 10px, so without a floor these are a ~20px
+              // target sitting right next to each other.
+              'min-h-11 sm:min-h-0',
+              size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5',
+              isActive
+                ? 'border-brass bg-brass text-background'
+                : 'border-hairline text-muted hover:border-ink hover:text-ink',
+            )}
+          >
+            {LANGUAGE_LABELS[code]}
+          </button>
         )
       })}
     </div>

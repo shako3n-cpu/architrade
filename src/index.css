@@ -148,6 +148,34 @@
     color: var(--at-background);
   }
 
+  /* Headings, labels and interactive chrome are UI, not manuscript — a click
+     should never leave a blinking text caret sitting in a page title. Body
+     copy (p, address, dl/dd, li) keeps normal selection so a phone number or
+     a paragraph can still be copied. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  button,
+  a,
+  label,
+  nav,
+  .at-label {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Real text fields opt back in, even if nested inside one of the elements
+     above. */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   /* Images never stretch, and always reserve their box while loading. */
   img,
   picture,

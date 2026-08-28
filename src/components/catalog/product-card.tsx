@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Media } from '@/components/ui/media'
-import { InquireButtons } from '@/components/contact/inquire-buttons'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category, Product } from '@/data/types'
 import {
@@ -42,11 +41,14 @@ export function ProductCard({
   const materials = productMaterials(product, lang)
 
   return (
-    <article className={cn('group flex flex-col', className)}>
-      <Link
-        to={localePath(`/product/${product.slug}`)}
-        className="relative block overflow-hidden bg-surface"
-      >
+    <Link
+      to={localePath(`/product/${product.slug}`)}
+      // The whole card is one target — image, title, tags, price — so a
+      // visitor can land anywhere on it and reach the piece, not just the
+      // photograph or the title text.
+      className={cn('group flex flex-col', className)}
+    >
+      <div className="relative overflow-hidden bg-surface">
         {cover ? (
           <Media
             src={cover}
@@ -79,16 +81,11 @@ export function ProductCard({
             {t('product.featuredBadge')}
           </span>
         )}
-      </Link>
+      </div>
 
       <div className="mt-5 flex flex-1 flex-col">
-        <h3 className="font-heading text-lg leading-snug text-ink">
-          <Link
-            to={localePath(`/product/${product.slug}`)}
-            className="transition-colors duration-300 hover:text-brass"
-          >
-            {productTitle(product, lang)}
-          </Link>
+        <h3 className="font-heading text-lg leading-snug text-ink transition-colors duration-300 group-hover:text-brass">
+          {productTitle(product, lang)}
         </h3>
 
         <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted">
@@ -101,17 +98,15 @@ export function ProductCard({
           {materials && <Tag>{materials}</Tag>}
         </div>
 
-        {/* Pushes the price line and the enquiry row to the bottom, so cards of
-            different text lengths still line up along their last row. */}
+        {/* Pushes the price line to the bottom, so cards of different text
+            lengths still line up along their last row. */}
         <div className="mt-auto pt-5">
           <p className="text-xs tracking-[0.14em] text-brass uppercase">
             {t('product.priceOnRequest')}
           </p>
-
-          <InquireButtons product={product} variant="inline" className="mt-3.5" />
         </div>
       </div>
-    </article>
+    </Link>
   )
 }
 

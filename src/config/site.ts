@@ -70,13 +70,12 @@ export const CONTACT = {
  * though that produces the same string: this file must not import from lib,
  * which already imports from here.
  *
- * PLACEHOLDER: the Instagram and Pinterest handles are still guesses — give
- * them the same treatment as facebookHandle once the real accounts are known.
+ * PLACEHOLDER: the Instagram handle is still a guess — give it the same
+ * treatment as facebookHandle once the real account is known.
  */
 export const SOCIAL = [
   { name: 'Facebook', href: `https://facebook.com/${CONTACT.facebookHandle}` },
   { name: 'Instagram', href: 'https://instagram.com/archtrade' },
-  { name: 'Pinterest', href: 'https://pinterest.com/archtrade' },
 ] as const
 
 /* -------------------------------------------------------------------------- */

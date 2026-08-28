@@ -5,6 +5,7 @@ import { Hero } from '@/components/home/hero'
 import { CategoryGroupSection } from '@/components/home/category-group'
 import { FeaturedGrid } from '@/components/home/featured-grid'
 import { ValuePoints } from '@/components/home/value-points'
+import { Clients } from '@/components/home/clients'
 import { ContactBand } from '@/components/home/contact-band'
 import { useCatalogue } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
@@ -65,6 +66,7 @@ export function Home() {
       </QueryState>
 
       <ValuePoints />
+      <Clients />
       <ContactBand />
     </>
   )

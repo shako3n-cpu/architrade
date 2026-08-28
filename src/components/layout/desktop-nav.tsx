@@ -23,7 +23,7 @@ export function DesktopNav({ className }: { className?: string }) {
               // "end" is off so /catalog stays active on /catalog/living-room.
               className={({ isActive }) =>
                 cn(
-                  'at-label relative py-2 transition-colors duration-300',
+                  'at-label relative py-2 text-xs transition-colors duration-300',
                   'after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px',
                   'after:origin-left after:scale-x-0 after:bg-brass',
                   'after:transition-transform after:duration-300',

@@ -82,7 +82,11 @@
     "contactEyebrow": "Ask about a piece",
     "contactTitle": "Tell us what the room needs",
     "contactBody": "There are no prices on this site because no two commissions are the same. Send the piece and the room, and you will have a quote — usually within a few hours.",
-    "groupEmpty": "This part of the catalogue has not been set up yet."
+    "groupEmpty": "This part of the catalogue has not been set up yet.",
+    "clientsEyebrow": "References",
+    "clientsTitle": "Who the work was for",
+    "clientsDescription": "Ministries, bank headquarters, hotel groups and head offices. Most of them came back for a second building.",
+    "clientsNote": "Names are listed with our clients' permission. Full references and site visits can be arranged on request."
   },
   "contact": {
     "openChannels": "Open contact options",
