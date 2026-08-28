@@ -3,27 +3,47 @@ import { useLanguage } from '@/hooks/use-language'
 import { cn } from '@/lib/utils'
 
 /**
- * The language toggle — ONE button, showing the language you would get.
+ * The language toggle — one button per language, the active one highlighted.
  *
- * Switching keeps the visitor on the same page (see useLanguage) and writes the
- * choice to localStorage so the next visit opens in the same language.
+ * WHAT CHANGED, AND THE PROBLEM IT BRINGS BACK
+ *   This was a single button showing the language you would GET, which has no
+ *   ambiguity about which half is pressable. A pair has to answer a question
+ *   before it can be used: which of these is my current state, and which is
+ *   the thing I can press. That is a real cost and it is why the single
+ *   button existed.
  *
- * WHY ONE BUTTON AND NOT TWO
- *   Two chips side by side have to answer a question before they can be used:
- *   which of these is the state I am in, and which is the thing I can press.
- *   Bronze-fill-means-current is a convention the visitor has to be taught,
- *   and half of them read the filled one as the button. A single control has
- *   no such ambiguity — it shows the language you are not reading, and
- *   pressing it gets you that language.
+ *   The pair is what was asked for, so the job here is to make that question
+ *   answer itself:
  *
- *   The cost is that the current language is no longer displayed. That is the
- *   right trade here: the page is already IN that language, which is a far
- *   louder signal than a highlighted two-letter code.
+ *     - The active language is FILLED in bronze; the other is a plain link
+ *       with no border at all. One reads as a label, one reads as an action,
+ *       which is the distinction two identical outlined chips never made.
+ *     - The active one is a <span>, not a <button>. It is not pressable,
+ *       cannot be tabbed to, and cannot be clicked to no effect — so the
+ *       control has exactly one target, the same as the single button did.
+ *     - `aria-current="true"` states it outright for a screen reader, which
+ *       colour alone never does.
  *
- * The target is computed by CYCLING rather than by "the other one", so this
- * keeps working if a third language is ever added — it would then step
- * ka -> en -> ru -> ka. Only the wording of the label would need revisiting.
+ * Switching keeps the visitor on the same page (see useLanguage) and writes
+ * the choice to localStorage so the next visit opens in the same language.
  */
+
+/**
+ * Display order, which is NOT the order in LANGUAGES.
+ *
+ * LANGUAGES leads with `ka` because it is the default the site falls back to.
+ * The switcher reads EN | KA, so the codes are rendered in that order and any
+ * language not named here follows in config order — adding a third language
+ * shows it rather than hiding it.
+ */
+const DISPLAY_ORDER: readonly Language[] = ['en', 'ka']
+
+function inDisplayOrder(): Language[] {
+  const known = DISPLAY_ORDER.filter((language) => LANGUAGES.includes(language))
+  const rest = LANGUAGES.filter((language) => !known.includes(language))
+  return [...known, ...rest]
+}
+
 export function LanguageSwitcher({
   className,
   size = 'md',
@@ -34,42 +54,57 @@ export function LanguageSwitcher({
 }) {
   const { lang, switchLanguage, t } = useLanguage()
 
-  const current = LANGUAGES.indexOf(lang as Language)
-  // -1 would mean the active language is not in LANGUAGES at all; falling back
-  // to index 0 makes the button step somewhere sensible instead of rendering
-  // `undefined`.
-  const next = LANGUAGES[(Math.max(current, 0) + 1) % LANGUAGES.length]
+  const pad = size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5'
+  // Without a floor these are ~20px tap targets on a phone.
+  const base = cn(
+    'inline-flex min-h-11 items-center justify-center rounded-xs sm:min-h-0',
+    // Deliberately NOT `at-label`: that class is 11px, sized for an eyebrow
+    // above a heading. Here the label IS the control, and at 11px in muted
+    // grey it reads as a caption rather than as something to press.
+    'font-body text-[0.78125rem] font-medium tracking-[0.14em] uppercase',
+    'transition-colors duration-300',
+    pad,
+  )
 
   return (
-    <button
-      type="button"
-      onClick={() => switchLanguage(next)}
-      // The visible text is a bare language code, which on its own tells a
-      // screen reader nothing about what pressing it does.
+    <div
+      className={cn('flex items-center gap-1', className)}
+      // A group label, because two bare language codes side by side tell a
+      // screen reader nothing about what they are for.
+      role="group"
       aria-label={t('header.languageLabel')}
-      // Marks the code as being IN the target language, so it is announced as
-      // English "EN" rather than read through Georgian pronunciation rules.
-      lang={next}
-      className={cn(
-        'inline-flex items-center justify-center rounded-xs border transition-colors duration-300',
-        // Deliberately NOT `at-label`. That class is 11px, sized for eyebrows
-        // sitting above a heading where the heading carries the weight. Here
-        // the label IS the control, and at 11px in muted grey it read as a
-        // caption rather than something to press.
-        'font-body text-[0.78125rem] font-medium tracking-[0.14em] uppercase',
-        // Without a floor this is a ~20px tap target.
-        'min-h-11 sm:min-h-0',
-        size === 'sm' ? 'px-2.5 py-1' : 'px-3.5 py-1.5',
-        // Outlined rather than filled: this is an action, and the bronze fill
-        // is spoken for elsewhere as "this is the current thing". The border
-        // is muted at 45%, not `hairline` — hairline is roughly 1.1:1 on this
-        // background, i.e. invisible, which is what made the old pair read as
-        // plain text however it was marked up.
-        'border-muted/45 bg-surface text-ink hover:border-brass hover:bg-brass hover:text-background',
-        className,
-      )}
     >
-      {LANGUAGE_LABELS[next]}
-    </button>
+      {inDisplayOrder().map((language) => {
+        const isCurrent = language === lang
+        const label = LANGUAGE_LABELS[language]
+
+        if (isCurrent) {
+          return (
+            <span
+              key={language}
+              aria-current="true"
+              // Marks the code as being IN that language, so it is announced
+              // as English "EN" rather than through Georgian pronunciation.
+              lang={language}
+              className={cn(base, 'bg-brass text-background')}
+            >
+              {label}
+            </span>
+          )
+        }
+
+        return (
+          <button
+            key={language}
+            type="button"
+            onClick={() => switchLanguage(language)}
+            lang={language}
+            className={cn(base, 'text-muted hover:bg-surface hover:text-ink')}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
   )
 }

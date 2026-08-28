@@ -13,6 +13,7 @@ import { About } from '@/pages/about'
 import { Services } from '@/pages/services'
 import { Collections } from '@/pages/collections'
 import { Contact } from '@/pages/contact'
+import { Brands } from '@/pages/brands'
 import { AdminCategories } from '@/pages/admin/categories'
 import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
@@ -103,6 +104,7 @@ const publicRoutes = (
     <Route path="product/:slug" element={<Product />} />
     <Route path="about" element={<About />} />
     <Route path="services" element={<Services />} />
+    <Route path="brands" element={<Brands />} />
     <Route path="showroom" element={<Placeholder title="Showroom" />} />
     <Route path="contact" element={<Contact />} />
     <Route path="privacy" element={<Placeholder title="Privacy policy" />} />

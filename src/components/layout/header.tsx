@@ -1,6 +1,7 @@
 import { Phone } from 'lucide-react'
 import { CONTACT } from '@/config/site'
 import { useLanguage } from '@/hooks/use-language'
+import { useNavigationTree } from '@/hooks/use-navigation'
 import { useScrolled } from '@/hooks/use-scrolled'
 import { cn } from '@/lib/utils'
 import { Wordmark } from './wordmark'
@@ -24,6 +25,9 @@ import { MobileDrawer } from './mobile-drawer'
 export function Header() {
   const { t } = useLanguage()
   const scrolled = useScrolled(24)
+  // Fetched once here and handed to both navigations, rather than each one
+  // asking for the same tree. See the note in use-navigation.ts.
+  const { tree } = useNavigationTree()
 
   return (
     <>
@@ -51,7 +55,7 @@ export function Header() {
           </div>
 
           {/* Centre — main navigation (desktop only). */}
-          <DesktopNav />
+          <DesktopNav tree={tree} />
 
           {/* Right — language switcher, phone, and the mobile menu button. */}
           <div className="flex items-center justify-end gap-2 lg:flex-1 lg:gap-5">
@@ -67,7 +71,7 @@ export function Header() {
               <span>{CONTACT.phoneDisplay}</span>
             </a>
 
-            <MobileDrawer />
+            <MobileDrawer tree={tree} />
           </div>
         </div>
       </header>

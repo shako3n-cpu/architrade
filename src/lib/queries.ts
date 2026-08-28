@@ -1,4 +1,5 @@
 import type { Category, Product } from '@/data/types'
+import { buildCategoryTree, subtreeIds } from './category-tree'
 import { getSupabase } from './supabase'
 
 /**
@@ -32,7 +33,7 @@ import { getSupabase } from './supabase'
  * Long lines here are deliberate. Do not "tidy" them onto several lines.
  */
 // prettier-ignore
-const CATEGORY_COLUMNS = 'id, slug, title_ka, title_en, created_at, group_key, image, sort_order'
+const CATEGORY_COLUMNS = 'id, slug, title_ka, title_en, created_at, group_key, image, sort_order, parent_id, is_active, featured'
 
 /**
  * The same list without the three columns supabase-schema.sql adds.
@@ -44,6 +45,22 @@ const CATEGORY_COLUMNS = 'id, slug, title_ka, title_en, created_at, group_key, i
  * environment has been migrated.
  */
 const CATEGORY_COLUMNS_BASE = 'id, slug, title_ka, title_en, created_at'
+
+/**
+ * The middle rung: everything supabase-schema.sql added, but nothing from
+ * supabase-category-tree.sql.
+ *
+ * There are now three possible shapes of this table in the wild — original,
+ * schema-migrated, tree-migrated — and PostgREST fails a select outright if
+ * ANY named column is missing, so one fallback is no longer enough. Asking in
+ * descending order of richness means a database gets the best answer it can
+ * actually give, and a site running against the un-migrated one degrades to a
+ * flat catalogue rather than a blank page.
+ *
+ * Delete this rung, and the chain, once every environment has been migrated.
+ */
+// prettier-ignore
+const CATEGORY_COLUMNS_FLAT = 'id, slug, title_ka, title_en, created_at, group_key, image, sort_order'
 
 // prettier-ignore
 const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at'
@@ -88,16 +105,22 @@ function unwrap<T>(result: { data: T[] | null; error: PgError | null }): T[] {
  * a genuine failure is never disguised as a schema mismatch.
  */
 async function withColumnFallback<T>(
-  full: () => Promise<{ data: T | null; error: PgError | null }>,
-  base: () => Promise<{ data: T | null; error: PgError | null }>,
+  ...attempts: Array<() => Promise<{ data: T | null; error: PgError | null }>>
 ): Promise<T | null> {
-  const result = await full()
-  if (!result.error) return result.data
-  if (!isMissingColumn(result.error)) throw new Error(result.error.message)
+  for (let i = 0; i < attempts.length; i += 1) {
+    const result = await attempts[i]()
+    if (!result.error) return result.data
 
-  const fallback = await base()
-  if (fallback.error) throw new Error(fallback.error.message)
-  return fallback.data
+    // Anything other than a missing column is a real failure and is thrown as
+    // itself — a broken query must never be disguised as a schema mismatch.
+    // The last rung throws too: if even the base columns are missing, there is
+    // nothing left to fall back to.
+    if (!isMissingColumn(result.error) || i === attempts.length - 1) {
+      throw new Error(result.error.message)
+    }
+  }
+
+  return null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -150,19 +173,22 @@ async function withArchiveFallback<T>(
 
 /** Every category, in display order. */
 export async function fetchCategories(signal?: AbortSignal): Promise<Category[]> {
-  const rows = await withColumnFallback<Category[]>(
-    async () => {
-      const query = getSupabase()
-        .from('categories')
-        .select(CATEGORY_COLUMNS)
-        .order('sort_order', { ascending: true })
-        .order('slug', { ascending: true })
+  const ordered = (columns: string) => {
+    const query = getSupabase()
+      .from('categories')
+      .select(columns)
+      .order('sort_order', { ascending: true })
+      .order('slug', { ascending: true })
 
-      return (await withSignal(query, signal)) as unknown as {
-        data: Category[] | null
-        error: PgError | null
-      }
-    },
+    return withSignal(query, signal) as unknown as Promise<{
+      data: Category[] | null
+      error: PgError | null
+    }>
+  }
+
+  const rows = await withColumnFallback<Category[]>(
+    () => ordered(CATEGORY_COLUMNS),
+    () => ordered(CATEGORY_COLUMNS_FLAT),
     async () => {
       // No sort_order column means nothing to sort by but age and slug.
       const query = getSupabase()
@@ -186,23 +212,20 @@ export async function fetchCategoryBySlug(
   slug: string,
   signal?: AbortSignal,
 ): Promise<Category | null> {
+  const one = (columns: string) => {
+    const query = getSupabase().from('categories').select(columns).eq('slug', slug)
+    return withSignal(query, signal).maybeSingle() as unknown as Promise<{
+      data: Category | null
+      error: PgError | null
+    }>
+  }
+
   // maybeSingle returns null instead of erroring when nothing matches, which
   // is exactly what a "category not found" page wants.
   return withColumnFallback<Category>(
-    async () => {
-      const query = getSupabase().from('categories').select(CATEGORY_COLUMNS).eq('slug', slug)
-      return (await withSignal(query, signal).maybeSingle()) as unknown as {
-        data: Category | null
-        error: PgError | null
-      }
-    },
-    async () => {
-      const query = getSupabase().from('categories').select(CATEGORY_COLUMNS_BASE).eq('slug', slug)
-      return (await withSignal(query, signal).maybeSingle()) as unknown as {
-        data: Category | null
-        error: PgError | null
-      }
-    },
+    () => one(CATEGORY_COLUMNS),
+    () => one(CATEGORY_COLUMNS_FLAT),
+    () => one(CATEGORY_COLUMNS_BASE),
   )
 }
 
@@ -443,10 +466,25 @@ export async function fetchCategoryPage(
   // a category id that does not exist.
   if (!category) return { category: null, products: [], categories }
 
+  /*
+   * THE WHOLE SUBTREE, NOT JUST THIS ROW.
+   *
+   * Browsing to Office has to show what is in Office Desks and Office Chairs.
+   * Filing products on the leaves — which is where they belong — means every
+   * parent holds nothing directly, so `eq('category_id', category.id)` renders
+   * a correct and completely empty page for exactly the categories a visitor
+   * clicks first. Collecting the ids beneath this one and asking for all of
+   * them is what makes a parent browsable at all.
+   *
+   * On an un-migrated database nothing has a parent, so the subtree is the
+   * category itself and this behaves exactly as the old query did.
+   */
+  const ids = subtreeIds(buildCategoryTree(categories), category.slug)
+
   const query = getSupabase()
     .from('products')
     .select(PRODUCT_COLUMNS)
-    .eq('category_id', category.id)
+    .in('category_id', ids.length > 0 ? ids : [category.id])
     .order('created_at', { ascending: false })
 
   return { category, products: unwrap<Product>(await withSignal(query, signal)), categories }

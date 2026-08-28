@@ -53,12 +53,37 @@ export interface Category {
    * branch in src/lib/queries.ts together.
    */
 
-  /** Which half of the catalogue this belongs to: home furniture or office. */
+  /**
+   * Which half of the catalogue this belongs to: home furniture or office.
+   *
+   * VESTIGIAL. This was the two-way split before the catalogue became a tree;
+   * the top-level rows are the grouping now. supabase-category-tree.sql drops
+   * the check constraint but keeps the column, so nothing that still reads it
+   * breaks. Nothing in this codebase does any more.
+   */
   group_key?: CategoryGroup | null
   /** Banner photograph for the category card. */
   image?: string | null
-  /** Ascending display order. Categories with the same value fall back to slug. */
+  /** Ascending display order WITHIN THE PARENT. Ties fall back to slug. */
   sort_order?: number | null
+
+  /*
+   * The three below arrive with supabase-category-tree.sql, and are optional
+   * for the same reason as the three above: a database that has not had that
+   * file run against it still answers queries, just without these columns.
+   * Readers go through src/lib/category-tree.ts, which supplies the defaults
+   * that make an un-migrated database behave exactly like a flat catalogue.
+   */
+
+  /** Parent category, or null/undefined for a top-level row. */
+  parent_id?: string | null
+  /**
+   * The office's on/off switch. An inactive category and everything under it
+   * is hidden from public navigation but keeps its products and its URL.
+   */
+  is_active?: boolean | null
+  /** Pinned and given a photograph in the mega menu. Independent of order. */
+  featured?: boolean | null
 }
 
 /** The top-level split the home page offers: home furniture vs office. */

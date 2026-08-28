@@ -114,6 +114,35 @@ export interface Brand {
    * note on CLIENTS below; the reasoning is identical.
    */
   logo?: string
+
+  /*
+   * The two below are UNSET ON EVERY ROW, and that is deliberate rather than
+   * unfinished. The brands page renders both the moment they are filled in;
+   * neither needs a code change.
+   *
+   *   website      These are twenty-nine real manufacturers, and a link that
+   *                goes to the wrong company — or to a domain that lapsed, or
+   *                to the regional site rather than the group one — is worse
+   *                on a partner page than no link at all. Several of these
+   *                houses have moved domain (Menu trades as Audo Copenhagen)
+   *                or run more than one. The office holds the agency
+   *                agreements and knows which address each house wants used.
+   *
+   *   description  A sentence about somebody else's company, written by
+   *                someone who does not work there, is how a partner page
+   *                acquires a claim its partner did not make. The supplier's
+   *                own boilerplate is one email away and is the thing that
+   *                should sit here.
+   *
+   * Fill either in and the card picks it up. There is no ordering
+   * requirement — the page is correct with none, some or all of them set.
+   */
+
+  /** Official website, absolute URL. Makes the card a link when present. */
+  website?: string
+  /** One or two sentences, in the supplier's own words. */
+  description_en?: string
+  description_ka?: string
 }
 
 const IMG = (id: string) => `https://images.unsplash.com/${id}?w=1200&q=80`

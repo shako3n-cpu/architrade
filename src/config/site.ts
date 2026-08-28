@@ -102,8 +102,16 @@ export const SOCIAL = [
  * every page, and the footer repeats both. A fifth item that duplicates three
  * existing ones costs attention and buys nothing.
  */
+/**
+ * The header navigation.
+ *
+ * `/catalog` is first and is rendered by DesktopNav as the mega-menu trigger
+ * rather than as a plain link — it is the entry to the whole tree, and the
+ * only item with anything to drop down. Everything else is a flat link.
+ */
 export const MAIN_NAV = [
   { to: '/catalog', labelKey: 'nav.catalog' },
+  { to: '/brands', labelKey: 'nav.brands' },
   { to: '/collections', labelKey: 'nav.collections' },
   { to: '/services', labelKey: 'nav.services' },
   { to: '/about', labelKey: 'nav.about' },
@@ -112,6 +120,7 @@ export const MAIN_NAV = [
 /** Extra links that appear only in the footer's "quick links" column. */
 export const FOOTER_NAV = [
   { to: '/showroom', labelKey: 'nav.showroom' },
+  { to: '/brands', labelKey: 'nav.brands' },
   { to: '/catalog', labelKey: 'nav.catalog' },
   { to: '/collections', labelKey: 'nav.collections' },
   { to: '/about', labelKey: 'nav.about' },

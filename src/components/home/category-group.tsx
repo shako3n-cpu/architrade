@@ -6,6 +6,7 @@ import { SectionHeading } from '@/components/ui/section-heading'
 import { Media } from '@/components/ui/media'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category, Product } from '@/data/types'
+import { buildCategoryTree, publicTree } from '@/lib/category-tree'
 import { categoryImage, categoryImageAlt, categoryTitle } from '@/lib/localize'
 
 /**
@@ -36,6 +37,21 @@ export function CategoryGroupSection({
 }) {
   const { lang, localePath, t } = useLanguage()
 
+  /*
+   * TOP-LEVEL BRANCHES ONLY.
+   *
+   * This used to render whatever list it was handed, which was the entire
+   * table. That was correct while the table was six flat rows; against the
+   * tree it puts all twenty-nine on the home page — leaves next to their own
+   * parents, and the hidden branches too. The home page's job is to name the
+   * four or five doors into the catalogue, so it takes the roots of the
+   * public tree and lets the mega menu and the category pages carry the rest.
+   *
+   * The count on each card is `totalCount`, so a parent reports what is
+   * underneath it rather than the nothing filed directly on it.
+   */
+  const branches = publicTree(buildCategoryTree(categories, products))
+
   return (
     /*
      * On `surface`, not on the page paper, and with no top hairline.
@@ -61,14 +77,13 @@ export function CategoryGroupSection({
         {/* Rendered even when empty, so the hero button that points at this
             anchor always lands somewhere. An empty office half means the
             database has not had supabase-schema.sql run against it yet. */}
-        {categories.length === 0 && (
+        {branches.length === 0 && (
           <p className="mt-10 text-sm text-muted">{t('home.groupEmpty')}</p>
         )}
 
         <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => {
+          {branches.map(({ category, totalCount: count }) => {
             const image = categoryImage(category)
-            const count = products.filter((p) => p.category_id === category.id).length
 
             return (
               <Link

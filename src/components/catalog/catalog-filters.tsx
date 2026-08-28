@@ -2,12 +2,11 @@ import { useState } from 'react'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { useLanguage } from '@/hooks/use-language'
-import type { Category, CategoryGroup } from '@/data/types'
-import { categoryGroup, categoryTitle } from '@/lib/localize'
+import type { Category } from '@/data/types'
+import { categoryTitle } from '@/lib/localize'
+import { buildCategoryTree, publicTree, type CategoryNode } from '@/lib/category-tree'
 import { isUnfiltered, type CatalogFilters } from '@/lib/catalog-filter'
 import { cn } from '@/lib/utils'
-
-const GROUPS: CategoryGroup[] = ['home', 'office']
 
 /**
  * The filter rail.
@@ -18,9 +17,10 @@ const GROUPS: CategoryGroup[] = ['home', 'office']
  *   and how much of it. The counts come from the loaded rows, so a category
  *   with nothing in it reads 0 rather than pretending.
  *
- * Categories are grouped the way the home page groups them — home furniture
- * and workplace — because that is the first cut a visitor makes, and it keeps
- * a twelve-item list from reading as one undifferentiated column.
+ * Categories are grouped BY THEIR PARENT, which is the same tree the mega
+ * menu renders. This replaced a hardcoded home/office split that predated the
+ * hierarchy: the rail and the menu now cut the catalogue the same way, so a
+ * visitor who arrived through one is not asked to relearn the other.
  *
  * COLLAPSED ON A PHONE, OPEN ON A DESKTOP
  *   Stacked above the grid, the full rail put 1235px — a screen and a half —
@@ -45,6 +45,10 @@ export function CatalogFilterRail({
 }) {
   const { t } = useLanguage()
   const [open, setOpen] = useState(false)
+
+  // Only branches the public can see, so the rail and the menu agree on what
+  // the catalogue contains.
+  const branches = publicTree(buildCategoryTree(categories))
 
   return (
     <div className="flex flex-col gap-6 lg:gap-10">
@@ -97,31 +101,36 @@ export function CatalogFilterRail({
             </li>
           </ul>
 
-          {GROUPS.map((group) => {
-            const inGroup = categories.filter((entry) => categoryGroup(entry) === group)
-            if (inGroup.length === 0) return null
+          {branches.map((branch) => (
+            <div key={branch.category.id} className="mt-7">
+              <BranchHeading node={branch} />
 
-            return (
-              <div key={group} className="mt-7">
-                <Eyebrow className="mb-3 text-brass-on-surface">
-                  {t(`catalog.group_${group}`)}
-                </Eyebrow>
+              <ul className="border-t border-hairline">
+                {/* The parent itself is a row, so "everything in Office" is
+                    one click rather than four. */}
+                <li>
+                  <CategoryRow
+                    category={branch.category}
+                    count={counts[branch.category.slug] ?? 0}
+                    active={filters.category === branch.category.slug}
+                    onClick={() => onChange({ category: branch.category.slug })}
+                  />
+                </li>
 
-                <ul className="border-t border-hairline">
-                  {inGroup.map((category) => (
-                    <li key={category.id}>
-                      <CategoryRow
-                        category={category}
-                        count={counts[category.slug] ?? 0}
-                        active={filters.category === category.slug}
-                        onClick={() => onChange({ category: category.slug })}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
-          })}
+                {branch.children.map((child) => (
+                  <li key={child.category.id}>
+                    <CategoryRow
+                      category={child.category}
+                      count={counts[child.category.slug] ?? 0}
+                      active={filters.category === child.category.slug}
+                      onClick={() => onChange({ category: child.category.slug })}
+                      indented
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="flex flex-col gap-4 border-t border-hairline pt-7">
@@ -151,17 +160,30 @@ export function CatalogFilterRail({
   )
 }
 
+/** A top-level branch's name, used as the group heading over its children. */
+function BranchHeading({ node }: { node: CategoryNode }) {
+  const { lang } = useLanguage()
+  return (
+    <Eyebrow className="mb-3 text-brass-on-surface">
+      {categoryTitle(node.category, lang)}
+    </Eyebrow>
+  )
+}
+
 /** A category row, named through the localiser. */
 function CategoryRow({
   category,
   count,
   active,
   onClick,
+  indented = false,
 }: {
   category: Category
   count: number
   active: boolean
   onClick: () => void
+  /** Children sit in from their parent, so the shape survives the flattening. */
+  indented?: boolean
 }) {
   const { lang } = useLanguage()
   return (
@@ -170,6 +192,7 @@ function CategoryRow({
       count={count}
       active={active}
       onClick={onClick}
+      indented={indented}
     />
   )
 }
@@ -180,11 +203,13 @@ function FilterRow({
   count,
   active,
   onClick,
+  indented = false,
 }: {
   label: string
   count: number
   active: boolean
   onClick: () => void
+  indented?: boolean
 }) {
   return (
     <button
@@ -192,7 +217,8 @@ function FilterRow({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex min-h-11 w-full items-baseline justify-between gap-4 border-b border-hairline px-1 py-3 text-left transition-colors duration-300',
+        'flex min-h-11 w-full items-baseline justify-between gap-4 border-b border-hairline py-3 text-left transition-colors duration-300',
+        indented ? 'pr-1 pl-5' : 'px-1',
         active ? 'text-brass' : 'text-ink hover:text-brass',
       )}
     >

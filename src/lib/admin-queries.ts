@@ -36,6 +36,12 @@ export type CategoryDraft = {
   slug: string
   title_ka: string
   title_en: string
+  /** null puts the row at the top level. */
+  parent_id?: string | null
+  sort_order?: number
+  is_active?: boolean
+  featured?: boolean
+  image?: string | null
 }
 
 /**
@@ -174,6 +180,76 @@ export async function renameCategory(
   return data as Category
 }
 
+/**
+ * Any subset of a category's editable fields.
+ *
+ * One function rather than one per field, because every caller on the tree
+ * screen — rename, retitle, move, reorder, show/hide, feature — is the same
+ * UPDATE with a different key, and the database applies its own rules
+ * regardless of which one it is: the cycle trigger refuses an illegal
+ * `parent_id` whether it arrived from a move or from an edit.
+ */
+export async function updateCategory(
+  id: string,
+  patch: Partial<Omit<CategoryDraft, 'slug'>>,
+): Promise<Category> {
+  const { data, error } = await getSupabase()
+    .from('categories')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Category
+}
+
+/**
+ * Deletes a category.
+ *
+ * The guard is in the DATABASE, not here — supabase-category-tree.sql installs
+ * a before-delete trigger that refuses a category still holding subcategories
+ * or products. Checking in the browser as well would be a race (someone else
+ * can file a product into it between the check and the delete) and a lie (a
+ * second admin tab, or anything else with the anon key, is not bound by a
+ * check that lives in this function). So the screen asks, the database judges,
+ * and `explainWriteFailure` turns the refusal into a sentence.
+ */
+export async function deleteCategory(id: string): Promise<void> {
+  const { error } = await getSupabase().from('categories').delete().eq('id', id)
+  if (error) throw error
+}
+
+/**
+ * Writes a new order to a run of siblings.
+ *
+ * Takes the whole list rather than a single "move up", because the positions
+ * have to end up contiguous: nudging one row by swapping two numbers works
+ * until two rows share a sort_order, at which point the tie breaks on slug and
+ * the list appears to reorder itself at random. Renumbering the run from 10 in
+ * steps of 10 removes ties by construction and leaves gaps to insert into.
+ *
+ * The updates are issued together and awaited as one. A partial failure leaves
+ * the order wrong but the tree intact — no row can be lost this way — and the
+ * screen refetches, so the next render shows whatever actually landed rather
+ * than what it hoped for.
+ */
+export async function reorderCategories(idsInOrder: string[]): Promise<void> {
+  const supabase = getSupabase()
+
+  const results = await Promise.all(
+    idsInOrder.map((id, index) =>
+      supabase
+        .from('categories')
+        .update({ sort_order: (index + 1) * 10 })
+        .eq('id', id),
+    ),
+  )
+
+  const failed = results.find((result) => result.error)
+  if (failed?.error) throw failed.error
+}
+
 /* -------------------------------------------------------------------------- */
 /* Turning database errors into something readable                            */
 /* -------------------------------------------------------------------------- */
@@ -198,7 +274,13 @@ const RLS_VIOLATION = '42501'
 const PGRST_UNKNOWN_COLUMN = 'PGRST204'
 const PGRST_UNKNOWN_TABLE = 'PGRST205'
 
-export type WriteFailure = 'duplicateSlug' | 'setupMissing' | 'notPermitted' | 'unknown'
+export type WriteFailure =
+  | 'duplicateSlug'
+  | 'setupMissing'
+  | 'notPermitted'
+  | 'categoryHasChildren'
+  | 'categoryHasProducts'
+  | 'unknown'
 
 /**
  * Classifies a failed write so the screen can show a sentence about what to do
@@ -212,6 +294,12 @@ export type WriteFailure = 'duplicateSlug' | 'setupMissing' | 'notPermitted' | '
 export function explainWriteFailure(error: unknown): WriteFailure {
   const code = (error as { code?: string } | null)?.code
   const message = (error as { message?: string } | null)?.message ?? ''
+
+  // The delete trigger raises with a machine-readable prefix precisely so this
+  // does not have to pattern-match a human sentence that might be translated
+  // or reworded later. See supabase-category-tree.sql section 2.
+  if (message.includes('CATEGORY_HAS_CHILDREN')) return 'categoryHasChildren'
+  if (message.includes('CATEGORY_HAS_PRODUCTS')) return 'categoryHasProducts'
 
   if (code === UNIQUE_VIOLATION) return 'duplicateSlug'
   if (

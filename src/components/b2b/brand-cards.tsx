@@ -92,7 +92,16 @@ export function B2bBrandCards() {
 }
 
 function BrandCard({ brand }: { brand: Brand }) {
-  const { t } = useLanguage()
+  const { lang, t } = useLanguage()
+
+  const description = lang === 'ka' ? brand.description_ka : brand.description_en
+
+  // A card with a website is the link; one without is a plain cell. Rendering
+  // an anchor with no href would give a keyboard a tab stop that does nothing.
+  const Cell = brand.website ? 'a' : 'div'
+  const linkProps = brand.website
+    ? { href: brand.website, target: '_blank' as const, rel: 'noopener noreferrer' }
+    : {}
 
   return (
     <li className="group relative isolate aspect-[4/3] overflow-hidden bg-graphite-deep">
@@ -113,7 +122,7 @@ function BrandCard({ brand }: { brand: Brand }) {
         className="absolute inset-0 bg-graphite-deep/55 transition-colors duration-500 group-hover:bg-graphite-deep/30"
       />
 
-      <div className="relative flex h-full flex-col justify-between p-6 md:p-7">
+      <Cell {...linkProps} className="relative flex h-full flex-col justify-between p-6 md:p-7">
         <span className="at-label text-brass-on-ink">
           {t(`b2b.brands.${brand.discipline}`)}
         </span>
@@ -131,8 +140,18 @@ function BrandCard({ brand }: { brand: Brand }) {
           </span>
         )}
 
-        <span className="at-label text-right text-ink-muted">{brand.country}</span>
-      </div>
+        <div className="flex items-end justify-between gap-4">
+          {/* Only rendered once the office supplies it — see the note on
+              `description` in src/data/company.ts. */}
+          {description ? (
+            <p className="max-w-[22ch] text-xs leading-relaxed text-ink-muted">{description}</p>
+          ) : (
+            <span aria-hidden="true" />
+          )}
+
+          <span className="at-label shrink-0 text-right text-ink-muted">{brand.country}</span>
+        </div>
+      </Cell>
 
       <span
         aria-hidden="true"

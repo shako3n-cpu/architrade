@@ -7,7 +7,8 @@
     "contact": "Contact",
     "showroom": "Showroom",
     "home": "Home",
-    "breadcrumbLabel": "Breadcrumb"
+    "breadcrumbLabel": "Breadcrumb",
+    "brands": "Brands"
   },
   "header": {
     "skipToContent": "Skip to main content",
@@ -127,7 +128,11 @@
     "featuredOnly": "Featured pieces only",
     "clearFilters": "Clear filters",
     "noResultsTitle": "Nothing matches that",
-    "noResultsBody": "Try a shorter search, or clear the filters to see the whole catalogue."
+    "noResultsBody": "Try a shorter search, or clear the filters to see the whole catalogue.",
+    "browseAll": "All categories",
+    "inThisCategory": "In this category",
+    "subcategories": "Subcategories",
+    "breadcrumbLabel": "You are here"
   },
   "category": {
     "browseLabel": "Browse categories",
@@ -299,7 +304,34 @@
     "purgeIn_one": "Deleted for good in {{count}} day",
     "purgeIn_other": "Deleted for good in {{count}} days",
     "purgeToday": "Deleted for good tonight",
-    "noArchived": "Nothing is archived. A piece taken off the site waits here for {{days}} days, and can be put back at any time in that window."
+    "noArchived": "Nothing is archived. A piece taken off the site waits here for {{days}} days, and can be put back at any time in that window.",
+    "catTreeTitle": "Catalogue structure",
+    "catTreeSubtitle": "Drag order, nesting and visibility. The site navigation follows this tree exactly — a change here is live on the next page load.",
+    "catAdd": "Add category",
+    "catAddChild": "Add subcategory",
+    "catEdit": "Edit",
+    "catDelete": "Delete",
+    "catMoveUp": "Move up",
+    "catMoveDown": "Move down",
+    "catEnable": "Show in navigation",
+    "catDisable": "Hide from navigation",
+    "catHidden": "Hidden",
+    "catEmpty": "Empty",
+    "catEmptyHint": "No products in this branch, so it stays out of the navigation until there are.",
+    "catFeatured": "Featured",
+    "catParent": "Parent category",
+    "catNoParent": "— Top level —",
+    "catTitleKa": "Title (Georgian)",
+    "catTitleEn": "Title (English)",
+    "catSlug": "URL slug",
+    "catImage": "Banner image URL",
+    "catSave": "Save",
+    "catCancel": "Cancel",
+    "catDeleteConfirm": "Delete this category? This cannot be undone.",
+    "catDeleteBlockedChildren": "This category still has subcategories. Move or delete them first.",
+    "catDeleteBlockedProducts": "This category still holds products. Move them to another category first.",
+    "catProductCount_one": "{{count}} product",
+    "catProductCount_other": "{{count}} products"
   },
   "b2b": {
     "hero": {
@@ -423,5 +455,14 @@
       "residentialBody": "Danish and Spanish design houses for apartments, villas and executive floors — the pieces people choose to keep when they move.",
       "outdoorBody": "Terraces, roof bars and courtyards. Aluminium, teak and rope, built for weather and for the wash-down a hotel gives them every morning."
     }
+  },
+  "brands": {
+    "eyebrow": "Manufacturers",
+    "title": "The houses whose work we hold.",
+    "description": "Twenty-nine European and American manufacturers, held under agency and specified into buildings across Georgia. Filter by what a project needs and ask for a quotation against any of them.",
+    "allDisciplines": "All",
+    "countLabel_one": "{{count}} manufacturer",
+    "countLabel_other": "{{count}} manufacturers",
+    "visitSite": "Visit website"
   }
 }
