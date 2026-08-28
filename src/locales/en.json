@@ -304,7 +304,8 @@
       "lightingName": "Architectural lighting",
       "lightingBody": "Decorative and technical fittings together — from UGR<19 office luminaires to the pendant a lobby is remembered by.",
       "acousticsName": "Acoustic solutions",
-      "acousticsBody": "Pods, baffles, panels and desk screens. The line most often cut from a budget and most often complained about six months after handover."
+      "acousticsBody": "Pods, baffles, panels and desk screens. The line most often cut from a budget and most often complained about six months after handover.",
+      "teaserCta": "All services"
     },
     "brands": {
       "eyebrow": "Partner houses",
@@ -333,7 +334,8 @@
       "supplyName": "Supply",
       "supplyBody": "Ordered from the factory, tracked through transit and held in our warehouse until the floor is ready to receive it.",
       "installName": "Install",
-      "installBody": "Delivered, built and placed to the layout, with snagging closed and the warranty documents a facilities team actually needs."
+      "installBody": "Delivered, built and placed to the layout, with snagging closed and the warranty documents a facilities team actually needs.",
+      "teaserCta": "About the company"
     },
     "projects": {
       "eyebrow": "Furnished work",
