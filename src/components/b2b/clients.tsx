@@ -35,10 +35,19 @@ export function B2bClients() {
           description={t('b2b.clients.description')}
         />
 
-        <ul className="mt-14 grid grid-cols-2 gap-x-8 gap-y-px sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {/* Eight across is exactly two rows for sixteen marks. The column count
+            is doing arithmetic, not decoration — change the length of CLIENTS
+            and this needs changing with it.
+
+            Eight only from `xl`, not `lg`. At 1024px eight columns leaves 93px
+            a cell, which clamps the marks back down to ~42px tall — smaller
+            than the size this layout exists to increase. Below xl it falls to
+            four columns and four rows, which is the honest trade: two rows is
+            worth having only while the logos stay big enough to read. */}
+        <ul className="mt-14 grid grid-cols-2 gap-x-6 gap-y-px sm:grid-cols-4 xl:grid-cols-8">
           {CLIENTS.map((client) => (
             <li key={client.name} className="group">
-              <div className="relative flex min-h-24 items-center border-t border-hairline pt-5 md:min-h-28">
+              <div className="relative flex min-h-28 items-center justify-center border-t border-hairline pt-5 md:min-h-32">
                 {/* The bronze rule that draws in from the left on hover — the
                     same gesture the header navigation uses, so the page has
                     one idea of what "you are pointing at this" looks like. */}
@@ -63,7 +72,7 @@ export function B2bClients() {
                     alt={client.name}
                     loading="lazy"
                     decoding="async"
-                    className="max-h-10 w-auto object-contain opacity-85 mix-blend-multiply transition-opacity duration-300 group-hover:opacity-100"
+                    className="max-h-14 w-auto max-w-full object-contain mix-blend-multiply md:max-h-16"
                   />
                 ) : (
                   <span className="font-heading text-base leading-snug text-muted transition-colors duration-300 group-hover:text-ink md:text-lg">

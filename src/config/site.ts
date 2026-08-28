@@ -56,11 +56,19 @@ export const CONTACT = {
 
   email: 'info@archtrade.ge',
 
-  /** Street address is translated (see locales), this is the map link. */
-  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=41.7255,44.7451',
-  /** Embedded map iframe source used on the showroom + contact pages. */
+  /**
+   * The showroom, as Google knows it.
+   *
+   * Both of these now point at the REAL archtrade listing rather than at the
+   * approximate pin that was here before — the embed carries the place's own
+   * id (…8414643:0x7efa9a999b658701), so it drops a named marker instead of a
+   * bare coordinate, and the two can no longer disagree about where the
+   * showroom is.
+   */
+  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=41.724346,44.727324',
+  /** Embedded map iframe source. Rendered by the footer's location band. */
   mapsEmbedUrl:
-    'https://www.google.com/maps?q=41.7255,44.7451&hl=en&z=16&output=embed',
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2977.8226172487907!2d44.727323976871816!3d41.72434637125906!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4044736ea8414643%3A0x7efa9a999b658701!2sarchtrade!5e0!3m2!1ska!2sge!4v1787938675739!5m2!1ska!2sge',
 } as const
 
 /**

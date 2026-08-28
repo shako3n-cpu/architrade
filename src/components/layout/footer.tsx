@@ -35,6 +35,28 @@ export function Footer() {
 
   return (
     <footer className="border-t border-hairline">
+      {/*
+       * The showroom, on a map, full-bleed across the top of the footer.
+       *
+       * Full width rather than inside the Container on purpose: it reads as a
+       * band that closes the page, and a map boxed into one column of a
+       * four-column footer is too small to orient anybody.
+       *
+       * `loading="lazy"` matters more here than on an image — this is a live
+       * Google Maps frame with its own scripts, and it sits on EVERY page.
+       * Deferred, it costs nothing until somebody actually scrolls to it.
+       */}
+      <div className="border-b border-hairline">
+        <iframe
+          src={CONTACT.mapsEmbedUrl}
+          title={t('footer.mapTitle')}
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+          className="block h-[20rem] w-full border-0 md:h-[24rem]"
+        />
+      </div>
+
       <Container>
         <div className="grid grid-cols-1 gap-12 py-16 md:grid-cols-2 md:py-20 lg:grid-cols-12 lg:gap-8">
           {/* Wordmark + about */}

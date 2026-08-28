@@ -34,7 +34,8 @@
     "rights": "All rights reserved",
     "privacy": "Privacy policy",
     "terms": "Terms and conditions",
-    "navLabel": "Footer navigation"
+    "navLabel": "Footer navigation",
+    "mapTitle": "ARCHTRADE location on the map"
   },
   "common": {
     "address": "Address",
@@ -375,7 +376,7 @@
     },
     "clients": {
       "eyebrow": "References",
-      "title": "Who the work was for.",
+      "title": "Our partners",
       "description": "Ministries, bank headquarters, hotel groups and head offices. Most of them came back for a second building.",
       "note": "Names are listed with our clients' permission. Full references and site visits can be arranged on request."
     },
