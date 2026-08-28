@@ -9,6 +9,9 @@ import { AdminLayout } from '@/components/admin/admin-layout'
 import { RequireAdmin } from '@/components/admin/require-admin'
 import { AdminLogin } from '@/pages/admin/login'
 import { AdminDashboard } from '@/pages/admin/dashboard'
+import { About } from '@/pages/about'
+import { Services } from '@/pages/services'
+import { Collections } from '@/pages/collections'
 import { AdminCategories } from '@/pages/admin/categories'
 import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
@@ -94,11 +97,11 @@ const publicRoutes = (
     {/* TEMPORARY: data review sheet, replaced by the real catalogue. */}
     <Route path="catalog" element={<CatalogPreview />} />
     <Route path="catalog/:categorySlug" element={<CategoryPage />} />
-    <Route path="collections" element={<Placeholder title="Collections" />} />
+    <Route path="collections" element={<Collections />} />
     <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
     <Route path="product/:slug" element={<Product />} />
-    <Route path="about" element={<Placeholder title="About" />} />
-    <Route path="services" element={<Placeholder title="Services" />} />
+    <Route path="about" element={<About />} />
+    <Route path="services" element={<Services />} />
     <Route path="showroom" element={<Placeholder title="Showroom" />} />
     <Route path="contact" element={<Placeholder title="Contact" />} />
     <Route path="privacy" element={<Placeholder title="Privacy policy" />} />

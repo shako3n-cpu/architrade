@@ -370,6 +370,33 @@
       "submit": "Send the request",
       "cancel": "Cancel",
       "placeholderNotice": "This form is not connected yet. Until it is, the buttons below open your email or Messenger with the same details filled in."
+    },
+    "clients": {
+      "eyebrow": "References",
+      "title": "Who the work was for.",
+      "description": "Ministries, bank headquarters, hotel groups and head offices. Most of them came back for a second building.",
+      "note": "Names are listed with our clients' permission. Full references and site visits can be arranged on request."
+    },
+    "pages": {
+      "aboutEyebrow": "The company",
+      "aboutTitle": "A contractor, not a middleman.",
+      "aboutDescription": "archtrade brings together project managers, MEP engineers, HSE managers, architects, facade specialists and QA/QC specialists in one team — people with a track record in delivery rather than in coordination.",
+      "servicesEyebrow": "Services",
+      "servicesTitle": "Everything between an empty site and a working building.",
+      "servicesDescription": "Four disciplines, offered separately or as one contract. Most clients take more than one, which is where the value is: nobody is left arguing about whose scope a problem belongs to.",
+      "collectionsEyebrow": "Collections",
+      "collectionsTitle": "What we specify, by discipline.",
+      "collectionsDescription": "We represent a selected group of manufacturers rather than a catalogue of everything. Each is reviewed on product and on service before we put them into a building."
+    },
+    "collections": {
+      "furnitureBody": "Task seating, conference and executive furniture, and public seating — specified for buildings that will be occupied for a decade, not styled for a photograph.",
+      "lightingBody": "Architectural and decorative lighting, from UGR<19 office luminaires to the fitting a lobby is remembered by.",
+      "flooringBody": "Carpet tile, broadloom, woven and heterogeneous vinyl, rated for the traffic an airport or a bank hall actually gets.",
+      "facadesBody": "Ventilated facades, terracotta, fibre cement, ceramic mesh and engineered glazing — the envelope, from the outside in.",
+      "acousticsBody": "Pods, baffles, panels and screens. The discipline most often left out of a fit-out budget and most often complained about afterwards.",
+      "brandCount_one": "{{count}} manufacturer",
+      "brandCount_other": "{{count}} manufacturers",
+      "explore": "See the catalog"
     }
   }
 }

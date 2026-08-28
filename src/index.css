@@ -161,6 +161,54 @@
     text-wrap: pretty;
   }
 
+  /* ==========================================================================
+     POINTER AND SELECTION ON CONTROLS
+     --------------------------------------------------------------------------
+     A link or a button is a thing you press, not a thing you read. Left alone,
+     the browser gives both an I-beam pointer and a text selection, so dragging
+     across the navigation highlights it like a paragraph and hovering a menu
+     item shows a caret — which is what makes an interface feel like a
+     document rather than an application.
+
+     Scoped to controls ONLY. Body copy, headings, product names, addresses
+     and phone numbers stay selectable, because people copy those on purpose.
+     ========================================================================== */
+  a,
+  button,
+  summary,
+  label,
+  [role='button'],
+  [role='tab'] {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Stops the grey flash on tap in mobile Safari and Chrome. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* A disabled control is not pressable, and should not pretend to be. */
+  button:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  /* Text inputs are the exception twice over: they want the I-beam back, and
+     their contents must stay selectable. */
+  input,
+  textarea,
+  select {
+    cursor: auto;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='submit'],
+  input[type='button'] {
+    cursor: pointer;
+  }
+
   /* Keyboard focus must always be visible. Brass ring, offset from the page
      background so it reads clearly against photography as well as flat dark. */
   :focus-visible {

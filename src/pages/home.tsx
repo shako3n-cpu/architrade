@@ -6,6 +6,7 @@ import { B2bServices } from '@/components/b2b/services'
 import { B2bProjects } from '@/components/b2b/projects'
 import { B2bBrandWall } from '@/components/b2b/brand-wall'
 import { B2bCompany } from '@/components/b2b/company'
+import { B2bClients } from '@/components/b2b/clients'
 import { CategoryGroupSection } from '@/components/home/category-group'
 import { FeaturedGrid } from '@/components/home/featured-grid'
 import { ContactBand } from '@/components/home/contact-band'
@@ -25,6 +26,7 @@ import { categoryGroup } from '@/lib/localize'
  *     who we represent  the houses behind the specification
  *     what we supply    the live catalogue
  *     how we work       values, then the four steps of a job
+ *     who for           the reference wall — the last word is a fact
  *     talk to us
  *
  *   The catalogue sits fourth deliberately. It is the part of the site that
@@ -82,6 +84,7 @@ export function Home() {
       </QueryState>
 
       <B2bCompany />
+      <B2bClients />
       <ContactBand />
     </>
   )

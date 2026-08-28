@@ -74,7 +74,7 @@ export function B2bHero() {
               asChild
               size="lg"
               variant="outline"
-              className="border-background/40 text-background hover:border-brass-on-ink hover:text-brass-on-ink"
+              className="border-background/50 text-background hover:border-background hover:bg-background hover:text-ink"
             >
               <Link to={localePath('/contact')}>{t('b2b.hero.ctaConsult')}</Link>
             </Button>

@@ -43,12 +43,21 @@ export function LanguageSwitcher({
               aria-current={isActive ? 'true' : undefined}
               lang={code}
               className={cn(
-                'at-label inline-flex items-center transition-colors duration-300',
-                // The label is 10px, so without a floor these are a ~20px
-                // target sitting right next to each other.
+                'inline-flex items-center transition-colors duration-300',
+                // Deliberately NOT `at-label`. That class is 11px, sized for
+                // eyebrows sitting above a heading where the heading carries
+                // the weight. Here the label IS the control, and at 11px in
+                // muted grey it read as a caption rather than something to
+                // press. 12.5px at 500 fixes both.
+                'font-body text-[0.78125rem] font-medium tracking-[0.14em] uppercase',
+                // Without a floor these are a ~20px target sitting right next
+                // to each other.
                 'min-h-11 sm:min-h-0',
                 size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5',
-                isActive ? 'text-brass' : 'text-muted hover:text-ink',
+                // The inactive code is the one you can click, so it gets full
+                // ink rather than muted; the active one is bronze, which reads
+                // as state rather than as a stronger invitation.
+                isActive ? 'text-brass' : 'text-ink hover:text-brass',
               )}
             >
               {LANGUAGE_LABELS[code]}

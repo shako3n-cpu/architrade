@@ -88,12 +88,17 @@ export const SOCIAL = [
  *   `to`         — path WITHOUT the language prefix; the Link helper adds it.
  *   `labelKey`   — key looked up in the locale files (nav.catalog, etc.)
  */
+/*
+ * The header carries the four pages somebody browses. Contact is deliberately
+ * NOT here: the phone number sits in the topbar, the chat button floats over
+ * every page, and the footer repeats both. A fifth item that duplicates three
+ * existing ones costs attention and buys nothing.
+ */
 export const MAIN_NAV = [
   { to: '/catalog', labelKey: 'nav.catalog' },
   { to: '/collections', labelKey: 'nav.collections' },
   { to: '/about', labelKey: 'nav.about' },
   { to: '/services', labelKey: 'nav.services' },
-  { to: '/contact', labelKey: 'nav.contact' },
 ] as const
 
 /** Extra links that appear only in the footer's "quick links" column. */

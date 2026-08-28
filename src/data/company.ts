@@ -248,3 +248,56 @@ export const PROJECTS: readonly SectorGroup[] = [
     ],
   },
 ] as const
+
+/* -------------------------------------------------------------------------- */
+/* Clients                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The reference wall.
+ *
+ * NAMES, NOT LOGOS — and this one is a judgement call worth stating.
+ *   Every mark on this list belongs to somebody else. Redrawing a bank's
+ *   identity by hand produces something that is not their logo while claiming
+ *   to be, which is worse than not showing it: a wrong mark on a reference
+ *   wall is the kind of detail a client's brand team notices immediately.
+ *
+ *   So the wall is set in type. If the office has licensed logo files, add a
+ *   `logo` path to a row and the component will show it instead — that is the
+ *   only change needed, and rows can be converted one at a time.
+ *
+ * Everyone here appears in PROJECTS above, drawn from archtrade.ge, with one
+ * exception noted on the row itself.
+ */
+export interface Client {
+  name: string
+  sector: Sector
+  /** Path to a licensed logo file. Falls back to the name set as type. */
+  logo?: string
+}
+
+export const CLIENTS: readonly Client[] = [
+  { name: 'Bank of Georgia', sector: 'finance' },
+  // NOT on archtrade.ge's own project list — added because it was named as a
+  // key client. Worth confirming before this goes live: a reference the
+  // client cannot corroborate is the one that gets asked about.
+  { name: 'TBC Bank', sector: 'finance' },
+  { name: 'Liberty Bank', sector: 'finance' },
+  { name: 'Pasha Bank', sector: 'finance' },
+  { name: 'ProCredit Bank', sector: 'finance' },
+  { name: 'Ministry of Justice', sector: 'government' },
+  { name: 'House of Justice', sector: 'government' },
+  { name: 'National Bureau of Enforcement', sector: 'government' },
+  { name: 'Deloitte', sector: 'enterprise' },
+  { name: 'Booking.com', sector: 'enterprise' },
+  { name: 'Samsung', sector: 'enterprise' },
+  { name: 'Colliers', sector: 'enterprise' },
+  { name: 'Knauf', sector: 'enterprise' },
+  { name: 'Regus', sector: 'enterprise' },
+  { name: 'Caucasus University', sector: 'enterprise' },
+  { name: 'IDS Borjomi', sector: 'enterprise' },
+  { name: 'Hilton Garden Inn', sector: 'hospitality' },
+  { name: 'Ramada Encore', sector: 'hospitality' },
+  { name: 'Best Western', sector: 'hospitality' },
+  { name: 'Casino International', sector: 'hospitality' },
+] as const

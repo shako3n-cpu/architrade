@@ -7,26 +7,36 @@
 
     <!-- Paint the page background before React mounts, so the first paint is the
          off-white the design uses, not the browser default white. -->
-    <meta name="theme-color" content="#fdfbf7" />
+    <meta name="theme-color" content="#fbf9f5" />
 
-    <!--
+<!--
       Fonts. Both families cover Georgian, Latin and Cyrillic, which is what
       lets ka / en share one typographic system.
-        Noto Serif Georgian 400/600 -> headings
-        Noto Sans Georgian  300/400 -> body
+
+        Noto Sans Georgian 300/400/500 -> body AND headings
+        Noto Serif Georgian 400        -> the company statement, once
+
+      500 IS NOT OPTIONAL. Headings, buttons and the language switcher are all
+      set at 500, and a weight the browser has not been given is synthesised —
+      it smears the glyphs and it does it worst on Georgian, where the strokes
+      are already fine. Adding a weight here is what makes it real.
+
       preconnect shaves a round-trip off the font request.
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400&family=Noto+Serif+Georgian:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;500&family=Noto+Serif+Georgian:wght@400&display=swap"
       rel="stylesheet"
     />
 
     <!-- Per-page title/description/OG/hreflang tags are injected at runtime by
          the <Seo> component; these are the fallbacks a crawler sees first. -->
     <title>ARCHTRADE</title>
-    <meta name="description" content="ARCHTRADE — furniture catalogue." />
+    <meta
+      name="description"
+      content="ARCHTRADE — general contractor in Tbilisi. Construction management, interior fit-out, building envelope, and interior and exterior trading."
+    />
   </head>
   <body>
     <div id="root"></div>
