@@ -4,10 +4,12 @@
 /* ============================================================================
    ARCHTRADE — DESIGN SYSTEM
    ----------------------------------------------------------------------------
-   Light, warm and solid — a showroom in daylight rather than a gallery at
-   night. Photography is the hero; the interface stays quiet. Every colour,
-   font and spacing decision lives in this one file so the whole site can be
-   re-skinned from here.
+   Deep graphite, warm off-white, muted bronze. An architect's drawing set
+   rather than a showroom: precise, quiet, and generous with space. Photography
+   carries the weight; the interface annotates it. Every colour, font and
+   spacing decision lives in this one file so the whole site can be re-skinned
+   from here — which is exactly what happened when this became a B2B site, with
+   no component touched.
 
    House rules enforced below:
      - corner radius never exceeds 4px
@@ -24,16 +26,26 @@
 
 :root {
   /* --- Brand palette (the six exact values the brand is built from) ------- */
-  --at-background: #fdfbf7; /* page background, softest off-white        */
-  --at-surface: #f5f1e9; /* bands, image placeholders, inputs         */
-  --at-hairline: #e4ddd0; /* 1px dividers and borders                  */
-  --at-ink: #1a1a1a; /* primary text, rich charcoal               */
-  --at-muted: #6e675c; /* secondary / supporting text  (5.4:1)      */
-  --at-brass: #8a6231; /* the single accent, muted wood-gold (5.2:1)*/
+  --at-background: #fbf9f5; /* page background, warm off-white          */
+  --at-surface: #f2eee6; /* bands, image placeholders, inputs        */
+  --at-hairline: #e2dcd0; /* 1px dividers and borders                 */
+  --at-ink: #23262a; /* primary text, deep graphite     (14.5:1) */
+  --at-muted: #6b6862; /* secondary / supporting text      (5.5:1) */
+  --at-brass: #8c6d46; /* the single accent, muted bronze   (4.5:1)*/
 
-  /* Brass variations, derived. Used for hover states and faint washes. */
-  --at-brass-bright: #a87a42;
-  --at-brass-dim: #674724;
+  /* The darkest graphite, for full-bleed bands behind photography. Deeper
+     than `ink` so a scrim over an image never matches body text exactly —
+     text on a photograph needs more separation than text on paper. */
+  --at-graphite-deep: #16181b;
+
+  /* Bronze variations, derived. Used for hover states and faint washes. */
+  --at-brass-bright: #a9834f;
+  --at-brass-dim: #6d5436;
+
+  /* Bronze at 4.5:1 clears AA on the page background and NOT on `surface`,
+     which is lighter. Small bronze text inside a surface band uses this
+     instead.                                  (5.1:1 on surface, 5.7:1 on bg) */
+  --at-brass-on-surface: #7a5f3d;
 
   /* Text colours for the few charcoal bands (contact CTA). `muted` and `brass`
      are both far too dark to sit on `ink`, so inverted sections use these
@@ -43,9 +55,23 @@
 
   /* --- Typography -------------------------------------------------------- */
   /* Georgian-first families. Both cover Georgian, Latin AND Cyrillic, so a
-     single stack renders ka / en without falling back to a system font. */
-  --at-font-heading: 'Noto Serif Georgian', 'Times New Roman', Georgia, serif;
+     single stack renders ka / en without falling back to a system font. That
+     is a hard constraint, not a preference — a display face chosen for its
+     Latin alone would drop the site into a fallback the moment it met the
+     Georgian catalogue, which is most of it.
+   */
+
+  /* Headings are SANS, and this is the redesign's clearest break with what
+     came before. A serif display read as a heritage furniture retailer; this
+     company is a general contractor whose work is measured in curtain walls
+     and fit-out programmes. Set large, tight and at 500, the grotesque reads
+     the way a drawing title block reads. */
+  --at-font-heading: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
   --at-font-body: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
+
+  /* Kept for the single editorial moment that wants warmth: the company
+     statement. Used once, deliberately, so it still means something. */
+  --at-font-serif: 'Noto Serif Georgian', 'Times New Roman', Georgia, serif;
 
   /* --- Motion ------------------------------------------------------------ */
   --at-duration: 300ms;
@@ -71,9 +97,12 @@
   --color-brass-bright: var(--at-brass-bright);
   --color-brass-dim: var(--at-brass-dim);
   --color-brass-on-ink: var(--at-brass-on-ink);
+  --color-brass-on-surface: var(--at-brass-on-surface);
+  --color-graphite-deep: var(--at-graphite-deep);
 
   --font-heading: var(--at-font-heading);
   --font-body: var(--at-font-body);
+  --font-serif: var(--at-font-serif);
 
   /* Radius scale is deliberately tiny. 4px is the hard ceiling. */
   --radius-none: 0px;
@@ -120,9 +149,11 @@
   h5,
   h6 {
     font-family: var(--at-font-heading);
-    font-weight: 400; /* 600 is reserved for genuine emphasis */
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+    /* 500 rather than 400: a grotesque set large needs the extra weight to
+       hold its own against photography, where a serif carried itself. */
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
     text-wrap: balance; /* avoids lonely last words in headings */
   }
 
@@ -178,6 +209,50 @@
   }
   .at-scroll-row::-webkit-scrollbar {
     display: none;
+  }
+
+  /* ==========================================================================
+     SURVEY MARKS — the signature of the B2B pages.
+     --------------------------------------------------------------------------
+     Two bronze ticks on opposite corners, the way a surveyor crops a drawing.
+     Borrowed from the client's own trade rather than invented, which is why it
+     reads as belonging here and not as decoration.
+
+     Two corners, not four. Four looked like a frame; two look like a mark.
+     ========================================================================== */
+  .at-survey {
+    position: relative;
+  }
+  .at-survey::before,
+  .at-survey::after {
+    content: '';
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-color: var(--at-brass);
+    pointer-events: none;
+  }
+  .at-survey::before {
+    top: 0;
+    left: 0;
+    border-top: 1px solid;
+    border-left: 1px solid;
+  }
+  .at-survey::after {
+    right: 0;
+    bottom: 0;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+  }
+
+  /* A flat graphite scrim for text over photography. Flat, not a gradient —
+     the house rules forbid gradients, and a single honest value is easier to
+     check for contrast than a ramp that is legible at one end only. */
+  .at-scrim {
+    /* 74%, arrived at by looking: at 66% the hero's supporting line crossed a
+       run of bright glazing and lost its footing. A photograph is only worth
+       having behind type if the type still reads over its lightest patch. */
+    background-color: color-mix(in srgb, var(--at-graphite-deep) 74%, transparent);
   }
 
   /* Slow image zoom used on product and category cards.

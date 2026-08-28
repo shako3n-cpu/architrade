@@ -1,10 +1,13 @@
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
 import { QueryState, SkeletonGrid } from '@/components/ui/query-state'
-import { Hero } from '@/components/home/hero'
+import { B2bHero } from '@/components/b2b/hero'
+import { B2bServices } from '@/components/b2b/services'
+import { B2bProjects } from '@/components/b2b/projects'
+import { B2bBrandWall } from '@/components/b2b/brand-wall'
+import { B2bCompany } from '@/components/b2b/company'
 import { CategoryGroupSection } from '@/components/home/category-group'
 import { FeaturedGrid } from '@/components/home/featured-grid'
-import { ValuePoints } from '@/components/home/value-points'
 import { ContactBand } from '@/components/home/contact-band'
 import { useCatalogue } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
@@ -13,12 +16,23 @@ import { categoryGroup } from '@/lib/localize'
 /**
  * The home page.
  *
- * Order is deliberate: say what ARCHTRADE is, split the catalogue the way a
- * visitor already thinks about it (home or office), show real pieces, answer
- * the four obvious questions, then hand over to a conversation.
+ * THE ARGUMENT, IN ORDER
+ *   A procurement lead arrives asking one question — can these people deliver
+ *   my building — and the page answers it before it sells anything:
  *
- * The hero, the value points and the contact band need no data, so they render
- * immediately and stay on screen while the catalogue loads underneath them.
+ *     what we do        the four disciplines, held under one contract
+ *     what we built     named projects in their own sector
+ *     who we represent  the houses behind the specification
+ *     what we supply    the live catalogue
+ *     how we work       values, then the four steps of a job
+ *     talk to us
+ *
+ *   The catalogue sits fourth deliberately. It is the part of the site that
+ *   changes daily, but nobody buys a curtain wall from a product grid; it earns
+ *   its place only after the company has been established.
+ *
+ * Everything above the catalogue needs no data, so it renders immediately and
+ * stays on screen while the products load underneath.
  */
 export function Home() {
   const { t } = useLanguage()
@@ -26,7 +40,10 @@ export function Home() {
 
   return (
     <>
-      <Hero />
+      <B2bHero />
+      <B2bServices />
+      <B2bProjects />
+      <B2bBrandWall />
 
       <QueryState
         result={catalogue}
@@ -64,7 +81,7 @@ export function Home() {
         )}
       </QueryState>
 
-      <ValuePoints />
+      <B2bCompany />
       <ContactBand />
     </>
   )

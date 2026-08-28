@@ -279,5 +279,97 @@
     "purgeIn_other": "Deleted for good in {{count}} days",
     "purgeToday": "Deleted for good tonight",
     "noArchived": "Nothing is archived. A piece taken off the site waits here for {{days}} days, and can be put back at any time in that window."
+  },
+  "b2b": {
+    "hero": {
+      "eyebrow": "General contractor · Tbilisi",
+      "title": "Design, build and fit out, under one contract.",
+      "description": "Project managers, MEP and facade engineers, HSE and QA/QC specialists in a single team. We take a building from an empty envelope to a finished floor for government, banking, hospitality and private enterprise.",
+      "ctaCatalog": "Browse the catalog",
+      "ctaConsult": "Request a consultation",
+      "statProjects": "Delivered projects",
+      "statBrands": "Solution partners",
+      "statSectors": "Sectors served"
+    },
+    "services": {
+      "eyebrow": "What we do",
+      "title": "Four disciplines, one accountable team.",
+      "description": "Most projects need more than one of these. Holding them under one contract is what removes the gaps between them.",
+      "constructionName": "Construction management",
+      "constructionBody": "A full range of design and build services. We are a general contractor first and foremost, and our staff learned the work by building, not by watching.",
+      "fitOutName": "Interior fit-out",
+      "fitOutBody": "Offices, branches, hotels and public buildings taken from bare shell to handover — partitions, joinery, flooring, lighting and furniture.",
+      "envelopeName": "Building envelope",
+      "envelopeBody": "Engineered curtain wall, entrances, architectural glass, windows and railings. We design, engineer and install the face of the building.",
+      "tradingName": "Interior & exterior trading",
+      "tradingBody": "Direct supply from the manufacturers we represent, specified into the project rather than sold from a shelf."
+    },
+    "brands": {
+      "eyebrow": "Solution partners",
+      "title": "The houses we specify from.",
+      "description": "Every partner is reviewed before we put their product into a project. Filter by discipline to see who covers what.",
+      "all": "All disciplines",
+      "furniture": "Furniture",
+      "lighting": "Lighting",
+      "flooring": "Flooring",
+      "facades": "Facades",
+      "acoustics": "Acoustics",
+      "showing_one": "{{count}} partner",
+      "showing_other": "{{count}} partners"
+    },
+    "about": {
+      "eyebrow": "The company",
+      "title": "Our values define our work.",
+      "statement": "Technological supremacy, conformity with international standards and regulations, effective project management and resource allocation, prompt and cost-effective service, rational and practical solutions, and a selective, high-grade product range.",
+      "processEyebrow": "How a project runs",
+      "processTitle": "Four steps, in this order.",
+      "listenName": "Listen",
+      "listenBody": "We start with the brief, the building and the budget — including the constraints nobody put in writing.",
+      "planName": "Plan",
+      "planBody": "Drawings, specification and programme. Every product is named before a single crew arrives on site.",
+      "constructName": "Construct",
+      "constructBody": "One general contractor, one site manager, one point of accountability for MEP, envelope and fit-out alike.",
+      "deliverName": "Deliver",
+      "deliverBody": "Snagging, commissioning and handover, with the documentation a facilities team actually needs afterwards."
+    },
+    "projects": {
+      "eyebrow": "Delivered work",
+      "title": "Built for people who cannot afford a second attempt.",
+      "description": "Ministries, bank headquarters, hotels and head offices across Georgia and the region.",
+      "government": "Government",
+      "finance": "Finance",
+      "hospitality": "Hospitality",
+      "enterprise": "Private enterprise",
+      "count_one": "{{count}} project",
+      "count_other": "{{count}} projects",
+      "cities": {
+        "tbilisi": "Tbilisi",
+        "batumi": "Batumi",
+        "kutaisi": "Kutaisi",
+        "kvareli": "Kvareli",
+        "sighnagi": "Sighnagi",
+        "marneuli": "Marneuli",
+        "gurjaani": "Gurjaani",
+        "akhaltsikhe": "Akhaltsikhe",
+        "natakhtari": "Natakhtari",
+        "yerevan": "Yerevan"
+      }
+    },
+    "quote": {
+      "open": "Request a spec sheet",
+      "title": "Request a spec sheet",
+      "description": "Tell us the project and we will send the full specification, lead times and trade terms for this piece. No price is shown on this site — every quotation is written against a real drawing and a real quantity.",
+      "product": "Piece",
+      "company": "Company",
+      "companyPlaceholder": "Who the quotation is for",
+      "contact": "Your name",
+      "email": "Email",
+      "quantity": "Approximate quantity",
+      "notes": "Project notes",
+      "notesPlaceholder": "Building, floor area, programme dates, anything that shapes the specification",
+      "submit": "Send the request",
+      "cancel": "Cancel",
+      "placeholderNotice": "This form is not connected yet. Until it is, the buttons below open your email or Messenger with the same details filled in."
+    }
   }
 }
