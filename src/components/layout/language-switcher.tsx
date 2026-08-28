@@ -40,14 +40,18 @@ export function LanguageSwitcher({
             aria-current={isActive ? 'true' : undefined}
             lang={code}
             className={cn(
-              'at-label inline-flex items-center justify-center rounded-xs border transition-colors duration-300',
-              // The label is 10px, so without a floor these are a ~20px
+              'at-label inline-flex items-center justify-center rounded-xs border text-xs transition-colors duration-300',
+              // The label is small, so without a floor these are a ~20px
               // target sitting right next to each other.
               'min-h-11 sm:min-h-0',
-              size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5',
+              size === 'sm' ? 'px-2.5 py-1' : 'px-3.5 py-1.5',
               isActive
                 ? 'border-brass bg-brass text-background'
-                : 'border-hairline text-muted hover:border-ink hover:text-ink',
+                : // The hairline is a 1.1:1 border on the page background —
+                  // invisible, which made the inactive code read as plain
+                  // text. A filled chip with a border you can actually see is
+                  // what makes the pair look like a control.
+                  'border-muted/45 bg-surface text-muted hover:border-ink hover:text-ink',
             )}
           >
             {LANGUAGE_LABELS[code]}
