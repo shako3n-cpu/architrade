@@ -67,8 +67,8 @@
     "groupOfficeTitle": "Office furniture",
     "groupOfficeDescription": "Desks, seating and executive suites specified for full working days rather than occasional use.",
     "featuredEyebrow": "Selected pieces",
-    "featuredTitle": "This season’s selection",
-    "featuredDescription": "A cross-section of the catalogue. Ask about any of them and we will come back to you the same day.",
+    "featuredTitle": "Selected from the catalogue",
+    "featuredDescription": "A cross-section of what we hold and what we specify most often. Ask about any of it and the reply comes the same day.",
     "whyEyebrow": "Why ARCHTRADE",
     "whyTitle": "Built properly, and built to be repaired",
     "whyDescription": "Four things worth knowing before you pick up the phone.",
@@ -80,9 +80,9 @@
     "why3Body": "Our own crew delivers anywhere in Georgia, carries it in, assembles it, and takes the packaging away again.",
     "why4Title": "Five-year guarantee",
     "why4Body": "Every frame and every mechanism is covered for five years. Upholstery and finishes are covered for two.",
-    "contactEyebrow": "Ask about a piece",
-    "contactTitle": "Tell us what the room needs",
-    "contactBody": "There are no prices on this site because no two commissions are the same. Send the piece and the room, and you will have a quote — usually within a few hours.",
+    "contactEyebrow": "Start a specification",
+    "contactTitle": "Send us the floor and the programme",
+    "contactBody": "Nothing on this site carries a price, because no two schedules are the same. Send the drawing, the quantities and the handover date, and a costed specification usually follows within the day.",
     "groupEmpty": "This part of the catalogue has not been set up yet.",
     "catalogueTitle": "The catalogue",
     "catalogueDescription": "Furniture, lighting, acoustics and public seating — from one supplier, under one contract."
@@ -99,13 +99,35 @@
     "inquireOnWhatsapp": "Inquire about {{product}} on WhatsApp",
     "inquireOnMessenger": "Inquire about {{product}} on Messenger",
     "inquireOnWhatsappShort": "Inquire on WhatsApp",
-    "inquireOnMessengerShort": "Inquire on Messenger"
+    "inquireOnMessengerShort": "Inquire on Messenger",
+    "eyebrow": "Contact",
+    "title": "Talk to someone who knows the stock.",
+    "description": "The showroom on Vazha-Pshavela answers during working hours. For a project enquiry, the more you can tell us about the floor and the programme, the more useful the first reply will be.",
+    "visitTitle": "Showroom",
+    "hoursTitle": "Working hours",
+    "channelsTitle": "Ways to reach us",
+    "channelsBody": "All four go to the same team. WhatsApp is usually quickest; email is best if you have drawings or a schedule to attach.",
+    "tradeNote": "Architects, contractors and procurement teams: ask for trade terms and a sample box, and we will send both with the specification.",
+    "mapTitle": "Map of the ARCHTRADE showroom on Vazha-Pshavela Avenue, Tbilisi"
   },
   "catalog": {
     "allProducts": "All products",
     "resultCount_one": "{{count}} piece",
     "resultCount_other": "{{count}} pieces",
-    "inCategory": "in category"
+    "inCategory": "in category",
+    "toggleFilters": "Filters",
+    "eyebrow": "The catalogue",
+    "title": "Every piece we supply, in one place.",
+    "description": "Filter by setting or search by name, material or dimension. Nothing here carries a price — each piece is quoted against a real drawing and a real quantity, so ask and we will come back the same day.",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Name, material or size",
+    "filterHeading": "Browse by category",
+    "group_home": "Home and residential",
+    "group_office": "Workplace and contract",
+    "featuredOnly": "Featured pieces only",
+    "clearFilters": "Clear filters",
+    "noResultsTitle": "Nothing matches that",
+    "noResultsBody": "Try a shorter search, or clear the filters to see the whole catalogue."
   },
   "category": {
     "browseLabel": "Browse categories",
@@ -155,11 +177,6 @@
     "in-stock": "In stock",
     "on-order": "On order",
     "custom": "Made to measure"
-  },
-  "preview": {
-    "eyebrow": "Step 3 — data review",
-    "title": "Catalogue data",
-    "description": "A temporary page showing live data from Supabase — this is not the catalogue design."
   },
   "state": {
     "loading": "Loading…",
@@ -287,8 +304,8 @@
   "b2b": {
     "hero": {
       "eyebrow": "Contract furniture · Tbilisi",
-      "title": "Furniture specified for buildings, not for showrooms.",
-      "description": "We hold the agencies for twenty-nine European and American manufacturers and supply their work into offices, hotels, embassies and homes across Georgia — seating, storage, lighting and acoustics, specified against a real drawing and delivered to a real programme.",
+      "title": "Furniture that outlasts the trend",
+      "description": "We hold the agencies for twenty-nine European and American manufacturers. Their seating, storage, lighting and acoustics go into offices, hotels, embassies and residences across Georgia — specified against the drawing, delivered against the programme.",
       "ctaCatalog": "Browse the catalog",
       "ctaConsult": "Request a consultation",
       "statProjects": "Furnished projects",

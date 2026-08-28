@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
 import { Home } from '@/pages/home'
-import { CatalogPreview } from '@/pages/catalog-preview'
+import { Catalog } from '@/pages/catalog'
 import { Product } from '@/pages/product'
 import { CategoryPage } from '@/pages/category'
 import { Placeholder } from '@/pages/placeholder'
@@ -12,6 +12,7 @@ import { AdminDashboard } from '@/pages/admin/dashboard'
 import { About } from '@/pages/about'
 import { Services } from '@/pages/services'
 import { Collections } from '@/pages/collections'
+import { Contact } from '@/pages/contact'
 import { AdminCategories } from '@/pages/admin/categories'
 import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
@@ -95,7 +96,7 @@ const publicRoutes = (
     <Route index element={<Home />} />
 
     {/* TEMPORARY: data review sheet, replaced by the real catalogue. */}
-    <Route path="catalog" element={<CatalogPreview />} />
+    <Route path="catalog" element={<Catalog />} />
     <Route path="catalog/:categorySlug" element={<CategoryPage />} />
     <Route path="collections" element={<Collections />} />
     <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
@@ -103,7 +104,7 @@ const publicRoutes = (
     <Route path="about" element={<About />} />
     <Route path="services" element={<Services />} />
     <Route path="showroom" element={<Placeholder title="Showroom" />} />
-    <Route path="contact" element={<Placeholder title="Contact" />} />
+    <Route path="contact" element={<Contact />} />
     <Route path="privacy" element={<Placeholder title="Privacy policy" />} />
     <Route path="terms" element={<Placeholder title="Terms and conditions" />} />
 

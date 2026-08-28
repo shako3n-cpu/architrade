@@ -7,8 +7,16 @@ import { ProductCard } from '@/components/catalog/product-card'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category, Product } from '@/data/types'
 
-/** How many pieces the home page shows before sending people to the catalogue. */
-const LIMIT = 8
+/**
+ * How many pieces the home page shows before sending people to the catalogue.
+ *
+ * Six, not eight, because the grid is three across rather than four. Four
+ * portrait cards on a 1280px page leave each one about 290px wide, which is
+ * the width a search-results page gives a product — the pictures get small
+ * enough that the card becomes a row of text with a thumbnail on top. Three
+ * across is nearer 400px, and the photograph stays the thing you look at.
+ */
+const LIMIT = 6
 
 /**
  * The featured row — pieces flagged `featured` in the database.
@@ -35,11 +43,12 @@ export function FeaturedGrid({
   const byId = new Map(categories.map((category) => [category.id, category]))
 
   return (
-    <Section spacing="lg" bordered aria-labelledby="featured-title">
+    <Section spacing="lg" aria-labelledby="featured-title">
       <Container>
         <SectionHeading
           id="featured-title"
           as="h2"
+          size="h3"
           eyebrow={t('home.featuredEyebrow')}
           title={t('home.featuredTitle')}
           description={t('home.featuredDescription')}
@@ -50,14 +59,14 @@ export function FeaturedGrid({
           }
         />
 
-        <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((product, index) => (
             <ProductCard
               key={product.id}
               product={product}
               category={product.category_id ? byId.get(product.category_id) : undefined}
               // The first row is usually visible without scrolling.
-              eager={index < 4}
+              eager={index < 3}
             />
           ))}
         </div>

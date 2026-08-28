@@ -20,6 +20,16 @@ import { cn } from '@/lib/utils'
  * Carries no price and no add-to-cart, because there is neither. It shows what
  * a buyer actually needs to decide whether to ask: what it is, what it is made
  * of, how big it is, and two ways to start the conversation.
+ *
+ * THE WHOLE CARD IS THE LINK
+ *   Not by wrapping it in an anchor — an anchor may not contain an anchor, and
+ *   the photograph and the title were two separate links, leaving the copy and
+ *   the tags between them dead to the click. Instead the title anchor grows an
+ *   `::after` over the whole `relative` article. One link, one tab stop, one
+ *   accessible name, and every pixel of the card hits it.
+ *
+ *   Anything interactive added inside must sit on `relative z-10` or the
+ *   overlay will swallow its clicks.
  */
 export function ProductCard({
   product,
@@ -41,11 +51,8 @@ export function ProductCard({
   const materials = productMaterials(product, lang)
 
   return (
-    <article className={cn('group flex flex-col', className)}>
-      <Link
-        to={localePath(`/product/${product.slug}`)}
-        className="relative block overflow-hidden bg-surface"
-      >
+    <article className={cn('group relative flex flex-col', className)}>
+      <div className="relative block overflow-hidden bg-surface">
         {cover ? (
           <Media
             src={cover}
@@ -78,13 +85,13 @@ export function ProductCard({
             {t('product.featuredBadge')}
           </span>
         )}
-      </Link>
+      </div>
 
       <div className="mt-5 flex flex-1 flex-col">
         <h3 className="font-heading text-lg leading-snug text-ink">
           <Link
             to={localePath(`/product/${product.slug}`)}
-            className="transition-colors duration-300 hover:text-brass"
+            className="transition-colors duration-300 group-hover:text-brass after:absolute after:inset-0 after:content-['']"
           >
             {productTitle(product, lang)}
           </Link>

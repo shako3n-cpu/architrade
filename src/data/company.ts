@@ -446,6 +446,24 @@ export interface Client {
   sector: Sector
   /** Path to a licensed logo file. Falls back to the name set as type. */
   logo?: string
+  /**
+   * Rendered height of the FILE, in px — not of the mark inside it.
+   *
+   * Every file in public/logos/ is the same 240x109 canvas, but the marks
+   * sitting on those canvases are not the same size: measured, they run from
+   * a 209x39 bank wordmark to a 78x105 square badge. Rendering all sixteen at
+   * one height therefore does NOT make them look one size — it makes the
+   * badges tower over the wordmarks, which is what a ragged logo wall is.
+   *
+   * So each file gets the canvas height that puts ITS mark at ~30px tall,
+   * capped so nothing grows wider than the cell. That pulls the spread in the
+   * rendered marks from 9.0x down to 1.55x.
+   *
+   * These numbers are measured from the current files. REPLACE A FILE AND
+   * THIS NUMBER IS WRONG — re-measure the light-pixel bounding box, or drop
+   * the field and accept the ragged version.
+   */
+  logoHeight?: number
 }
 
 /**
@@ -465,23 +483,28 @@ export interface Client {
  *   public/logos/ and a row here to put any of them back.
  */
 export const CLIENTS: readonly Client[] = [
-  { name: 'Ministry of Justice of Georgia', sector: 'government', logo: '/logos/ministry-justice.png' },
-  { name: 'House of Justice', sector: 'government', logo: '/logos/public-service-hall.png' },
-  { name: 'Bank of Georgia', sector: 'finance', logo: '/logos/bank-of-georgia.png' },
+  // ministry-justice.png and deloitte.png are in public/logos/, and both are
+  // BLANK — decoded, the first has no pixel brighter than 28/255 (it is a
+  // black rectangle) and the second has 0.48% of its area above 100/255.
+  // Pointing at them renders an empty cell, so these two rows carry no `logo`
+  // and fall back to the wordmark until a real file replaces them.
+  { name: 'Ministry of Justice of Georgia', sector: 'government' },
+  { name: 'House of Justice', sector: 'government', logo: '/logos/public-service-hall.png', logoHeight: 38 },
+  { name: 'Bank of Georgia', sector: 'finance', logo: '/logos/bank-of-georgia.png', logoHeight: 52 },
   // NOT on archtrade.ge's own project list — added because it was named as a
   // key client. Worth confirming before this goes live: a reference the
   // client cannot corroborate is the one that gets asked about.
-  { name: 'TBC Bank', sector: 'finance', logo: '/logos/tbc-bank.png' },
-  { name: 'ProCredit Bank', sector: 'finance', logo: '/logos/procredit-bank.png' },
-  { name: 'Deloitte', sector: 'enterprise', logo: '/logos/deloitte.png' },
-  { name: 'Booking.com', sector: 'enterprise', logo: '/logos/bookingcom.png' },
-  { name: 'Colliers', sector: 'enterprise', logo: '/logos/colliers.png' },
-  { name: 'Knauf', sector: 'enterprise', logo: '/logos/knauf.png' },
-  { name: 'Hilton Garden Inn', sector: 'hospitality', logo: '/logos/hilton-gardeninn.png' },
-  { name: 'Ramada Encore', sector: 'hospitality', logo: '/logos/ramada-encore.png' },
-  { name: 'Moxy Hotels', sector: 'hospitality', logo: '/logos/hotel-moxy.png' },
-  { name: 'Best Western', sector: 'hospitality', logo: '/logos/best-western.png' },
-  { name: 'Hotel Kabadoni', sector: 'hospitality', logo: '/logos/hotel-kabadoni.png' },
-  { name: 'Le Port Hotel', sector: 'hospitality', logo: '/logos/le-port-1.png' },
-  { name: 'Casino International', sector: 'hospitality', logo: '/logos/casino-interntional.png' },
+  { name: 'TBC Bank', sector: 'finance', logo: '/logos/tbc-bank.png', logoHeight: 53 },
+  { name: 'ProCredit Bank', sector: 'finance', logo: '/logos/procredit-bank.png', logoHeight: 54 },
+  { name: 'Deloitte', sector: 'enterprise' },
+  { name: 'Booking.com', sector: 'enterprise', logo: '/logos/bookingcom.png', logoHeight: 38 },
+  { name: 'Colliers', sector: 'enterprise', logo: '/logos/colliers.png', logoHeight: 37 },
+  { name: 'Knauf', sector: 'enterprise', logo: '/logos/knauf.png', logoHeight: 36 },
+  { name: 'Hilton Garden Inn', sector: 'hospitality', logo: '/logos/hilton-gardeninn.png', logoHeight: 38 },
+  { name: 'Ramada Encore', sector: 'hospitality', logo: '/logos/ramada-encore.png', logoHeight: 47 },
+  { name: 'Moxy Hotels', sector: 'hospitality', logo: '/logos/hotel-moxy.png', logoHeight: 45 },
+  { name: 'Best Western', sector: 'hospitality', logo: '/logos/best-western.png', logoHeight: 45 },
+  { name: 'Hotel Kabadoni', sector: 'hospitality', logo: '/logos/hotel-kabadoni.png', logoHeight: 34 },
+  { name: 'Le Port Hotel', sector: 'hospitality', logo: '/logos/le-port-1.png', logoHeight: 30 },
+  { name: 'Casino International', sector: 'hospitality', logo: '/logos/casino-interntional.png', logoHeight: 31 },
 ] as const

@@ -37,11 +37,22 @@ export function CategoryGroupSection({
   const { lang, localePath, t } = useLanguage()
 
   return (
-    <Section id={id} spacing="lg" bordered aria-labelledby={`${id}-title`}>
+    /*
+     * On `surface`, not on the page paper, and with no top hairline.
+     *
+     * This band and the featured row below it are both "catalogue things in a
+     * grid". Rendered on the same ground with the same rule above them they
+     * read as one very long grid with a heading dropped into the middle of it,
+     * which is the flatness the page had. A change of ground separates them
+     * more quietly than another hairline would, and the colour change already
+     * does the work the border was doing.
+     */
+    <Section id={id} spacing="lg" className="bg-surface" aria-labelledby={`${id}-title`}>
       <Container>
         <SectionHeading
           id={`${id}-title`}
           as="h2"
+          size="h3"
           eyebrow={eyebrow}
           title={title}
           description={description}

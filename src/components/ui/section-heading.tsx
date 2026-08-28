@@ -12,6 +12,19 @@ type SectionHeadingProps = {
   action?: ReactNode
   /** Heading level — pick the one the document outline needs. */
   as?: 'h1' | 'h2' | 'h3'
+  /**
+   * Type size, when it should not follow the level.
+   *
+   * The page has two kinds of section. The ARGUMENT sections — what we do,
+   * who we are, who we did it for — carry the page and take the large type.
+   * The DISPLAY sections — the catalogue and the featured row — are carried
+   * by their photographs, and a heading at argument size competes with the
+   * pictures underneath it instead of introducing them.
+   *
+   * Both are still <h2> in the outline, because a screen reader walking the
+   * headings needs them at the same level. Only the size steps down.
+   */
+  size?: 'h1' | 'h2' | 'h3'
   align?: 'left' | 'center'
   className?: string
   id?: string
@@ -34,6 +47,7 @@ export function SectionHeading({
   description,
   action,
   as: Tag = 'h2',
+  size,
   align = 'left',
   className,
   id,
@@ -51,7 +65,7 @@ export function SectionHeading({
       <div className={cn('max-w-2xl', centered && 'text-center')}>
         {eyebrow && <Eyebrow className={cn('mb-4 text-brass')}>{eyebrow}</Eyebrow>}
 
-        <Tag id={id} className={cn(SIZES[Tag], 'text-ink')}>
+        <Tag id={id} className={cn(SIZES[size ?? Tag], 'text-ink')}>
           {title}
         </Tag>
 
