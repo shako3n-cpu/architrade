@@ -61,7 +61,7 @@
     "statProjects": "Homes and offices furnished",
     "statDeliveryValue": "Georgia",
     "statDelivery": "Delivery and assembly",
-    "categoriesEyebrow": "Browse by room",
+    "categoriesEyebrow": "Browse by discipline",
     "groupHomeTitle": "Home furniture",
     "groupHomeDescription": "Living room, bedroom and dining — the pieces a house is actually built around.",
     "groupOfficeTitle": "Office furniture",
@@ -83,7 +83,9 @@
     "contactEyebrow": "Ask about a piece",
     "contactTitle": "Tell us what the room needs",
     "contactBody": "There are no prices on this site because no two commissions are the same. Send the piece and the room, and you will have a quote — usually within a few hours.",
-    "groupEmpty": "This part of the catalogue has not been set up yet."
+    "groupEmpty": "This part of the catalogue has not been set up yet.",
+    "catalogueTitle": "The catalogue",
+    "catalogueDescription": "Furniture, lighting, acoustics and public seating — from one supplier, under one contract."
   },
   "contact": {
     "openChannels": "Open contact options",

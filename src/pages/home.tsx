@@ -10,7 +10,6 @@ import { FeaturedGrid } from '@/components/home/featured-grid'
 import { ContactBand } from '@/components/home/contact-band'
 import { useCatalogue } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
-import { categoryGroup } from '@/lib/localize'
 
 /**
  * The home page.
@@ -68,21 +67,26 @@ export function Home() {
       >
         {({ categories, products }) => (
           <>
+            {/*
+             * ONE SECTION, NOT TWO.
+             *   This used to be a home half and an office half, filtered on
+             *   `group_key`. That split made sense while the catalogue was cut
+             *   by ROOM. It is now cut by what the thing IS — furniture,
+             *   lighting, acoustics, public seating — and a lighting pendant
+             *   belongs to an office and a living room equally, so the halves
+             *   had nothing left to divide. Rendering both would have left the
+             *   office one permanently empty, showing "this part of the
+             *   catalogue has not been set up yet" on the home page.
+             *
+             *   Ordering is the database's, not this file's: the query sorts
+             *   on `sort_order`, which follows archtrade.ge's own menu.
+             */}
             <CategoryGroupSection
-              id="home-furniture"
+              id="catalogue"
               eyebrow={t('home.categoriesEyebrow')}
-              title={t('home.groupHomeTitle')}
-              description={t('home.groupHomeDescription')}
-              categories={categories.filter((c) => categoryGroup(c) === 'home')}
-              products={products}
-            />
-
-            <CategoryGroupSection
-              id="office-furniture"
-              eyebrow={t('home.categoriesEyebrow')}
-              title={t('home.groupOfficeTitle')}
-              description={t('home.groupOfficeDescription')}
-              categories={categories.filter((c) => categoryGroup(c) === 'office')}
+              title={t('home.catalogueTitle')}
+              description={t('home.catalogueDescription')}
+              categories={categories}
               products={products}
             />
 
