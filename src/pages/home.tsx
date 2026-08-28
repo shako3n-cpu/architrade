@@ -3,7 +3,6 @@ import { Section } from '@/components/ui/section'
 import { QueryState, SkeletonGrid } from '@/components/ui/query-state'
 import { B2bHero } from '@/components/b2b/hero'
 import { B2bServices } from '@/components/b2b/services'
-import { B2bProjects } from '@/components/b2b/projects'
 import { B2bBrandCards } from '@/components/b2b/brand-cards'
 import { B2bCompany } from '@/components/b2b/company'
 import { B2bClients } from '@/components/b2b/clients'
@@ -44,7 +43,6 @@ export function Home() {
     <>
       <B2bHero />
       <B2bServices />
-      <B2bProjects />
       <B2bBrandCards />
 
       <QueryState

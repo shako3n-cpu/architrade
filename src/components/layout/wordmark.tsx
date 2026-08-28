@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import type { MouseEvent } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useLanguage } from '@/hooks/use-language'
 import { SITE_NAME } from '@/config/site'
 import { cn } from '@/lib/utils'
@@ -19,13 +20,46 @@ import { cn } from '@/lib/utils'
  *   directly (not via `font-heading`, which is the grotesque and should stay
  *   that way for headings), and the weight is pinned to 400 — the only cut of
  *   Noto Serif Georgian index.html actually loads.
+ *
+ * IT DOES BOTH JOBS A LOGO IS EXPECTED TO DO
+ *   From another page it goes home, and RootLayout's route effect puts you at
+ *   the top when it lands. From the home page itself it scrolls back up —
+ *   which it did NOT do before, because navigating to the route you are
+ *   already on is a no-op in the router, so that effect never fired and the
+ *   click appeared to do nothing.
  */
 export function Wordmark({ className }: { className?: string }) {
   const { localePath, t } = useLanguage()
+  const location = useLocation()
+
+  const home = localePath('/')
+  const atHome = location.pathname === home || location.pathname === `${home}/`
+
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    // Middle-click, ctrl/cmd-click and the rest are the browser's to handle —
+    // intercepting them would break "open the home page in a new tab".
+    if (event.defaultPrevented) return
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return
+    }
+
+    // Anywhere else, let the router navigate; RootLayout scrolls on arrival.
+    if (!atHome) return
+
+    event.preventDefault()
+    window.scrollTo({
+      top: 0,
+      // Matches the reduced-motion rule the stylesheet applies to html.
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+    })
+  }
 
   return (
     <Link
-      to={localePath('/')}
+      to={home}
+      onClick={handleClick}
       aria-label={t('header.homeLink')}
       className={cn(
         // inline-flex + min-h-11 makes the whole header-height strip around

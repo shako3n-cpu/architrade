@@ -1,7 +1,6 @@
 import { PageHeader } from '@/components/b2b/page-header'
 import { B2bServices } from '@/components/b2b/services'
 import { B2bBrandCards } from '@/components/b2b/brand-cards'
-import { B2bProjects } from '@/components/b2b/projects'
 import { ContactBand } from '@/components/home/contact-band'
 import { useLanguage } from '@/hooks/use-language'
 
@@ -27,7 +26,6 @@ export function Services() {
 
       <B2bServices />
       <B2bBrandCards />
-      <B2bProjects />
       <ContactBand />
     </>
   )

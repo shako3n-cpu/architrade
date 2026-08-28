@@ -54,14 +54,41 @@ export function B2bHero() {
       />
 
       <Container className="pt-32 pb-14 md:pt-44 md:pb-20">
-        <div className="max-w-3xl">
+        {/* Wider measure than the old max-w-3xl. The Georgian headline is a
+            third longer than the English one, and at 3xl it had nowhere to go
+            but downwards. */}
+        <div className="max-w-5xl">
           <Eyebrow className="text-brass-on-ink">{t('b2b.hero.eyebrow')}</Eyebrow>
 
-          <h1 className="mt-6 text-4xl text-background md:text-6xl lg:text-7xl">
+          {/*
+           * THE RESERVED BLOCK IS WHY THE PAGE STOPS JUMPING
+           *   The headline sets to two lines in English and three in Georgian,
+           *   so the hero — which is min-height, not height — grew by a whole
+           *   line when you switched language and shoved the photograph and
+           *   everything under it down the page.
+           *
+           *   No font size fixes that. The two strings are different lengths,
+           *   so any size that puts English on three lines puts Georgian on
+           *   four; the gap just moves. What fixes it is reserving the taller
+           *   language's space in BOTH: `min-h` in `lh` units is exactly three
+           *   lines of whatever this breakpoint's type is, so English simply
+           *   leaves its third line empty and the hero measures the same in
+           *   either language.
+           *
+           *   Sized down from 7xl as well — at 72px the Georgian ran to four
+           *   lines and read as shouting rather than as a statement.
+           */}
+          <h1 className="mt-6 min-h-[4lh] text-4xl text-background md:text-5xl lg:min-h-[3lh] lg:text-6xl">
             {t('b2b.hero.title')}
           </h1>
 
-          <p className="mt-7 max-w-2xl text-base leading-relaxed text-ink-muted md:text-lg">
+          {/* Reserved for the same reason as the headline above: the Georgian
+              description runs to five lines where the English runs to four, so
+              without this the hero still moved by ~29px on a language switch
+              even once the headline was pinned. Only from `md` — on a phone
+              both languages wrap far past five lines anyway, and reserving
+              there would just open a hole under the text. */}
+          <p className="mt-7 max-w-2xl text-base leading-relaxed text-ink-muted md:min-h-[5lh] md:text-lg">
             {t('b2b.hero.description')}
           </p>
 
