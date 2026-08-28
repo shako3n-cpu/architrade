@@ -26,43 +26,45 @@ export function LanguageSwitcher({
     <div
       role="group"
       aria-label={t('header.languageLabel')}
-      className={cn('flex items-center', className)}
+      className={cn('flex items-center gap-1.5', className)}
     >
-      {LANGUAGES.map((code: Language, index) => {
+      {LANGUAGES.map((code: Language) => {
         const isActive = code === lang
 
         return (
-          <div key={code} className="flex items-center">
-            {/* Hairline separator between the codes, never before the first. */}
-            {index > 0 && <span aria-hidden="true" className="h-3 w-px bg-hairline" />}
-
-            <button
-              type="button"
-              onClick={() => switchLanguage(code)}
-              // Tells assistive tech which language is currently applied.
-              aria-current={isActive ? 'true' : undefined}
-              lang={code}
-              className={cn(
-                'inline-flex items-center transition-colors duration-300',
-                // Deliberately NOT `at-label`. That class is 11px, sized for
-                // eyebrows sitting above a heading where the heading carries
-                // the weight. Here the label IS the control, and at 11px in
-                // muted grey it read as a caption rather than something to
-                // press. 12.5px at 500 fixes both.
-                'font-body text-[0.78125rem] font-medium tracking-[0.14em] uppercase',
-                // Without a floor these are a ~20px target sitting right next
-                // to each other.
-                'min-h-11 sm:min-h-0',
-                size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5',
-                // The inactive code is the one you can click, so it gets full
-                // ink rather than muted; the active one is bronze, which reads
-                // as state rather than as a stronger invitation.
-                isActive ? 'text-brass' : 'text-ink hover:text-brass',
-              )}
-            >
-              {LANGUAGE_LABELS[code]}
-            </button>
-          </div>
+          <button
+            key={code}
+            type="button"
+            onClick={() => switchLanguage(code)}
+            // Tells assistive tech which language is currently applied.
+            aria-current={isActive ? 'true' : undefined}
+            lang={code}
+            className={cn(
+              'inline-flex items-center justify-center rounded-xs border transition-colors duration-300',
+              // Deliberately NOT `at-label`. That class is 11px, sized for
+              // eyebrows sitting above a heading where the heading carries
+              // the weight. Here the label IS the control, and at 11px in
+              // muted grey it read as a caption rather than something to
+              // press. 12.5px at 500 fixes both.
+              'font-body text-[0.78125rem] font-medium tracking-[0.14em] uppercase',
+              // Without a floor these are a ~20px target sitting right next
+              // to each other.
+              'min-h-11 sm:min-h-0',
+              size === 'sm' ? 'px-2.5 py-1' : 'px-3.5 py-1.5',
+              // Two codes set in bare type, separated by a hairline, read as a
+              // caption however they are marked up — which is what kept this
+              // looking like text rather than a control. The pair now wears
+              // the shape of a segmented control: the current language is a
+              // filled bronze chip, the other an outlined one you can press.
+              // The border is muted at 45%, not `hairline` — hairline is
+              // roughly 1.1:1 on this background, i.e. invisible.
+              isActive
+                ? 'border-brass bg-brass text-background'
+                : 'border-muted/45 bg-surface text-ink hover:border-ink hover:text-brass',
+            )}
+          >
+            {LANGUAGE_LABELS[code]}
+          </button>
         )
       })}
     </div>

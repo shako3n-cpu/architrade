@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Media } from '@/components/ui/media'
-import { InquireButtons } from '@/components/contact/inquire-buttons'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category, Product } from '@/data/types'
 import {
@@ -101,14 +100,12 @@ export function ProductCard({
           {materials && <Tag>{materials}</Tag>}
         </div>
 
-        {/* Pushes the price line and the enquiry row to the bottom, so cards of
-            different text lengths still line up along their last row. */}
+        {/* Pushes the price line to the bottom, so cards of different text
+            lengths still line up along their last row. */}
         <div className="mt-auto pt-5">
           <p className="text-xs tracking-[0.14em] text-brass uppercase">
             {t('product.priceOnRequest')}
           </p>
-
-          <InquireButtons product={product} variant="inline" className="mt-3.5" />
         </div>
       </div>
     </article>

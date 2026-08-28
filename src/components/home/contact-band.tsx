@@ -34,7 +34,9 @@ export function ContactBand() {
               {t('home.contactBody')}
             </p>
 
-            <address className="mt-10 flex flex-col gap-2 text-sm text-ink-muted not-italic">
+            {/* at-selectable: same reasoning as the footer — the page default
+                is unselectable, and an address is made to be copied. */}
+            <address className="at-selectable mt-10 flex flex-col gap-2 text-sm text-ink-muted not-italic">
               <span className="text-background">{t('common.addressLine')}</span>
               <span>
                 {t('footer.weekdays')} · {t('footer.weekdaysHours')}

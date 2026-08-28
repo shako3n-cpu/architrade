@@ -48,11 +48,22 @@ export function B2bClients() {
                 />
 
                 {client.logo ? (
+                  /*
+                   * mix-blend-multiply, and it is load-bearing. The files are
+                   * palette PNGs with no alpha, so each carries a solid white
+                   * ground — dropped straight on they would be sixteen white
+                   * cards on an off-white page, the one thing the hairline
+                   * language never does. Multiply folds pure white into
+                   * whatever sits behind it and leaves the ink alone.
+                   * It depends on this band staying LIGHT; on a graphite
+                   * section the trick inverts and the marks vanish.
+                   */
                   <img
                     src={client.logo}
                     alt={client.name}
                     loading="lazy"
-                    className="max-h-10 w-auto grayscale opacity-70 transition duration-300 group-hover:opacity-100 group-hover:grayscale-0"
+                    decoding="async"
+                    className="max-h-10 w-auto object-contain opacity-85 mix-blend-multiply transition-opacity duration-300 group-hover:opacity-100"
                   />
                 ) : (
                   <span className="font-heading text-base leading-snug text-muted transition-colors duration-300 group-hover:text-ink md:text-lg">

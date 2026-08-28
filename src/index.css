@@ -186,22 +186,36 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Headings, eyebrows and the small caps labels are read, never typed into
-     and almost never copied. Left alone they take the I-beam cursor, which
-     on a display line reads as a text caret sitting in the title — the thing
-     that made the navigation and the hero look editable. Default arrow, no
-     selection, same as the controls above. Body copy is untouched: addresses,
-     product names and specifications still select and copy normally. */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  .at-label {
+  /* ==========================================================================
+     THE PAGE IS AN INTERFACE, NOT A DOCUMENT
+     --------------------------------------------------------------------------
+     This used to name h1–h6 and .at-label only. That left every <p>, <span>,
+     <li> and <dd> on `cursor: auto`, which is an I-beam — so a paragraph, a
+     spec chip or a stat figure still gave the blinking-caret-in-the-page look
+     the headings had been fixed for. Chrome shows it more readily than Firefox
+     does, which is why this read as "fixed in Firefox, still broken in Chrome"
+     rather than as a gap that was always there in both.
+
+     So the default is inverted: the whole body is arrow-cursor and
+     unselectable, and the things that genuinely want text behaviour opt back
+     in below. Anything narrower than this turns into an endless list of tags,
+     because the caret comes from the DEFAULT, not from any one element.
+
+     TO MAKE A BLOCK COPYABLE AGAIN, add `at-selectable`. Reach for it on
+     anything a visitor has a real reason to copy — an address, an article
+     number, a bank detail. It is deliberately opt-in.
+     ========================================================================== */
+  body {
     cursor: default;
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  .at-selectable,
+  .at-selectable * {
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
   }
 
   /* The filter and sector tabs wear .at-label themselves, and a class beats
@@ -221,10 +235,12 @@
   }
 
   /* Text inputs are the exception twice over: they want the I-beam back, and
-     their contents must stay selectable. */
+     their contents must stay selectable. A directly-matching rule always beats
+     the value inherited from `body`, so ordering here is not load-bearing. */
   input,
   textarea,
-  select {
+  select,
+  [contenteditable='true'] {
     cursor: auto;
     -webkit-user-select: text;
     user-select: text;

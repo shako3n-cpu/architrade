@@ -57,7 +57,10 @@ export function Footer() {
               {t('footer.contactTitle')}
             </Eyebrow>
 
-            <address className="flex flex-col gap-1 text-sm text-muted not-italic sm:gap-3.5">
+            {/* at-selectable: the page default is unselectable (see index.css),
+                and a street address is the clearest case of something a
+                visitor genuinely highlights and copies. */}
+            <address className="at-selectable flex flex-col gap-1 text-sm text-muted not-italic sm:gap-3.5">
               <span>{t('common.addressLine')}</span>
 
               <a

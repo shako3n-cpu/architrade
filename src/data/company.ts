@@ -448,28 +448,40 @@ export interface Client {
   logo?: string
 }
 
+/**
+ * THESE ARE NOW THE REAL MARKS, AND THEY ARE THE COMPANY'S OWN FILES.
+ *   Every file in public/logos/ was copied from archtrade.ge, where this same
+ *   reference wall already runs. Nothing here is redrawn — a hand-traced bank
+ *   logo is not that bank's logo, and a wrong mark on a reference wall is
+ *   exactly the detail a client's brand team notices first.
+ *
+ * WHY THE LIST GOT SHORTER
+ *   It was twenty names in type; it is now the sixteen that archtrade.ge has
+ *   a logo file for. Liberty Bank, Pasha Bank, the National Bureau of
+ *   Enforcement, Samsung, Regus, Caucasus University and IDS Borjomi came off
+ *   — not because the work did not happen, but because a wall that is part
+ *   logo and part plain text reads as a wall with holes in it. They are still
+ *   in PROJECTS above, which is where the detail belongs. Add a file to
+ *   public/logos/ and a row here to put any of them back.
+ */
 export const CLIENTS: readonly Client[] = [
-  { name: 'Bank of Georgia', sector: 'finance' },
+  { name: 'Ministry of Justice of Georgia', sector: 'government', logo: '/logos/ministry-justice.png' },
+  { name: 'House of Justice', sector: 'government', logo: '/logos/public-service-hall.png' },
+  { name: 'Bank of Georgia', sector: 'finance', logo: '/logos/bank-of-georgia.png' },
   // NOT on archtrade.ge's own project list — added because it was named as a
   // key client. Worth confirming before this goes live: a reference the
   // client cannot corroborate is the one that gets asked about.
-  { name: 'TBC Bank', sector: 'finance' },
-  { name: 'Liberty Bank', sector: 'finance' },
-  { name: 'Pasha Bank', sector: 'finance' },
-  { name: 'ProCredit Bank', sector: 'finance' },
-  { name: 'Ministry of Justice', sector: 'government' },
-  { name: 'House of Justice', sector: 'government' },
-  { name: 'National Bureau of Enforcement', sector: 'government' },
-  { name: 'Deloitte', sector: 'enterprise' },
-  { name: 'Booking.com', sector: 'enterprise' },
-  { name: 'Samsung', sector: 'enterprise' },
-  { name: 'Colliers', sector: 'enterprise' },
-  { name: 'Knauf', sector: 'enterprise' },
-  { name: 'Regus', sector: 'enterprise' },
-  { name: 'Caucasus University', sector: 'enterprise' },
-  { name: 'IDS Borjomi', sector: 'enterprise' },
-  { name: 'Hilton Garden Inn', sector: 'hospitality' },
-  { name: 'Ramada Encore', sector: 'hospitality' },
-  { name: 'Best Western', sector: 'hospitality' },
-  { name: 'Casino International', sector: 'hospitality' },
+  { name: 'TBC Bank', sector: 'finance', logo: '/logos/tbc-bank.png' },
+  { name: 'ProCredit Bank', sector: 'finance', logo: '/logos/procredit-bank.png' },
+  { name: 'Deloitte', sector: 'enterprise', logo: '/logos/deloitte.png' },
+  { name: 'Booking.com', sector: 'enterprise', logo: '/logos/bookingcom.png' },
+  { name: 'Colliers', sector: 'enterprise', logo: '/logos/colliers.png' },
+  { name: 'Knauf', sector: 'enterprise', logo: '/logos/knauf.png' },
+  { name: 'Hilton Garden Inn', sector: 'hospitality', logo: '/logos/hilton-gardeninn.png' },
+  { name: 'Ramada Encore', sector: 'hospitality', logo: '/logos/ramada-encore.png' },
+  { name: 'Moxy Hotels', sector: 'hospitality', logo: '/logos/hotel-moxy.png' },
+  { name: 'Best Western', sector: 'hospitality', logo: '/logos/best-western.png' },
+  { name: 'Hotel Kabadoni', sector: 'hospitality', logo: '/logos/hotel-kabadoni.png' },
+  { name: 'Le Port Hotel', sector: 'hospitality', logo: '/logos/le-port-1.png' },
+  { name: 'Casino International', sector: 'hospitality', logo: '/logos/casino-interntional.png' },
 ] as const
