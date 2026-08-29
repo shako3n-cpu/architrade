@@ -1,18 +1,24 @@
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
-import { Eyebrow } from '@/components/ui/eyebrow'
 import { SectionHeading } from '@/components/ui/section-heading'
 import { PROCESS_STEPS } from '@/data/company'
 import { useLanguage } from '@/hooks/use-language'
 
 /**
- * Who the company is, and how a job actually runs.
+ * How a job actually runs.
  *
- * THE ONE SERIF ON THE SITE
- *   The statement is set in the serif face, and it is the only place that
- *   happens. Everything else is the grotesque. Used once, the change of voice
- *   marks this as the company speaking rather than the interface describing
- *   it; used twice it would just be a second font.
+ * THE STATEMENT USED TO OPEN THIS SECTION, AND NOW OPENS THE PAGE
+ *   There was an eyebrow, a heading and the company statement set in serif
+ *   above the steps. /about is this component's only caller, and that page
+ *   already had a header of its own, so the two stacked up and said the same
+ *   thing twice before a visitor reached the first step. The heading and the
+ *   statement moved up into the page header; what is left here is the process,
+ *   which is the part the page did not already say.
+ *
+ *   The serif treatment did not survive the move — PageHeader sets its
+ *   standfirst in the body face, like every other interior page. Worth
+ *   knowing if the serif is wanted back: it belongs on the page header, not
+ *   restored here, or the duplication comes with it.
  *
  * THE NUMBERS ARE REAL
  *   Brief, specify, supply, install is a sequence — you cannot ship what has
@@ -26,27 +32,15 @@ export function B2bCompany() {
   return (
     <Section spacing="lg" bordered id="company" aria-labelledby="company-title">
       <Container>
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-5">
-            <Eyebrow className="text-brass">{t('b2b.about.eyebrow')}</Eyebrow>
-            <h2 id="company-title" className="mt-4 text-3xl text-ink md:text-4xl lg:text-5xl">
-              {t('b2b.about.title')}
-            </h2>
-          </div>
-
-          <blockquote className="lg:col-span-7">
-            <p className="font-serif text-xl leading-relaxed text-ink md:text-2xl">
-              {t('b2b.about.statement')}
-            </p>
-          </blockquote>
-        </div>
-      </Container>
-
-      <Container className="mt-20 md:mt-28">
+        {/* Now the section's own heading, so it is an h2 rather than the h3 it
+            was while sitting under one. The outline runs h1 -> h2 with nothing
+            skipped. */}
         <SectionHeading
+          id="company-title"
           eyebrow={t('b2b.about.processEyebrow')}
           title={t('b2b.about.processTitle')}
-          as="h3"
+          as="h2"
+          size="h3"
         />
 
         <ol className="mt-12 grid gap-px border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-4">
