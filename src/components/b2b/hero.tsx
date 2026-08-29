@@ -4,6 +4,7 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { Button } from '@/components/ui/button'
 import { BRANDS, PROJECTS, SECTORS } from '@/data/company'
 import { useLanguage } from '@/hooks/use-language'
+import { cn } from '@/lib/utils'
 
 /**
  * The opening statement.
@@ -121,7 +122,7 @@ export function B2bHero() {
            *   Sized down from 7xl as well — at 72px the Georgian ran to four
            *   lines and read as shouting rather than as a statement.
            */}
-          <h1 className="mt-6 min-h-[4lh] text-4xl text-background md:text-5xl lg:min-h-[3lh] lg:text-6xl">
+          <h1 className="mt-6 min-h-[4lh] text-3xl text-background sm:text-4xl md:text-5xl lg:min-h-[3lh] lg:text-6xl">
             {t('b2b.hero.title')}
           </h1>
 
@@ -168,20 +169,36 @@ export function B2bHero() {
 
       <div className="relative border-t border-background/15">
         <Container>
-          <dl className="grid grid-cols-3">
+          {/*
+           * THREE ACROSS ONLY FROM `sm`.
+           *   At 375px three columns are 112px each, and the labels are
+           *   Georgian phrases — "ავეჯით აღჭურვილი პროექტი" broke to three
+           *   lines of 11px type in a column narrower than the words. The
+           *   figures were unreadable at exactly the size where the hero has
+           *   least room to waste.
+           *
+           *   On a phone each figure becomes one ROW instead: number left,
+           *   label right, hairline between. Same three facts, one line each,
+           *   and less vertical space than the wrapped columns took.
+           */}
+          <dl className="grid grid-cols-1 sm:grid-cols-3">
             {figures.map((figure, index) => (
               <div
                 key={figure.label}
-                className={
-                  index > 0
-                    ? 'border-l border-background/15 py-6 pl-5 sm:pl-8'
-                    : 'py-6 pr-5 sm:pr-8'
-                }
+                className={cn(
+                  'flex items-baseline justify-between gap-4 py-4',
+                  'sm:block sm:py-6',
+                  // Rows divide with a rule above; columns with one to the left.
+                  index > 0 && 'border-t border-background/15 sm:border-t-0 sm:border-l sm:pl-8',
+                  index === 0 && 'sm:pr-8',
+                )}
               >
                 <dd className="font-heading text-2xl text-background md:text-3xl">
                   {figure.value}
                 </dd>
-                <dt className="at-label mt-1 text-ink-muted">{figure.label}</dt>
+                <dt className="at-label text-right text-ink-muted sm:mt-1 sm:text-left">
+                  {figure.label}
+                </dt>
               </div>
             ))}
           </dl>

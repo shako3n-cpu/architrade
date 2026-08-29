@@ -30,7 +30,7 @@ export function CompanyTeaser() {
             <Eyebrow className="text-brass">{t('b2b.about.eyebrow')}</Eyebrow>
             <h2
               id="company-teaser-title"
-              className="mt-4 text-3xl text-ink md:text-4xl lg:text-5xl"
+              className="mt-4 text-2xl text-ink sm:text-3xl md:text-4xl lg:text-5xl"
             >
               {t('b2b.about.title')}
             </h2>

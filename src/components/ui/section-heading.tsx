@@ -30,10 +30,19 @@ type SectionHeadingProps = {
   id?: string
 }
 
+/*
+ * Each size starts one step smaller than it used to on the narrowest screens.
+ *
+ * A 36px h1 on a 375px phone is roughly eleven Latin characters to the line,
+ * and fewer in Georgian, whose words are longer — so headings arrived
+ * pre-broken into four and five ragged lines and swallowed the fold. The
+ * `sm` step puts the old size back at 640px, where there is width for it, so
+ * only phones are affected.
+ */
 const SIZES = {
-  h1: 'text-4xl md:text-6xl lg:text-7xl',
-  h2: 'text-3xl md:text-4xl lg:text-5xl',
-  h3: 'text-2xl md:text-3xl',
+  h1: 'text-3xl sm:text-4xl md:text-6xl lg:text-7xl',
+  h2: 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl',
+  h3: 'text-xl sm:text-2xl md:text-3xl',
 } as const
 
 /**

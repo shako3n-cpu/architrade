@@ -59,7 +59,7 @@ export function ProductInfo({
         )}
       </div>
 
-      <h1 className="mt-4 font-heading text-3xl leading-tight text-ink md:text-4xl lg:text-5xl">
+      <h1 className="mt-4 font-heading text-2xl leading-tight text-ink sm:text-3xl md:text-4xl lg:text-5xl">
         {productTitle(product, lang)}
       </h1>
 

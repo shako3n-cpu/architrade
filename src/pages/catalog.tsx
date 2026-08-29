@@ -58,7 +58,7 @@ export function Catalog() {
       <div className="border-b border-hairline pt-14 pb-14 md:pt-20 md:pb-16">
         <Container>
           <Eyebrow className="text-brass">{t('catalog.eyebrow')}</Eyebrow>
-          <h1 className="mt-5 max-w-4xl text-4xl text-ink md:text-5xl lg:text-6xl">
+          <h1 className="mt-5 max-w-4xl text-3xl text-ink sm:text-4xl md:text-5xl lg:text-6xl">
             {t('catalog.title')}
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-relaxed text-muted md:text-lg">

@@ -25,7 +25,9 @@ export function PageHeader({
       <Container>
         <Eyebrow className="text-brass">{eyebrow}</Eyebrow>
 
-        <h1 className="mt-5 max-w-4xl text-4xl text-ink md:text-5xl lg:text-6xl">{title}</h1>
+        <h1 className="mt-5 max-w-4xl text-3xl text-ink sm:text-4xl md:text-5xl lg:text-6xl">
+          {title}
+        </h1>
 
         <p className="mt-7 max-w-2xl text-base leading-relaxed text-muted md:text-lg">
           {description}

@@ -25,7 +25,7 @@ export function ContactBand() {
 
             <h2
               id="contact-band-title"
-              className="mt-6 font-heading text-3xl text-background md:text-4xl lg:text-5xl"
+              className="mt-6 font-heading text-2xl text-background sm:text-3xl md:text-4xl lg:text-5xl"
             >
               {t('home.contactTitle')}
             </h2>
