@@ -3,6 +3,7 @@ import { Section } from '@/components/ui/section'
 import { SectionHeading } from '@/components/ui/section-heading'
 import { SERVICES } from '@/data/company'
 import { useLanguage } from '@/hooks/use-language'
+import { cn } from '@/lib/utils'
 
 /**
  * The four disciplines.
@@ -14,20 +15,37 @@ import { useLanguage } from '@/hooks/use-language'
  * Two columns on desktop, not four. Four would make each card a thumbnail, and
  * these are the four things the company sells.
  */
-export function B2bServices() {
+export function B2bServices({ showHeading = true }: { showHeading?: boolean }) {
   const { t } = useLanguage()
 
   return (
-    <Section spacing="lg" id="services" aria-labelledby="services-title">
+    <Section
+      spacing="lg"
+      id="services"
+      {...(showHeading
+        ? { 'aria-labelledby': 'services-title' }
+        : { 'aria-label': t('b2b.services.eyebrow') })}
+    >
       <Container>
-        <SectionHeading
-          id="services-title"
-          eyebrow={t('b2b.services.eyebrow')}
-          title={t('b2b.services.title')}
-          description={t('b2b.services.description')}
-        />
+        {/* Off on /services, where the page header directly above now carries
+            this exact title and subtitle. The section keeps its heading for
+            the home page, where it is introducing itself rather than repeating
+            the thing above it. */}
+        {showHeading && (
+          <SectionHeading
+            id="services-title"
+            eyebrow={t('b2b.services.eyebrow')}
+            title={t('b2b.services.title')}
+            description={t('b2b.services.description')}
+          />
+        )}
 
-        <ul className="mt-14 grid gap-px border border-hairline bg-hairline sm:grid-cols-2">
+        <ul
+          className={cn(
+            'grid gap-px border border-hairline bg-hairline sm:grid-cols-2',
+            showHeading && 'mt-14',
+          )}
+        >
           {SERVICES.map((service) => (
             <li key={service.id} className="group bg-background">
               <article className="flex h-full flex-col">

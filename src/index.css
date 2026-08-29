@@ -347,6 +347,34 @@
     background-color: color-mix(in srgb, var(--at-graphite-deep) 74%, transparent);
   }
 
+  /* A thin, quiet scrollbar for panes that scroll inside the page — the
+     catalogue filter rail, today. The browser default is a wide grey slab
+     that reads as chrome bolted onto a hairline layout.
+
+     Both syntaxes are needed and neither is redundant: Firefox and Safari 18+
+     take `scrollbar-width`/`scrollbar-color`, older WebKit takes the
+     pseudo-elements, and a browser that understands neither simply keeps its
+     own scrollbar, which is the correct fallback. Colours are the hairline
+     and muted tokens, so this follows the palette anywhere it is used. */
+  .at-scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--at-hairline) transparent;
+  }
+  .at-scroll-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .at-scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .at-scroll-thin::-webkit-scrollbar-thumb {
+    background-color: var(--at-hairline);
+    border-radius: 3px;
+  }
+  .at-scroll-thin:hover::-webkit-scrollbar-thumb {
+    background-color: var(--at-muted);
+  }
+
   /* Slow image zoom used on product and category cards.
      The parent needs `overflow-hidden`. */
   .at-zoom {

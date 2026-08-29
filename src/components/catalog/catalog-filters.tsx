@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { useLanguage } from '@/hooks/use-language'
-import type { Category } from '@/data/types'
 import { categoryTitle } from '@/lib/localize'
 import type { CategoryNode } from '@/lib/category-tree'
 import { isUnfiltered, type CatalogFilters } from '@/lib/catalog-filter'
@@ -11,16 +10,35 @@ import { cn } from '@/lib/utils'
 /**
  * The filter rail.
  *
- * A LIST, NOT A DROPDOWN
- *   Six to twelve categories fit on screen, so showing them costs nothing and
- *   answers the question a dropdown makes you open it to ask: what is in here,
- *   and how much of it. The counts come from the loaded rows, so a category
- *   with nothing in it reads 0 rather than pretending.
+ * AN ACCORDION, NOT A FLAT LIST
+ *   Every branch open at once is sixteen rows today and grows with the
+ *   catalogue, which overran the rail and left the lower half unreachable —
+ *   the sticky container clipped it and nothing scrolled. Branches are now
+ *   closed by default, so the visitor reads four rooms and opens the one they
+ *   want. The tree is the same one the mega menu draws, so arriving through
+ *   either does not mean relearning the other.
  *
- * Categories are grouped BY THEIR PARENT, which is the same tree the mega
- * menu renders. This replaced a hardcoded home/office split that predated the
- * hierarchy: the rail and the menu now cut the catalogue the same way, so a
- * visitor who arrived through one is not asked to relearn the other.
+ * TWO TARGETS ON A PARENT ROW, AND BOTH ARE NEEDED
+ *   The name SELECTS the branch — "everything in Office" is a real filter and
+ *   one of the most useful, so it must stay one click — and selecting also
+ *   opens it, because having narrowed to nine products the obvious next
+ *   question is which nine. The chevron beside it only opens and closes,
+ *   changing nothing about what is shown in the grid.
+ *
+ *   Collapsing them into one control loses one of the two: the whole row
+ *   filtering leaves no way to close a branch, and the whole row toggling
+ *   leaves no way to filter by a parent at all.
+ *
+ * THE OPEN BRANCH FOLLOWS THE URL
+ *   Landing on ?c=sofas opens Living Room with Sofas marked, rather than
+ *   showing three closed branches and a filtered grid with no visible reason.
+ *   A manual toggle overrides that for as long as the visitor is on the page.
+ *
+ * IT SCROLLS ON ITS OWN
+ *   The rail is sticky, so its height is bounded by the viewport rather than
+ *   by the page. The category list gets that leftover height and its own
+ *   scrollbar; the search field, the featured checkbox and the clear button
+ *   stay outside it, pinned and always reachable.
  *
  * COLLAPSED ON A PHONE, OPEN ON A DESKTOP
  *   Stacked above the grid, the full rail put 1235px — a screen and a half —
@@ -50,11 +68,25 @@ export function CatalogFilterRail({
   filters: CatalogFilters
   onChange: (next: Partial<CatalogFilters>) => void
 }) {
-  const { t } = useLanguage()
+  const { lang, t } = useLanguage()
   const [open, setOpen] = useState(false)
+  const [toggled, setToggled] = useState<Record<string, boolean>>({})
+
+  /** The branch the current filter sits in, whether as parent or as child. */
+  const activeBranchId = branches.find(
+    (branch) =>
+      branch.category.slug === filters.category ||
+      branch.children.some((child) => child.category.slug === filters.category),
+  )?.category.id
+
+  const isExpanded = (branch: CategoryNode) =>
+    toggled[branch.category.id] ?? branch.category.id === activeBranchId
+
+  const toggle = (branch: CategoryNode) =>
+    setToggled((current) => ({ ...current, [branch.category.id]: !isExpanded(branch) }))
 
   return (
-    <div className="flex flex-col gap-6 lg:gap-10">
+    <div className="flex flex-col gap-6 lg:gap-8">
       <search>
         <label className="block">
           <span className="at-label mb-3 block text-muted">{t('catalog.searchLabel')}</span>
@@ -89,51 +121,62 @@ export function CatalogFilterRail({
         <span aria-hidden="true">{open ? '−' : '+'}</span>
       </button>
 
-      <div id="catalog-filters" className={cn('flex-col gap-10', open ? 'flex' : 'hidden lg:flex')}>
+      <div id="catalog-filters" className={cn('flex-col gap-8', open ? 'flex' : 'hidden lg:flex')}>
         <div>
           <Eyebrow className="mb-4 text-muted">{t('catalog.filterHeading')}</Eyebrow>
 
-          <ul className="border-t border-hairline">
-            <li>
-              <FilterRow
-                label={t('catalog.allProducts')}
-                count={total}
-                active={!filters.category}
-                onClick={() => onChange({ category: '' })}
-              />
-            </li>
-          </ul>
+          {/* The scroll area. `-mr-2 pr-2` keeps the scrollbar clear of the
+              counts instead of overlapping them, and the max-height is the
+              viewport minus the header, the sticky offset and the block of
+              controls pinned underneath. */}
+          <div className="at-scroll-thin -mr-2 border-t border-hairline pr-2 lg:max-h-[calc(100vh-22rem)] lg:overflow-y-auto">
+            <FilterRow
+              label={t('catalog.allProducts')}
+              count={total}
+              active={!filters.category}
+              onClick={() => onChange({ category: '' })}
+            />
 
-          {branches.map((branch) => (
-            <div key={branch.category.id} className="mt-7">
-              <BranchHeading node={branch} />
+            <ul>
+              {branches.map((branch) => {
+                const expanded = isExpanded(branch)
+                const panelId = `filter-branch-${branch.category.slug}`
 
-              <ul className="border-t border-hairline">
-                {/* The parent itself is a row, so "everything in Office" is
-                    one click rather than four. */}
-                <li>
-                  <CategoryRow
-                    category={branch.category}
-                    count={counts[branch.category.slug] ?? 0}
-                    active={filters.category === branch.category.slug}
-                    onClick={() => onChange({ category: branch.category.slug })}
-                  />
-                </li>
-
-                {branch.children.map((child) => (
-                  <li key={child.category.id}>
-                    <CategoryRow
-                      category={child.category}
-                      count={counts[child.category.slug] ?? 0}
-                      active={filters.category === child.category.slug}
-                      onClick={() => onChange({ category: child.category.slug })}
-                      indented
+                return (
+                  <li key={branch.category.id}>
+                    <BranchRow
+                      node={branch}
+                      count={counts[branch.category.slug] ?? 0}
+                      active={filters.category === branch.category.slug}
+                      expanded={expanded}
+                      panelId={panelId}
+                      onSelect={() => {
+                        onChange({ category: branch.category.slug })
+                        // Selecting a branch always opens it: having narrowed
+                        // to nine, the next question is which nine.
+                        setToggled((current) => ({ ...current, [branch.category.id]: true }))
+                      }}
+                      onToggle={() => toggle(branch)}
                     />
+
+                    <ul id={panelId} hidden={!expanded}>
+                      {branch.children.map((child) => (
+                        <li key={child.category.id}>
+                          <FilterRow
+                            label={categoryTitle(child.category, lang)}
+                            count={counts[child.category.slug] ?? 0}
+                            active={filters.category === child.category.slug}
+                            onClick={() => onChange({ category: child.category.slug })}
+                            indented
+                          />
+                        </li>
+                      ))}
+                    </ul>
                   </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                )
+              })}
+            </ul>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 border-t border-hairline pt-7">
@@ -163,40 +206,58 @@ export function CatalogFilterRail({
   )
 }
 
-/** A top-level branch's name, used as the group heading over its children. */
-function BranchHeading({ node }: { node: CategoryNode }) {
-  const { lang } = useLanguage()
-  return (
-    <Eyebrow className="mb-3 text-brass-on-surface">
-      {categoryTitle(node.category, lang)}
-    </Eyebrow>
-  )
-}
-
-/** A category row, named through the localiser. */
-function CategoryRow({
-  category,
+/** A parent: the name selects the branch, the chevron opens it. */
+function BranchRow({
+  node,
   count,
   active,
-  onClick,
-  indented = false,
+  expanded,
+  panelId,
+  onSelect,
+  onToggle,
 }: {
-  category: Category
+  node: CategoryNode
   count: number
   active: boolean
-  onClick: () => void
-  /** Children sit in from their parent, so the shape survives the flattening. */
-  indented?: boolean
+  expanded: boolean
+  panelId: string
+  onSelect: () => void
+  onToggle: () => void
 }) {
-  const { lang } = useLanguage()
+  const { lang, t } = useLanguage()
+  const name = categoryTitle(node.category, lang)
+
   return (
-    <FilterRow
-      label={categoryTitle(category, lang)}
-      count={count}
-      active={active}
-      onClick={onClick}
-      indented={indented}
-    />
+    <div className="flex items-stretch border-b border-hairline">
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={active}
+        className={cn(
+          'flex min-h-11 flex-1 items-baseline justify-between gap-3 py-3 pl-1 text-left transition-colors duration-300',
+          active ? 'text-brass' : 'text-ink hover:text-brass',
+        )}
+      >
+        <span className="text-sm font-medium">{name}</span>
+        <span className="at-label shrink-0 text-muted">{count}</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        // The name is already on screen beside it, so the chevron needs one of
+        // its own or a screen reader announces a button called nothing.
+        aria-label={`${name} — ${t('catalog.subcategories')}`}
+        className="inline-flex w-9 shrink-0 items-center justify-center text-muted transition-colors duration-300 hover:text-brass"
+      >
+        <ChevronDown
+          aria-hidden="true"
+          className={cn('size-4 transition-transform duration-300', expanded && 'rotate-180')}
+        />
+      </button>
+    </div>
   )
 }
 
@@ -212,6 +273,7 @@ function FilterRow({
   count: number
   active: boolean
   onClick: () => void
+  /** Children sit in from their parent, so the shape survives the flattening. */
   indented?: boolean
 }) {
   return (
