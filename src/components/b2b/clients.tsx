@@ -43,6 +43,13 @@ import type { Client } from '@/data/company'
 export function B2bClients() {
   const { t } = useLanguage()
 
+  /*
+   * Blank cells to complete the last row of the three-column phone layout.
+   * Derived rather than hardcoded to 2, so adding or removing a client cannot
+   * silently reintroduce the grey slab.
+   */
+  const fillers = (3 - (CLIENTS.length % 3)) % 3
+
   return (
     /*
      * `--at-band` exists because `bg-ink` and `text-ink` are the same token.
@@ -86,18 +93,39 @@ export function B2bClients() {
               Eight across is exactly two rows for sixteen marks — the column
               count is doing arithmetic, not decoration. Eight only from `xl`;
               at 1024px eight columns leave 93px a cell, too narrow for the
-              widest wordmarks, so it falls back to four columns. */}
-          <ul className="mt-14 grid grid-cols-2 gap-px bg-hairline sm:grid-cols-4 xl:grid-cols-8">
+              widest wordmarks, so it falls back to four columns.
+
+              THREE ON A PHONE, WHICH DOES NOT DIVIDE SIXTEEN.
+                Five rows of three and a sixth holding one. Because the cells
+                paint the band colour over a hairline-coloured list, the two
+                MISSING cells in that last row are not empty — they are a bare
+                224px slab of hairline grey, measured. `fillers` below adds
+                exactly enough blank cells to square the grid off, and they
+                are `sm:hidden` because four and eight both divide sixteen
+                cleanly and need none.
+
+                Padding drops on a phone too: at ~111px a cell, 20px a side
+                would eat more than a third of the width and shrink the very
+                marks the per-file logoHeight exists to normalise. */}
+          <ul className="mt-14 grid grid-cols-3 gap-px bg-hairline sm:grid-cols-4 xl:grid-cols-8">
             {CLIENTS.map((client) => (
               <li key={client.name} className="group relative bg-[var(--at-band)]">
                 <span
                   aria-hidden="true"
                   className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-brass transition-transform duration-300 group-hover:scale-x-100"
                 />
-                <div className="flex min-h-28 items-center justify-center px-5 py-7 md:min-h-32">
+                <div className="flex min-h-24 items-center justify-center px-2.5 py-5 sm:min-h-28 sm:px-5 sm:py-7 md:min-h-32">
                   <ClientMark client={client} />
                 </div>
               </li>
+            ))}
+
+            {Array.from({ length: fillers }, (_, index) => (
+              <li
+                key={`filler-${index}`}
+                aria-hidden="true"
+                className="bg-[var(--at-band)] sm:hidden"
+              />
             ))}
           </ul>
 
