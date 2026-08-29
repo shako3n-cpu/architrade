@@ -150,13 +150,17 @@
   h6 {
     font-family: var(--at-font-heading);
     /* 500 rather than 400: a grotesque set large needs the extra weight to
-       hold its own against photography, where a serif carried itself. */
+       hold its own against photography, where a serif carried itself.
+       Never above 500 — the loaded faces are 300/400/500, so asking for 600
+       or 700 makes the browser SYNTHESISE a bold by smearing each glyph
+       outward, and a faked bold is what turns Georgian into a slab. If a
+       heavier heading is ever wanted, add the weight to the font request in
+       index.html first. */
     font-weight: 500;
     line-height: 1.15;
     letter-spacing: -0.025em;
     text-wrap: balance; /* avoids lonely last words in headings */
   }
-
   p {
     text-wrap: pretty;
   }
@@ -406,4 +410,54 @@
   .group:hover .at-zoom {
     transform: none;
   }
+}
+
+
+/* ============================================================================
+   GEORGIAN HEADINGS NEED THEIR OWN METRICS
+   ----------------------------------------------------------------------------
+   The heading defaults in @layer base are Latin display conventions and they
+   do not transfer. Measured on /ka/about at 36px: Mkhedruli ink runs 37px tall
+   against a 40px line box — three pixels of headroom for the whole line — so
+   consecutive lines of a Georgian heading almost touch and the block reads as
+   one dark mass rather than as separate lines.
+
+   Two reasons the script needs more room than Latin. Mkhedruli is unicameral,
+   so there is no cap height to sit under and no visual ceiling for the eye to
+   use; and its ascenders (ბ, ღ, ყ) and descenders (ჟ, ც, ჭ, ჯ) are longer and
+   far more frequent than in Latin, where most lines have neither.
+
+   Tracking goes back to roughly zero for the same reason. Negative tracking
+   tightens Latin display type because its letterforms are largely straight-
+   sided and leave gaps; Mkhedruli is round and already closely fitted, so
+   pulling it in makes neighbouring bowls collide. That collision is the
+   "blocky" look — it was never the typeface, which loads correctly at every
+   weight the site uses (verified: the U+10A0-10FF subset reports `loaded` at
+   300, 400 and 500, and nothing on the site asks for a weight above 500, so
+   nothing is being synthesised).
+
+   TWO THINGS ABOUT HOW THIS IS WRITTEN, BOTH LOAD-BEARING
+
+   `:lang(ka)`, not `[lang='ka']`. The document carries `lang="ka-GE"`, and an
+   attribute equality selector does not match a subtag — the first version of
+   this rule matched nothing at all. `:lang()` is defined to match the base
+   language plus any region suffix, which is exactly the question being asked.
+
+   UNLAYERED, and it has to stay that way. Tailwind's `text-4xl` and friends
+   set `line-height` as well as `font-size`, from the utilities layer. Layer
+   order beats specificity in the cascade, so a rule inside `@layer base`
+   loses to those utilities however specific it is. Unlayered CSS outranks
+   every layer, which is the only place this can sit and win. Moving it into
+   a layer silently reverts the line-height and leaves the tracking behind.
+   ============================================================================ */
+:lang(ka) :is(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.28;
+  letter-spacing: 0;
+}
+
+/* Display sizes can afford to come back in very slightly: at 48px and above
+   the extra leading is already doing the work, and a touch of negative
+   tracking stops a long Georgian headline from drifting apart. */
+:lang(ka) :is(h1, h2) {
+  letter-spacing: -0.005em;
 }
