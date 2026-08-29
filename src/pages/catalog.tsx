@@ -140,19 +140,33 @@ function CatalogBody({
           {t('catalog.resultCount', { count: visible.length })}
         </p>
 
+        {/*
+         * TWO ACROSS ON A PHONE, not one.
+         *
+         * One-up put a single card at 658px — 81% of an 812px screen — so
+         * nineteen products came to 15.5 screens of scrolling. This is the page
+         * whose entire premise is finding things WITHOUT a search box, and a
+         * visitor cannot scan or compare what they can only see one of at a
+         * time. Two-up halves the scroll and puts a pair in view at once.
+         *
+         * The home page's featured row stays one-up on a phone on purpose: six
+         * pieces chosen as a showcase are a different job from nineteen to be
+         * scanned.
+         */}
         {visible.length === 0 ? (
           <div className="py-20 text-center">
             <p className="font-heading text-xl text-ink">{t('catalog.noResultsTitle')}</p>
             <p className="mt-3 text-sm text-muted">{t('catalog.noResultsBody')}</p>
           </div>
         ) : (
-          <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 xl:grid-cols-3">
             {visible.map((product, index) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 category={categoryById.get(product.category_id)}
                 eager={index < 3}
+                dense
               />
             ))}
           </div>

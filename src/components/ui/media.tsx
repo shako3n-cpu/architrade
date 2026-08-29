@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 type MediaProps = {
@@ -35,6 +36,18 @@ const RATIOS = {
  *   - lazy loading by default, async decoding
  *   - a surface-coloured placeholder instead of a white flash
  *   - real alt text (the prop is required)
+ *   - a DEAD URL degrades to that placeholder, never a broken-image icon
+ *
+ * THE LAST ONE IS NOT THEORETICAL
+ *   Catalogue photography is hosted on Unsplash, and photographers delete
+ *   their work. Nine images had to be replaced in one commit on this branch;
+ *   eight more were found 404ing while checking the mobile cards, two of them
+ *   covers rendering as blank cards with a torn-paper icon.
+ *
+ *   The box is already the right colour and the right shape, so falling back
+ *   to it costs nothing and turns link rot into a quiet gap instead of visible
+ *   breakage. It does not HIDE the problem — the console still carries the
+ *   failed request, and the alt text is still read out.
  */
 export function Media({
   src,
@@ -46,18 +59,28 @@ export function Media({
   imgClassName,
   sizes,
 }: MediaProps) {
+  const [failed, setFailed] = useState(false)
+
+  // A card can be reused for a different product as a list re-renders, so the
+  // failure has to be cleared when the source changes or one dead photograph
+  // would blank every piece that reuses the element.
+  useEffect(() => setFailed(false), [src])
+
   return (
     <div className={cn('relative overflow-hidden bg-surface', RATIOS[ratio], className)}>
-      <img
-        src={src}
-        alt={alt}
-        loading={loading}
-        decoding="async"
-        // Hero images should not wait behind lazy work in the queue.
-        fetchPriority={loading === 'eager' ? 'high' : undefined}
-        sizes={sizes}
-        className={cn('h-full w-full object-cover', zoom && 'at-zoom', imgClassName)}
-      />
+      {!failed && (
+        <img
+          src={src}
+          alt={alt}
+          loading={loading}
+          decoding="async"
+          // Hero images should not wait behind lazy work in the queue.
+          fetchPriority={loading === 'eager' ? 'high' : undefined}
+          sizes={sizes}
+          onError={() => setFailed(true)}
+          className={cn('h-full w-full object-cover', zoom && 'at-zoom', imgClassName)}
+        />
+      )}
     </div>
   )
 }

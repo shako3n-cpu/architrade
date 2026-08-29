@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Media } from '@/components/ui/media'
 import { useLanguage } from '@/hooks/use-language'
@@ -35,6 +35,7 @@ export function ProductCard({
   product,
   category,
   eager = false,
+  dense = false,
   className,
 }: {
   product: Product
@@ -42,6 +43,22 @@ export function ProductCard({
   category?: Category
   /** True for the first row of a grid above the fold. */
   eager?: boolean
+  /**
+   * Drops the description and the specification chips on NARROW SCREENS ONLY,
+   * for grids that go two-up on a phone.
+   *
+   * Set by the catalogue, which lists nineteen pieces two across at 159px a
+   * card. A two-line description in that width is four or five words, and the
+   * chips do not fit at all — the materials chip alone measures 302px. Both
+   * become noise that pushes the next row further down without telling anyone
+   * anything. They come back at `sm`, and the product page carries them in
+   * full one tap away.
+   *
+   * A prop rather than a media query inside the card, because the card cannot
+   * see how wide its column is: the same component is one-up on the home page
+   * at the same viewport, where the description reads perfectly well.
+   */
+  dense?: boolean
   className?: string
 }) {
   const { lang, localePath, t } = useLanguage()
@@ -49,6 +66,15 @@ export function ProductCard({
   const cover = productCover(product)
   const hover = productHoverImage(product)
   const materials = productMaterials(product, lang)
+
+  /*
+   * The hover photograph does NOT go through Media, so it does not get that
+   * component's dead-URL fallback and needs its own. Five of these are 404ing
+   * in the live catalogue right now — Unsplash contributors delete their work
+   * — and without this each one renders a torn-image icon that fades IN over a
+   * perfectly good cover photo when the pointer arrives.
+   */
+  const [hoverFailed, setHoverFailed] = useState(false)
 
   return (
     <article className={cn('group relative flex flex-col', className)}>
@@ -67,13 +93,14 @@ export function ProductCard({
           <div aria-hidden="true" className="aspect-[3/4] bg-surface" />
         )}
 
-        {hover && (
+        {hover && !hoverFailed && (
           <img
             src={hover}
             alt=""
             aria-hidden="true"
             loading="lazy"
             decoding="async"
+            onError={() => setHoverFailed(true)}
             className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           />
         )}
@@ -88,7 +115,12 @@ export function ProductCard({
       </div>
 
       <div className="mt-5 flex flex-1 flex-col">
-        <h3 className="font-heading text-lg leading-snug text-ink">
+        <h3
+          className={cn(
+            'font-heading leading-snug text-ink',
+            dense ? 'text-base sm:text-lg' : 'text-lg',
+          )}
+        >
           <Link
             to={localePath(`/product/${product.slug}`)}
             className="transition-colors duration-300 group-hover:text-brass after:absolute after:inset-0 after:content-['']"
@@ -97,11 +129,16 @@ export function ProductCard({
           </Link>
         </h3>
 
-        <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted">
+        <p
+          className={cn(
+            'mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted',
+            dense && 'hidden sm:line-clamp-2 sm:block',
+          )}
+        >
           {productDescription(product, lang)}
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-1.5">
+        <div className={cn('mt-4 flex flex-wrap gap-1.5', dense && 'hidden sm:flex')}>
           {category && <Tag>{categoryTitle(category, lang)}</Tag>}
           {product.dimensions && <Tag>{product.dimensions}</Tag>}
           {materials && <Tag>{materials}</Tag>}
@@ -109,7 +146,7 @@ export function ProductCard({
 
         {/* Pushes the price line to the bottom, so cards of different text
             lengths still line up along their last row. */}
-        <div className="mt-auto pt-5">
+        <div className={cn('mt-auto', dense ? 'pt-3 sm:pt-5' : 'pt-5')}>
           <p className="text-xs tracking-[0.14em] text-brass uppercase">
             {t('product.priceOnRequest')}
           </p>
