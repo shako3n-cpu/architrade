@@ -16,10 +16,15 @@ import { cn } from '@/lib/utils'
  *   inherited the body's Light 300. A wordmark set in Light is the thin,
  *   washed-out logo this is fixing.
  *
- *   Both are now stated outright rather than inherited: the serif is named
- *   directly (not via `font-heading`, which is the grotesque and should stay
- *   that way for headings), and the weight is pinned to 400 — the only cut of
- *   Noto Serif Georgian index.html actually loads.
+ *   Both are stated outright rather than inherited: the serif is named
+ *   directly, and the weight is pinned to 400.
+ *
+ *   `font-heading` now resolves to the same serif — headings were moved onto
+ *   it so the mark and the headings beneath it share a voice. Naming it here
+ *   anyway is deliberate: the wordmark should not silently change face again
+ *   the next time that token is repointed, which is exactly how it became a
+ *   thin sans the last time. The weight stays pinned too, because 400 is the
+ *   wordmark's own cut and has nothing to do with the 500 headings use.
  *
  * IT DOES BOTH JOBS A LOGO IS EXPECTED TO DO
  *   From another page it goes home, and RootLayout's route effect puts you at

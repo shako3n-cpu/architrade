@@ -66,7 +66,16 @@
      company is a general contractor whose work is measured in curtain walls
      and fit-out programmes. Set large, tight and at 500, the grotesque reads
      the way a drawing title block reads. */
-  --at-font-heading: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
+  /* Headings are the SERIF. The wordmark was already set in it, so the mark
+     and the headings it sits above now share a voice instead of the logo
+     being the one serif thing on an otherwise grotesque page. The grotesque
+     stays on body copy, labels and controls, which is where its clarity at
+     small sizes actually earns something.
+
+     Noto Sans Georgian is the first fallback, not a generic serif: if the
+     serif fails to load, dropping to a Georgian-capable sans is far better
+     than dropping to Times, which has no Mkhedruli at all. */
+  --at-font-heading: 'Noto Serif Georgian', 'Noto Sans Georgian', Georgia, serif;
   --at-font-body: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
 
   /* Kept for the single editorial moment that wants warmth: the company
@@ -158,7 +167,11 @@
        index.html first. */
     font-weight: 500;
     line-height: 1.15;
-    letter-spacing: -0.025em;
+    /* -0.015em, not the -0.025em the grotesque wanted. Serif letterforms carry
+       their own optical spacing in the serifs themselves, so the same negative
+       tracking that tightened the sans crowds this one and starts jamming
+       serif into serif at display sizes. */
+    letter-spacing: -0.015em;
     text-wrap: balance; /* avoids lonely last words in headings */
   }
   p {
@@ -460,4 +473,24 @@
    tracking stops a long Georgian headline from drifting apart. */
 :lang(ka) :is(h1, h2) {
   letter-spacing: -0.005em;
+}
+
+
+/* ============================================================================
+   THE HEADING FAMILY ONLY SHIPS 400 AND 500
+   ----------------------------------------------------------------------------
+   `font-heading` sets the family and nothing else, so an element that uses it
+   without being an h1..h6 never meets the `font-weight: 500` rule and inherits
+   the body's Light 300 instead. That was harmless while the token pointed at
+   Noto Sans Georgian, which has a 300 cut. The serif does not: index.html
+   loads 400 and 500, so those elements — the mega menu's branch links, the
+   mobile drawer's rows — were asking for a weight that does not exist and
+   getting whatever the browser decided to substitute.
+
+   Pinning them to 400 puts every one of them on a cut that is actually
+   loaded. Headings are excluded so their 500 still wins; this is unlayered
+   and would otherwise outrank the base rule that sets it.
+   ============================================================================ */
+.font-heading:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
+  font-weight: 400;
 }
