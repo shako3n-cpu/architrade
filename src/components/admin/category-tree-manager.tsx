@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import type { Category, Product } from '@/data/types'
 import {
   createCategory,
@@ -48,6 +49,15 @@ export function CategoryTreeManager({
   const [addingUnder, setAddingUnder] = useState<string | null | undefined>(undefined)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  /*
+   * The row queued for deletion, or null. This screen used window.confirm,
+   * which was the one destructive action on the whole dashboard still asking
+   * through the browser's own box — the dialog it should have used documents
+   * itself as the replacement for exactly that. Native confirm cannot be
+   * styled, cannot say WHICH category is going, renders in the browser's
+   * language rather than the one the office chose, and blocks the thread.
+   */
+  const [pending, setPending] = useState<CategoryNode | null>(null)
 
   const tree = buildCategoryTree(categories, products)
   const rows = flattenTree(tree)
@@ -186,8 +196,8 @@ export function CategoryTreeManager({
                     )
                   }
                   onDelete={() => {
-                    if (!window.confirm(t('admin.catDeleteConfirm'))) return
-                    void run(node.category.id, () => deleteCategory(node.category.id))
+                    setError(null)
+                    setPending(node)
                   }}
                 />
               )}
@@ -195,6 +205,27 @@ export function CategoryTreeManager({
           )
         })}
       </ul>
+
+      {/* Named, so "delete" is never a question about an unspecified row. The
+          database is still the judge: a category holding products or children
+          is refused there and the refusal arrives as the banner above, which
+          is why this closes either way rather than staying open pretending to
+          be the thing that decides. */}
+      <ConfirmDialog
+        open={pending !== null}
+        onOpenChange={(next) => !next && setPending(null)}
+        title={t('admin.catDeleteTitle')}
+        description={t('admin.catDeleteBody', { name: pending?.category.title_en ?? '' })}
+        confirmLabel={t('admin.catDelete')}
+        busy={busyId !== null}
+        onConfirm={() => {
+          const target = pending
+          if (!target) return
+          void run(target.category.id, () => deleteCategory(target.category.id)).then(() =>
+            setPending(null),
+          )
+        }}
+      />
     </>
   )
 }
