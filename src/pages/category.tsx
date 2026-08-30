@@ -102,7 +102,7 @@ function CategoryView({
           {products.length === 0 ? (
             <Panel title={t('category.emptyTitle')} body={t('category.emptyBody')} />
           ) : (
-            <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:grid-cols-4">
               {products.map((product, index) => (
                 <ProductCard
                   key={product.id}

@@ -166,7 +166,6 @@ function CatalogBody({
                 product={product}
                 category={categoryById.get(product.category_id)}
                 eager={index < 3}
-                dense
               />
             ))}
           </div>

@@ -4,6 +4,7 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { useLanguage } from '@/hooks/use-language'
 import type { Category, Product } from '@/data/types'
 import { categoryTitle, productMaterials } from '@/lib/localize'
+import { cn } from '@/lib/utils'
 
 /**
  * The specification sheet — what the piece is, how big it is, what it is made
@@ -18,17 +19,19 @@ import { categoryTitle, productMaterials } from '@/lib/localize'
 export function ProductSpecs({
   product,
   category,
+  className,
 }: {
   product: Product
   /** Undefined when the product's category row could not be resolved. */
   category?: Category
+  className?: string
 }) {
   const { lang, localePath, t } = useLanguage()
 
   const materials = productMaterials(product, lang)
 
   return (
-    <dl className="border-t border-hairline">
+    <dl className={cn('border-t border-hairline', className)}>
       {category && (
         <Row label={t('product.category')}>
           <Link

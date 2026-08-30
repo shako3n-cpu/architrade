@@ -78,10 +78,24 @@ export function ProductInfo({
         </div>
       )}
 
-      <h2 className="sr-only">{t('product.specTitle')}</h2>
-      <ProductSpecs product={product} category={category} />
-
+      {/*
+       * THE ENQUIRY SITS ABOVE THE SPECIFICATIONS, NOT BELOW THEM.
+       *
+       * There is no price and no cart on this site, so these two buttons are
+       * the entire commercial mechanism of the page. Under the spec table they
+       * landed at 1394px on a 812px phone — 1.7 screens down, behind the
+       * gallery, the title, the description and a full dimensions-and-
+       * materials list. Someone who has decided they want the piece was being
+       * asked to scroll past its dimensions in order to ask about it.
+       *
+       * The description still comes first: you have to know what the thing is
+       * before you can want it. The specification list is reference material
+       * and reads perfectly well after the ask.
+       */}
       <InquiryBox product={product} className="mt-10" />
+
+      <h2 className="sr-only">{t('product.specTitle')}</h2>
+      <ProductSpecs product={product} category={category} className="mt-10" />
     </div>
   )
 }

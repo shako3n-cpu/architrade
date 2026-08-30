@@ -21,6 +21,20 @@ import { cn } from '@/lib/utils'
  * a buyer actually needs to decide whether to ask: what it is, what it is made
  * of, how big it is, and two ways to start the conversation.
  *
+ * IT IS BUILT FOR TWO-UP ON A PHONE, AND THAT IS NOT OPTIONAL
+ *   Every grid that renders this card — the catalogue, a category page, the
+ *   home featured row, related products — is two across below `sm`. So the
+ *   card drops its description and its specification chips at that width
+ *   rather than offering a flag for it: at ~160px the description is four or
+ *   five words and the chips do not fit at all, the materials one alone
+ *   measuring 302px. Both come back at `sm`, and the product page carries
+ *   them in full one tap away.
+ *
+ *   This was a `dense` prop for one release, set by the catalogue only. That
+ *   left the same component rendering at two different sizes on two pages a
+ *   single tap apart, and made "forgot to pass dense" a silent layout bug.
+ *   The card owns the behaviour now; the grids only have to agree on columns.
+ *
  * THE WHOLE CARD IS THE LINK
  *   Not by wrapping it in an anchor — an anchor may not contain an anchor, and
  *   the photograph and the title were two separate links, leaving the copy and
@@ -35,7 +49,6 @@ export function ProductCard({
   product,
   category,
   eager = false,
-  dense = false,
   className,
 }: {
   product: Product
@@ -43,22 +56,6 @@ export function ProductCard({
   category?: Category
   /** True for the first row of a grid above the fold. */
   eager?: boolean
-  /**
-   * Drops the description and the specification chips on NARROW SCREENS ONLY,
-   * for grids that go two-up on a phone.
-   *
-   * Set by the catalogue, which lists nineteen pieces two across at 159px a
-   * card. A two-line description in that width is four or five words, and the
-   * chips do not fit at all — the materials chip alone measures 302px. Both
-   * become noise that pushes the next row further down without telling anyone
-   * anything. They come back at `sm`, and the product page carries them in
-   * full one tap away.
-   *
-   * A prop rather than a media query inside the card, because the card cannot
-   * see how wide its column is: the same component is one-up on the home page
-   * at the same viewport, where the description reads perfectly well.
-   */
-  dense?: boolean
   className?: string
 }) {
   const { lang, localePath, t } = useLanguage()
@@ -115,12 +112,7 @@ export function ProductCard({
       </div>
 
       <div className="mt-5 flex flex-1 flex-col">
-        <h3
-          className={cn(
-            'font-heading leading-snug text-ink',
-            dense ? 'text-base sm:text-lg' : 'text-lg',
-          )}
-        >
+        <h3 className="font-heading text-base leading-snug text-ink sm:text-lg">
           <Link
             to={localePath(`/product/${product.slug}`)}
             className="transition-colors duration-300 group-hover:text-brass after:absolute after:inset-0 after:content-['']"
@@ -129,16 +121,11 @@ export function ProductCard({
           </Link>
         </h3>
 
-        <p
-          className={cn(
-            'mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted',
-            dense && 'hidden sm:line-clamp-2 sm:block',
-          )}
-        >
+        <p className="mt-2.5 hidden line-clamp-2 text-sm leading-relaxed text-muted sm:block">
           {productDescription(product, lang)}
         </p>
 
-        <div className={cn('mt-4 flex flex-wrap gap-1.5', dense && 'hidden sm:flex')}>
+        <div className="mt-4 hidden flex-wrap gap-1.5 sm:flex">
           {category && <Tag>{categoryTitle(category, lang)}</Tag>}
           {product.dimensions && <Tag>{product.dimensions}</Tag>}
           {materials && <Tag>{materials}</Tag>}
@@ -146,7 +133,7 @@ export function ProductCard({
 
         {/* Pushes the price line to the bottom, so cards of different text
             lengths still line up along their last row. */}
-        <div className={cn('mt-auto', dense ? 'pt-3 sm:pt-5' : 'pt-5')}>
+        <div className="mt-auto pt-3 sm:pt-5">
           <p className="text-xs tracking-[0.14em] text-brass uppercase">
             {t('product.priceOnRequest')}
           </p>
