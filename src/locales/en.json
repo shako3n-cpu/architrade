@@ -132,7 +132,13 @@
     "browseAll": "All categories",
     "inThisCategory": "In this category",
     "subcategories": "Subcategories",
-    "breadcrumbLabel": "You are here"
+    "breadcrumbLabel": "You are here",
+    "sheetTitle": "Filter the catalogue",
+    "sheetApply_one": "Show {{count}} piece",
+    "sheetApply_other": "Show {{count}} pieces",
+    "closeFilters": "Close filters",
+    "activeFilters_one": "{{count}} filter",
+    "activeFilters_other": "{{count}} filters"
   },
   "category": {
     "browseLabel": "Browse categories",

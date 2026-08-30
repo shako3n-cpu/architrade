@@ -132,7 +132,13 @@
     "browseAll": "ყველა კატეგორია",
     "inThisCategory": "ამ კატეგორიაში",
     "subcategories": "ქვეკატეგორიები",
-    "breadcrumbLabel": "თქვენ იმყოფებით"
+    "breadcrumbLabel": "თქვენ იმყოფებით",
+    "sheetTitle": "კატალოგის ფილტრი",
+    "sheetApply_one": "{{count}} ნივთის ჩვენება",
+    "sheetApply_other": "{{count}} ნივთის ჩვენება",
+    "closeFilters": "ფილტრების დახურვა",
+    "activeFilters_one": "{{count}} ფილტრი",
+    "activeFilters_other": "{{count}} ფილტრი"
   },
   "category": {
     "browseLabel": "კატეგორიების დათვალიერება",

@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
-import { Eyebrow } from '@/components/ui/eyebrow'
+import { Search } from 'lucide-react'
+import { FilterSheet } from './filter-sheet'
+import { activeFilterCount, FilterBody } from './filter-body'
 import { useLanguage } from '@/hooks/use-language'
-import { categoryTitle } from '@/lib/localize'
 import type { CategoryNode } from '@/lib/category-tree'
-import { isUnfiltered, type CatalogFilters } from '@/lib/catalog-filter'
-import { cn } from '@/lib/utils'
+import type { CatalogFilters } from '@/lib/catalog-filter'
 
 /**
  * The filter rail.
@@ -51,6 +50,7 @@ export function CatalogFilterRail({
   branches,
   counts,
   total,
+  resultCount,
   filters,
   onChange,
 }: {
@@ -65,11 +65,12 @@ export function CatalogFilterRail({
   counts: Record<string, number>
   /** Pieces in the whole catalogue, for the "all" row. */
   total: number
+  /** Pieces matching right now, for the sheet's closing button. */
+  resultCount: number
   filters: CatalogFilters
   onChange: (next: Partial<CatalogFilters>) => void
 }) {
   const { lang, t } = useLanguage()
-  const [open, setOpen] = useState(false)
   const [toggled, setToggled] = useState<Record<string, boolean>>({})
 
   /** The branch the current filter sits in, whether as parent or as child. */
@@ -81,9 +82,6 @@ export function CatalogFilterRail({
 
   const isExpanded = (branch: CategoryNode) =>
     toggled[branch.category.id] ?? branch.category.id === activeBranchId
-
-  const toggle = (branch: CategoryNode) =>
-    setToggled((current) => ({ ...current, [branch.category.id]: !isExpanded(branch) }))
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
@@ -101,194 +99,49 @@ export function CatalogFilterRail({
               value={filters.query}
               onChange={(event) => onChange({ query: event.target.value })}
               placeholder={t('catalog.searchPlaceholder')}
-              className="h-12 w-full rounded-xs border border-hairline bg-background pr-4 pl-10 text-sm text-ink transition-colors duration-300 placeholder:text-muted focus:border-brass"
+              className="h-12 w-full rounded-xs border border-hairline bg-background pr-4 pl-10 text-base text-ink transition-colors duration-300 placeholder:text-muted focus:border-brass sm:text-sm"
             />
           </span>
         </label>
       </search>
 
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        aria-controls="catalog-filters"
-        className="at-label flex min-h-11 items-center justify-between border border-hairline px-4 text-ink transition-colors duration-300 hover:border-brass hover:text-brass lg:hidden"
+      {/* Below `lg` the filters live in a sheet that overlays the grid; from
+          `lg` the same body is the sticky column it has always been. One set
+          of controls, rendered in one of two places, so the two can never
+          drift apart. */}
+      <FilterSheet
+        activeCount={activeFilterCount(filters)}
+        resultCount={resultCount}
+        className="lg:hidden"
       >
-        <span className="flex items-center gap-2.5">
-          <SlidersHorizontal aria-hidden="true" className="size-3.5" />
-          {t('catalog.toggleFilters')}
-        </span>
-        <span aria-hidden="true">{open ? '−' : '+'}</span>
-      </button>
+        <FilterBody
+          branches={branches}
+          counts={counts}
+          total={total}
+          filters={filters}
+          onChange={onChange}
+          lang={lang}
+          t={t}
+          isExpanded={isExpanded}
+          setToggled={setToggled}
+          scrollsItself={false}
+        />
+      </FilterSheet>
 
-      <div id="catalog-filters" className={cn('flex-col gap-8', open ? 'flex' : 'hidden lg:flex')}>
-        <div>
-          <Eyebrow className="mb-4 text-muted">{t('catalog.filterHeading')}</Eyebrow>
-
-          {/* The scroll area. `-mr-2 pr-2` keeps the scrollbar clear of the
-              counts instead of overlapping them, and the max-height is the
-              viewport minus the header, the sticky offset and the block of
-              controls pinned underneath. */}
-          <div className="at-scroll-thin -mr-2 border-t border-hairline pr-2 lg:max-h-[calc(100vh-22rem)] lg:overflow-y-auto">
-            <FilterRow
-              label={t('catalog.allProducts')}
-              count={total}
-              active={!filters.category}
-              onClick={() => onChange({ category: '' })}
-            />
-
-            <ul>
-              {branches.map((branch) => {
-                const expanded = isExpanded(branch)
-                const panelId = `filter-branch-${branch.category.slug}`
-
-                return (
-                  <li key={branch.category.id}>
-                    <BranchRow
-                      node={branch}
-                      count={counts[branch.category.slug] ?? 0}
-                      active={filters.category === branch.category.slug}
-                      expanded={expanded}
-                      panelId={panelId}
-                      onSelect={() => {
-                        onChange({ category: branch.category.slug })
-                        // Selecting a branch always opens it: having narrowed
-                        // to nine, the next question is which nine.
-                        setToggled((current) => ({ ...current, [branch.category.id]: true }))
-                      }}
-                      onToggle={() => toggle(branch)}
-                    />
-
-                    <ul id={panelId} hidden={!expanded}>
-                      {branch.children.map((child) => (
-                        <li key={child.category.id}>
-                          <FilterRow
-                            label={categoryTitle(child.category, lang)}
-                            count={counts[child.category.slug] ?? 0}
-                            active={filters.category === child.category.slug}
-                            onClick={() => onChange({ category: child.category.slug })}
-                            indented
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 border-t border-hairline pt-7">
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-ink">
-            <input
-              type="checkbox"
-              checked={filters.featuredOnly}
-              onChange={(event) => onChange({ featuredOnly: event.target.checked })}
-              className="size-4 accent-[var(--at-brass)]"
-            />
-            {t('catalog.featuredOnly')}
-          </label>
-
-          {!isUnfiltered(filters) && (
-            <button
-              type="button"
-              onClick={() => onChange({ category: '', query: '', featuredOnly: false })}
-              className="at-label flex items-center gap-2 self-start text-muted transition-colors duration-300 hover:text-brass"
-            >
-              <X aria-hidden="true" className="size-3.5" />
-              {t('catalog.clearFilters')}
-            </button>
-          )}
-        </div>
+      <div className="hidden lg:block">
+        <FilterBody
+          branches={branches}
+          counts={counts}
+          total={total}
+          filters={filters}
+          onChange={onChange}
+          lang={lang}
+          t={t}
+          isExpanded={isExpanded}
+          setToggled={setToggled}
+          scrollsItself
+        />
       </div>
     </div>
-  )
-}
-
-/** A parent: the name selects the branch, the chevron opens it. */
-function BranchRow({
-  node,
-  count,
-  active,
-  expanded,
-  panelId,
-  onSelect,
-  onToggle,
-}: {
-  node: CategoryNode
-  count: number
-  active: boolean
-  expanded: boolean
-  panelId: string
-  onSelect: () => void
-  onToggle: () => void
-}) {
-  const { lang, t } = useLanguage()
-  const name = categoryTitle(node.category, lang)
-
-  return (
-    <div className="flex items-stretch border-b border-hairline">
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-pressed={active}
-        className={cn(
-          'flex min-h-11 flex-1 items-baseline justify-between gap-3 py-3 pl-1 text-left transition-colors duration-300',
-          active ? 'text-brass' : 'text-ink hover:text-brass',
-        )}
-      >
-        <span className="text-sm font-medium">{name}</span>
-        <span className="at-label shrink-0 text-muted">{count}</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={expanded}
-        aria-controls={panelId}
-        // The name is already on screen beside it, so the chevron needs one of
-        // its own or a screen reader announces a button called nothing.
-        aria-label={`${name} — ${t('catalog.subcategories')}`}
-        className="inline-flex w-9 shrink-0 items-center justify-center text-muted transition-colors duration-300 hover:text-brass"
-      >
-        <ChevronDown
-          aria-hidden="true"
-          className={cn('size-4 transition-transform duration-300', expanded && 'rotate-180')}
-        />
-      </button>
-    </div>
-  )
-}
-
-/** One selectable line: name on the left, count on the right, hairline under. */
-function FilterRow({
-  label,
-  count,
-  active,
-  onClick,
-  indented = false,
-}: {
-  label: string
-  count: number
-  active: boolean
-  onClick: () => void
-  /** Children sit in from their parent, so the shape survives the flattening. */
-  indented?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'flex min-h-11 w-full items-baseline justify-between gap-4 border-b border-hairline py-3 text-left transition-colors duration-300',
-        indented ? 'pr-1 pl-5' : 'px-1',
-        active ? 'text-brass' : 'text-ink hover:text-brass',
-      )}
-    >
-      <span className="text-sm">{label}</span>
-      <span className="at-label shrink-0 text-muted">{count}</span>
-    </button>
   )
 }

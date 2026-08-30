@@ -494,3 +494,33 @@
 .font-heading:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
   font-weight: 400;
 }
+
+
+/* ============================================================================
+   NO FORM CONTROL UNDER 16px ON A PHONE
+   ----------------------------------------------------------------------------
+   iOS Safari zooms the page in when a field smaller than 16px receives focus,
+   and it does NOT zoom back out afterwards. The visitor is left on a page
+   wider than the screen, panning sideways to read it, with no obvious way to
+   undo it. That is a worse outcome than any typographic gain from 14px, and
+   the site's own catalogue search was doing it.
+
+   Written as a floor rather than a fixed size: `max()` leaves anything already
+   larger alone, and only lifts what would trigger the zoom.
+
+   UNLAYERED, and it has to stay that way. A `text-sm` on an input is a
+   utility, and layer order beats specificity — the same rule inside
+   `@layer base` would lose to it, which is precisely how a field ends up at
+   14px again. This is a guarantee, not a default, so it sits where nothing
+   can quietly outrank it.
+
+   Components still say `text-base sm:text-sm` for themselves; this is the net
+   under them for the next field somebody adds.
+   ============================================================================ */
+@media (max-width: 639px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}

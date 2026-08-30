@@ -130,6 +130,7 @@ function CatalogBody({
           branches={branches}
           counts={counts}
           total={products.length}
+          resultCount={visible.length}
           filters={filters}
           onChange={onChange}
         />

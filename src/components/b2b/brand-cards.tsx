@@ -94,7 +94,17 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
           </p>
         </div>
 
-        <ul className="mt-8 grid grid-cols-1 gap-px border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
+        {/*
+          * THREE ACROSS ON A PHONE.
+          *   One-up gave twenty-nine cards a full 333px each and ran the page
+          *   to 13.7 screens — the longest on the site, for what is a list you
+          *   scan for a name you already have in mind. Three-up turns it into
+          *   a contact sheet, which is the right shape for that job.
+          *
+          *   The card contents change with it, because 111px is not a small
+          *   version of 333px — see BrandCard.
+          */}
+        <ul className="mt-8 grid grid-cols-3 gap-px border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((brand) => (
             <BrandCard key={brand.name} brand={brand} />
           ))}
@@ -135,8 +145,16 @@ function BrandCard({ brand }: { brand: Brand }) {
         className="absolute inset-0 bg-graphite-deep/55 transition-colors duration-500 group-hover:bg-graphite-deep/30"
       />
 
-      <Cell {...linkProps} className="relative flex h-full flex-col justify-between p-6 md:p-7">
-        <span className="at-label text-brass-on-ink">
+      <Cell
+        {...linkProps}
+        className="relative flex h-full flex-col justify-between p-2 sm:p-6 md:p-7"
+      >
+        {/* The discipline badge is `at-label`: 11px, uppercase, letterspaced
+            to 0.18em. "არქიტექტურული განათება" set like that is wider than the
+            whole 111px cell, so it is gone below `sm`. Nothing is lost — the
+            filter chips directly above the grid say which discipline is being
+            shown, and at three-up the visitor is scanning for a NAME. */}
+        <span className="at-label hidden text-brass-on-ink sm:block">
           {t(`b2b.brands.${brand.discipline}`)}
         </span>
 
@@ -145,10 +163,10 @@ function BrandCard({ brand }: { brand: Brand }) {
             src={brand.logo}
             alt={brand.name}
             loading="lazy"
-            className="mx-auto max-h-12 w-auto brightness-0 invert"
+            className="mx-auto max-h-6 w-auto brightness-0 invert sm:max-h-12"
           />
         ) : (
-          <span className="text-center font-heading text-2xl tracking-[0.06em] text-background md:text-3xl">
+          <span className="text-center font-heading text-xs leading-tight text-background sm:text-2xl sm:tracking-[0.06em] md:text-3xl">
             {brand.name}
           </span>
         )}
@@ -162,7 +180,9 @@ function BrandCard({ brand }: { brand: Brand }) {
             <span aria-hidden="true" />
           )}
 
-          <span className="at-label shrink-0 text-right text-ink-muted">{brand.country}</span>
+          <span className="shrink-0 text-right text-[9px] tracking-normal text-ink-muted uppercase sm:text-[11px] sm:tracking-[0.18em]">
+            {brand.country}
+          </span>
         </div>
       </Cell>
 
