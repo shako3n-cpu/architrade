@@ -12,9 +12,11 @@ import { MegaMenu } from './mega-menu'
  * The active link is marked with a thin brass rule underneath rather than a
  * filled pill — consistent with the hairline language of the rest of the site.
  *
- * `/catalog` is not rendered as a link here. It is the one item with a tree
- * behind it, so it becomes the mega-menu trigger; the trigger still reaches
- * /catalog on its own, so nothing is lost by the swap.
+ * `/catalog` is the one item with a tree behind it, so it renders as the
+ * mega-menu trigger instead of a plain NavLink. The trigger is a link and a
+ * chevron side by side, not a single button: the word goes to /catalog and
+ * the chevron opens the panel, so the item is a destination and a menu at the
+ * same time. It marks itself active the same way the NavLinks here do.
  */
 export function DesktopNav({ tree, className }: { tree: CategoryNode[]; className?: string }) {
   const { localePath, t } = useLanguage()

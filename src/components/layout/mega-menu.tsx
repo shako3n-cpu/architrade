@@ -126,6 +126,16 @@ export function MegaMenu({ tree, className }: { tree: CategoryNode[]; className?
 
   const featured = tree.filter((node) => node.category.featured).slice(0, FEATURE_LIMIT)
 
+  /*
+   * Marked active on the catalogue AND on any category beneath it, matching
+   * the `end`-less NavLinks beside it. The trigger never showed this at all
+   * while it was a plain button: standing on /catalog, the one nav item that
+   * described where you were was the only one not lit.
+   */
+  const catalogPath = localePath('/catalog')
+  const onCatalog =
+    location.pathname === catalogPath || location.pathname.startsWith(`${catalogPath}/`)
+
   return (
     <div
       ref={wrapper}
@@ -148,33 +158,68 @@ export function MegaMenu({ tree, className }: { tree: CategoryNode[]; className?
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeNow()
       }}
     >
-      <button
-        ref={trigger}
-        type="button"
-        aria-expanded={open}
-        aria-controls="mega-menu"
-        onClick={() => {
-          if (locked) {
-            closeNow()
-            return
-          }
-          cancelClose()
-          setOpen(true)
-          setLocked(true)
-        }}
+      {/*
+       * TWO CONTROLS, NOT ONE.
+       *
+       * This was a single button carrying the word and the chevron, so the one
+       * thing "Catalogue" could not do was go to the catalogue: every click
+       * toggled the panel. The word is a LINK now and the chevron is a
+       * disclosure button beside it, which is the ordinary shape for a nav
+       * item that is both a destination and a menu — and it costs nothing,
+       * because hovering anywhere on the pair still opens the panel, so the
+       * browsing route is untouched.
+       *
+       * The underline lives on this wrapper rather than on either control, so
+       * it still spans the pair as one item. The wrapper is `relative` for
+       * that; the PANEL is not inside it and still resolves against the
+       * header, which is what the outer element's `static` is protecting.
+       */}
+      <div
         className={cn(
           'at-label relative flex items-center gap-1.5 py-2 transition-colors duration-300',
           'after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left',
           'after:bg-brass after:transition-transform after:duration-300',
-          open ? 'text-ink after:scale-x-100' : 'text-muted after:scale-x-0 hover:text-ink',
+          open || onCatalog ? 'text-ink after:scale-x-100' : 'text-muted after:scale-x-0',
         )}
       >
-        {t('nav.catalog')}
-        <ChevronDown
-          aria-hidden="true"
-          className={cn('size-3.5 transition-transform duration-300', open && 'rotate-180')}
-        />
-      </button>
+        <Link
+          to={catalogPath}
+          // Closing on click covers the case navigation cannot: clicking it
+          // while already on /catalog changes no pathname, so the effect that
+          // watches the route would never fire and the panel would hang open
+          // over the page it just confirmed you were on.
+          onClick={closeNow}
+          className="transition-colors duration-300 hover:text-ink"
+        >
+          {t('nav.catalog')}
+        </Link>
+
+        <button
+          ref={trigger}
+          type="button"
+          aria-expanded={open}
+          aria-controls="mega-menu"
+          // The chevron has no text of its own, so it needs a name. Without
+          // one a screen reader announces "button" next to a link and gives no
+          // reason to press it.
+          aria-label={t('nav.catalogMenuToggle')}
+          onClick={() => {
+            if (locked) {
+              closeNow()
+              return
+            }
+            cancelClose()
+            setOpen(true)
+            setLocked(true)
+          }}
+          className="-mr-1 flex items-center px-1 py-1 transition-colors duration-300 hover:text-ink"
+        >
+          <ChevronDown
+            aria-hidden="true"
+            className={cn('size-3.5 transition-transform duration-300', open && 'rotate-180')}
+          />
+        </button>
+      </div>
 
       <div
         id="mega-menu"

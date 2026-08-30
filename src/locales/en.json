@@ -1,6 +1,7 @@
 {
   "nav": {
     "catalog": "Catalog",
+    "catalogMenuToggle": "Show catalogue categories",
     "collections": "Collections",
     "about": "About",
     "services": "Services",

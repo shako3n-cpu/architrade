@@ -1,6 +1,7 @@
 {
   "nav": {
     "catalog": "კატალოგი",
+    "catalogMenuToggle": "კატალოგის კატეგორიების ჩვენება",
     "collections": "კოლექციები",
     "about": "ჩვენ შესახებ",
     "services": "სერვისები",
