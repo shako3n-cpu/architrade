@@ -88,6 +88,26 @@
 
   /* --- Layout ------------------------------------------------------------ */
   --at-header-height: 4.5rem; /* 72px — sticky header offset */
+
+  /*
+   * One level of nesting in the admin category tree.
+   *
+   * A custom property rather than a utility class because the row applies it
+   * as `calc(depth * this)` in an inline style — depth is data, and a class
+   * per level would need one for every level the database allows.
+   *
+   * Halved on a phone: the indent is charged to the row's content width, and
+   * the row already gives a full line to the name and another to six
+   * controls. 28px a level is legible there and leaves the deeper levels room
+   * the 44px step does not.
+   */
+  --at-tree-step: 1.75rem;
+}
+
+@media (max-width: 639px) {
+  :root {
+    --at-tree-step: 1rem;
+  }
 }
 
 /* ----------------------------------------------------------------------------

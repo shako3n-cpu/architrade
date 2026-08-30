@@ -106,7 +106,11 @@ export function CategoryTreeManager({
 
   return (
     <>
-      <div className="mt-8 flex items-center justify-between gap-4">
+      {/* Stacked below `sm`. "კატეგორიის დამატება" sets 256px wide and cannot
+          shrink, so beside the count in a justify-between row it pushed 40px
+          past the right edge of a 320px screen — the one horizontal overflow
+          on this page. Given its own line it fits with room to spare. */}
+      <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <p className="text-xs text-muted">
           {t('admin.categoryCount', { count: categories.length })}
         </p>
