@@ -143,6 +143,7 @@
   "category": {
     "browseLabel": "Browse categories",
     "otherCategories": "Other categories",
+    "inThisCategory": "In this category",
     "notFoundTitle": "We could not find that category",
     "notFoundBody": "It may have been renamed, or taken out of the catalog. Everything else is still here.",
     "emptyTitle": "Nothing in this category yet",
