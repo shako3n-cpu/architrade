@@ -50,7 +50,7 @@ export function Collections() {
               const count = BRANDS.filter((brand) => brand.discipline === discipline).length
 
               return (
-                <li key={discipline} className="group bg-background">
+                <li key={discipline} className="group relative bg-background">
                   <article className="flex h-full flex-col">
                     <div className="relative isolate aspect-[16/10] overflow-hidden bg-surface">
                       <img
@@ -84,9 +84,32 @@ export function Collections() {
                         ))}
                       </div>
 
+                      {/*
+                       * TO THE HOUSES IT JUST NAMED, NOT TO THE BARE CATALOGUE.
+                       *
+                       * All six cards used to point at /catalog. The card said
+                       * "architectural lighting", listed the six manufacturers
+                       * in it, and then delivered the whole undifferentiated
+                       * list — the one page on the site whose job is routing by
+                       * discipline routed everything to the same place.
+                       *
+                       * /brands reads its filter from the URL now, so this can
+                       * land on the discipline the visitor was just reading
+                       * about.
+                       *
+                       * The `::after` stretches this link over the whole card,
+                       * so a 565px block on a phone is not navigated by one
+                       * small button at the bottom of it. The card carries no
+                       * other interactive element, so nothing is swallowed.
+                       */}
                       <div className="mt-7">
                         <Button asChild variant="outline" size="sm">
-                          <Link to={localePath('/catalog')}>{t('b2b.collections.explore')}</Link>
+                          <Link
+                            to={localePath(`/brands?d=${discipline}`)}
+                            className="after:absolute after:inset-0 after:content-['']"
+                          >
+                            {t('b2b.collections.explore')}
+                          </Link>
                         </Button>
                       </div>
                     </div>

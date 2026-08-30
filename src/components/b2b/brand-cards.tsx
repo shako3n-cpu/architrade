@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
 import { SectionHeading } from '@/components/ui/section-heading'
@@ -35,7 +36,35 @@ type Filter = Discipline | 'all'
  */
 export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean }) {
   const { t } = useLanguage()
-  const [filter, setFilter] = useState<Filter>('all')
+
+  /*
+   * THE DISCIPLINE FILTER LIVES IN THE URL, NOT IN COMPONENT STATE.
+   *
+   * It was `useState`, which made a filtered view of this list impossible to
+   * link to — and /collections needs exactly that. Each of its six cards
+   * describes one discipline and names the manufacturers in it, and every one
+   * of them pointed at the bare /catalog: the card promised "architectural
+   * lighting" and delivered the whole undifferentiated catalogue.
+   *
+   * As a query parameter the view is addressable, so those cards can send a
+   * visitor to the houses they were just reading about, and a filtered list is
+   * something you can bookmark or send to a colleague. `replace` keeps the
+   * back button pointing at wherever they came from rather than at each chip
+   * they tried on the way.
+   */
+  const [params, setParams] = useSearchParams()
+  const requested = params.get('d')
+  const filter: Filter =
+    requested && (DISCIPLINES as readonly string[]).includes(requested)
+      ? (requested as Discipline)
+      : 'all'
+
+  const setFilter = (next: Filter) => {
+    const search = new URLSearchParams(params)
+    if (next === 'all') search.delete('d')
+    else search.set('d', next)
+    setParams(search, { replace: true })
+  }
 
   const visible = useMemo(
     () => (filter === 'all' ? BRANDS : BRANDS.filter((brand) => brand.discipline === filter)),
