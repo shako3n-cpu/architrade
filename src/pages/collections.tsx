@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/b2b/page-header'
 import { B2bClients } from '@/components/b2b/clients'
 import { ContactBand } from '@/components/home/contact-band'
-import { BRANDS, DISCIPLINES, type Discipline } from '@/data/company'
+import { DISCIPLINES, type Discipline } from '@/data/company'
+import { useBrands } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
 
 /**
@@ -35,6 +36,16 @@ const IMAGES: Record<Discipline, string> = {
 export function Collections() {
   const { t, localePath } = useLanguage()
 
+  /*
+   * The houses named on each card come from the database, so a brand added or
+   * hidden in the dashboard changes these counts and these lists without a
+   * deploy. There is deliberately no loading state around them: the six cards
+   * are about the DISCIPLINES, which are fixed, and the manufacturer names are
+   * supporting detail. Holding the whole page back for them would trade a
+   * complete page that fills in for a blank one that arrives all at once.
+   */
+  const rows = useBrands().data ?? []
+
   return (
     <>
       <PageHeader
@@ -47,7 +58,8 @@ export function Collections() {
         <Container>
           <ul className="grid gap-px border border-hairline bg-hairline lg:grid-cols-2">
             {DISCIPLINES.map((discipline) => {
-              const count = BRANDS.filter((brand) => brand.discipline === discipline).length
+              const inDiscipline = rows.filter((brand) => brand.discipline === discipline)
+              const count = inDiscipline.length
 
               return (
                 <li key={discipline} className="group relative bg-background">
@@ -77,8 +89,8 @@ export function Collections() {
                       </p>
 
                       <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-hairline pt-5">
-                        {BRANDS.filter((brand) => brand.discipline === discipline).map((brand) => (
-                          <span key={brand.name} className="at-label text-muted">
+                        {inDiscipline.map((brand) => (
+                          <span key={brand.id} className="at-label text-muted">
                             {brand.name}
                           </span>
                         ))}

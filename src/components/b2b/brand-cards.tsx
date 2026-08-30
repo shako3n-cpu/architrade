@@ -3,7 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
 import { SectionHeading } from '@/components/ui/section-heading'
-import { BRANDS, DISCIPLINES, type Brand, type Discipline } from '@/data/company'
+import { DISCIPLINES, type Discipline } from '@/data/company'
+import { BrandCard } from './brand-card'
+import { QueryState } from '@/components/ui/query-state'
+import { useBrands } from '@/hooks/use-catalog'
+import type { Brand } from '@/data/types'
 import { useLanguage } from '@/hooks/use-language'
 import { cn } from '@/lib/utils'
 
@@ -38,6 +42,17 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
   const { t } = useLanguage()
 
   /*
+   * The houses come from the DATABASE now, not from a constant in the source.
+   *
+   * They were twenty-nine hardcoded entries in src/data/company.ts, which is
+   * why `website` and `description` were empty on every one: both are facts
+   * only the office holds, and neither could be filled in without a developer
+   * editing TypeScript and shipping a build. The dashboard writes them now,
+   * and this page renders each the moment it is set.
+   */
+  const brands = useBrands()
+
+  /*
    * THE DISCIPLINE FILTER LIVES IN THE URL, NOT IN COMPONENT STATE.
    *
    * It was `useState`, which made a filtered view of this list impossible to
@@ -66,10 +81,16 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
     setParams(search, { replace: true })
   }
 
-  const visible = useMemo(
-    () => (filter === 'all' ? BRANDS : BRANDS.filter((brand) => brand.discipline === filter)),
-    [filter],
-  )
+  /*
+   * `brands.data` is the dependency, not a `rows` local. `data ?? []` builds a
+   * new array on every render while the query is still loading, so depending
+   * on that local would recompute this memo every time and quietly defeat it.
+   * The fallback belongs inside.
+   */
+  const visible = useMemo(() => {
+    const rows: Brand[] = brands.data ?? []
+    return filter === 'all' ? rows : rows.filter((brand) => brand.discipline === filter)
+  }, [filter, brands.data])
 
   const filters: Filter[] = ['all', ...DISCIPLINES]
 
@@ -119,6 +140,13 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
           />
         )}
 
+        {/* ONE loading state for the whole control, not two.
+            The chips are meaningless without the grid beneath them — a filter
+            over nothing — so they arrive together rather than the chips
+            appearing first over an empty box and the count reading zero. */}
+        <QueryState result={brands}>
+          {() => (
+            <>
         {/* THE FILTER BAR SCROLLS RATHER THAN WRAPS ON A PHONE
             Seven chips carrying names like "არქიტექტურული განათება" fit about
             one to a line at 375px: measured, the wrapped bar stood 295px tall
@@ -178,90 +206,13 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
           */}
         <ul className="mt-8 grid grid-cols-3 gap-px border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((brand) => (
-            <BrandCard key={brand.name} brand={brand} />
+            <BrandCard key={brand.id} brand={brand} />
           ))}
         </ul>
+            </>
+          )}
+        </QueryState>
       </Container>
     </Section>
-  )
-}
-
-function BrandCard({ brand }: { brand: Brand }) {
-  const { lang, t } = useLanguage()
-
-  const description = lang === 'ka' ? brand.description_ka : brand.description_en
-
-  // A card with a website is the link; one without is a plain cell. Rendering
-  // an anchor with no href would give a keyboard a tab stop that does nothing.
-  const Cell = brand.website ? 'a' : 'div'
-  const linkProps = brand.website
-    ? { href: brand.website, target: '_blank' as const, rel: 'noopener noreferrer' }
-    : {}
-
-  return (
-    <li className="group relative isolate aspect-[4/3] overflow-hidden bg-graphite-deep">
-      <img
-        src={brand.image}
-        alt=""
-        loading="lazy"
-        className="at-zoom absolute inset-0 h-full w-full object-cover"
-      />
-
-      {/* A lighter wash than the site's standard scrim. Everywhere else the
-          photograph is a backdrop for a headline; here the photograph IS the
-          content — a specifier is looking at the room, not reading it — so it
-          sits at 55% and lifts to 30% under the cursor. Enough graphite for
-          the wordmark, not enough to hide the chair. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-graphite-deep/55 transition-colors duration-500 group-hover:bg-graphite-deep/30"
-      />
-
-      <Cell
-        {...linkProps}
-        className="relative flex h-full flex-col justify-between p-2 sm:p-6 md:p-7"
-      >
-        {/* The discipline badge is `at-label`: 11px, uppercase, letterspaced
-            to 0.18em. "არქიტექტურული განათება" set like that is wider than the
-            whole 111px cell, so it is gone below `sm`. Nothing is lost — the
-            filter chips directly above the grid say which discipline is being
-            shown, and at three-up the visitor is scanning for a NAME. */}
-        <span className="at-label hidden text-brass-on-ink sm:block">
-          {t(`b2b.brands.${brand.discipline}`)}
-        </span>
-
-        {brand.logo ? (
-          <img
-            src={brand.logo}
-            alt={brand.name}
-            loading="lazy"
-            className="mx-auto max-h-6 w-auto brightness-0 invert sm:max-h-12"
-          />
-        ) : (
-          <span className="text-center font-heading text-xs leading-tight text-background sm:text-2xl sm:tracking-[0.06em] md:text-3xl">
-            {brand.name}
-          </span>
-        )}
-
-        <div className="flex items-end justify-between gap-4">
-          {/* Only rendered once the office supplies it — see the note on
-              `description` in src/data/company.ts. */}
-          {description ? (
-            <p className="max-w-[22ch] text-xs leading-relaxed text-ink-muted">{description}</p>
-          ) : (
-            <span aria-hidden="true" />
-          )}
-
-          <span className="shrink-0 text-right text-[9px] tracking-normal text-ink-muted uppercase sm:text-[11px] sm:tracking-[0.18em]">
-            {brand.country}
-          </span>
-        </div>
-      </Cell>
-
-      <span
-        aria-hidden="true"
-        className="absolute inset-x-6 bottom-6 h-px origin-left scale-x-0 bg-brass transition-transform duration-500 group-hover:scale-x-100 md:inset-x-7 md:bottom-7"
-      />
-    </li>
   )
 }

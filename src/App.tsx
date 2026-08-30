@@ -15,6 +15,7 @@ import { Collections } from '@/pages/collections'
 import { Contact } from '@/pages/contact'
 import { Brands } from '@/pages/brands'
 import { AdminCategories } from '@/pages/admin/categories'
+import { AdminBrands } from '@/pages/admin/brands'
 import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
 import { getStoredLanguage } from '@/i18n'
@@ -71,6 +72,18 @@ const adminRoutes = (
       element={
         <RequireAdmin>
           <AdminCategories />
+        </RequireAdmin>
+      }
+    />
+
+    {/* Open to operators, exactly like categories: supabase-brands.sql grants
+        brand writes to is_staff(), so gating the screen tighter than the
+        database would hide a capability the operator actually has. */}
+    <Route
+      path="brands"
+      element={
+        <RequireAdmin>
+          <AdminBrands />
         </RequireAdmin>
       }
     />

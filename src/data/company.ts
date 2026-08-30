@@ -95,245 +95,34 @@ export const DISCIPLINES: readonly Discipline[] = [
   'acoustics',
 ] as const
 
-export interface Brand {
-  name: string
-  /**
-   * One discipline per house, deliberately. Most of these manufacturers make
-   * more than one kind of thing, but a card carries one badge and one
-   * photograph, and a badge that hedges tells a specifier nothing. The
-   * discipline recorded here is the one archtrade leads with.
-   */
-  discipline: Discipline
-  /** Where the house is from. Shown small, under the name. */
-  country: string
-  /** A room this house's work belongs in. Not their photography. */
-  image: string
-  /**
-   * A licensed logo file, if the office has one. When set, the card shows the
-   * mark instead of the wordmark. Left unset everywhere on purpose — see the
-   * note on CLIENTS below; the reasoning is identical.
-   */
-  logo?: string
+/**
+ * THE PARTNER HOUSES NOW LIVE IN THE DATABASE.
+ *
+ * They were twenty-nine entries here, with `website` and `description` empty
+ * on every one of them because both are facts only the office holds and
+ * neither could be filled in without a developer editing this file. They are
+ * rows in `brands` now — see supabase-brands.sql, which carries the seed and
+ * is the record of what was here — and the dashboard writes them.
+ *
+ * `Brand` as a type moved to src/data/types.ts with the other database rows.
+ * `DISCIPLINES` above stayed: it is not data about the houses, it is the fixed
+ * set of six the interface can label, and it still drives both the filter row
+ * and the locale keys `b2b.brands.<discipline>`.
+ */
 
-  /*
-   * The two below are UNSET ON EVERY ROW, and that is deliberate rather than
-   * unfinished. The brands page renders both the moment they are filled in;
-   * neither needs a code change.
-   *
-   *   website      These are twenty-nine real manufacturers, and a link that
-   *                goes to the wrong company — or to a domain that lapsed, or
-   *                to the regional site rather than the group one — is worse
-   *                on a partner page than no link at all. Several of these
-   *                houses have moved domain (Menu trades as Audo Copenhagen)
-   *                or run more than one. The office holds the agency
-   *                agreements and knows which address each house wants used.
-   *
-   *   description  A sentence about somebody else's company, written by
-   *                someone who does not work there, is how a partner page
-   *                acquires a claim its partner did not make. The supplier's
-   *                own boilerplate is one email away and is the thing that
-   *                should sit here.
-   *
-   * Fill either in and the card picks it up. There is no ordering
-   * requirement — the page is correct with none, some or all of them set.
-   */
-
-  /** Official website, absolute URL. Makes the card a link when present. */
-  website?: string
-  /** One or two sentences, in the supplier's own words. */
-  description_en?: string
-  description_ka?: string
-}
+/**
+ * How many houses the seed carried.
+ *
+ * Used in ONE place — the hero's third figure — as the number to show for the
+ * one paint before the live count arrives, so the largest text above the fold
+ * never flashes a dash or a zero. The live count replaces it immediately and
+ * is what the page actually reports; this only has to be right on the day the
+ * table was seeded, and being briefly stale is the whole point of it.
+ */
+export const BRAND_COUNT_AT_SEED = 29
 
 const IMG = (id: string) => `https://images.unsplash.com/${id}?w=1200&q=80`
 
-export const BRANDS: readonly Brand[] = [
-  // ------------------------------------------------------------- Office
-  {
-    name: 'Herman Miller',
-    discipline: 'office',
-    country: 'US',
-    image: IMG('photo-1688578735352-9a6f2ac3b70a'),
-  },
-  {
-    name: 'Haworth',
-    discipline: 'office',
-    country: 'US',
-    image: IMG('photo-1580480055273-228ff5388ef8'),
-  },
-  {
-    name: 'Andreu World',
-    discipline: 'office',
-    country: 'ES',
-    image: IMG('photo-1764810815228-b7f9432eec5c'),
-  },
-  {
-    name: 'Frezza',
-    discipline: 'office',
-    country: 'IT',
-    image: IMG('photo-1611269154421-4e27233ac5c7'),
-  },
-  {
-    name: 'DVO',
-    discipline: 'office',
-    country: 'IT',
-    image: IMG('photo-1577412647305-991150c7d163'),
-  },
-  {
-    name: 'Fursys',
-    discipline: 'office',
-    country: 'KR',
-    image: IMG('photo-1631193816258-28b44b21e78b'),
-  },
-
-  // -------------------------------------------------------- Hospitality
-  {
-    name: 'Fritz Hansen',
-    discipline: 'hospitality',
-    country: 'DK',
-    image: IMG('photo-1617364852223-75f57e78dc96'),
-  },
-  {
-    name: 'Artifort',
-    discipline: 'hospitality',
-    country: 'NL',
-    image: IMG('photo-1648960456182-00643d5d20eb'),
-  },
-  {
-    name: 'La Cividina',
-    discipline: 'hospitality',
-    country: 'IT',
-    image: IMG('photo-1776362658611-2067c9ded1d1'),
-  },
-  {
-    name: 'Sancal',
-    discipline: 'hospitality',
-    country: 'ES',
-    image: IMG('photo-1616627547584-bf28cee262db'),
-  },
-  {
-    name: 'Figueras',
-    discipline: 'hospitality',
-    country: 'ES',
-    image: IMG('photo-1646215993365-125e6428e1dc'),
-  },
-
-  // -------------------------------------------------------- Residential
-  {
-    name: 'Fredericia',
-    discipline: 'residential',
-    country: 'DK',
-    image: IMG('photo-1687262304525-02287047d4d6'),
-  },
-  {
-    name: 'Muuto',
-    discipline: 'residential',
-    country: 'DK',
-    image: IMG('photo-1742367539759-6e4fc2e39209'),
-  },
-  {
-    name: 'Menu',
-    discipline: 'residential',
-    country: 'DK',
-    image: IMG('photo-1567016376408-0226e4d0c1ea'),
-  },
-  {
-    name: 'Barcelona Design',
-    discipline: 'residential',
-    country: 'ES',
-    image: IMG('photo-1616137148650-4aa14651e02b'),
-  },
-
-  // ----------------------------------------------------------- Lighting
-  {
-    name: 'Marset',
-    discipline: 'lighting',
-    country: 'ES',
-    image: IMG('photo-1513506003901-1e6a229e2d15'),
-  },
-  {
-    name: 'Vibia',
-    discipline: 'lighting',
-    country: 'ES',
-    image: IMG('photo-1553797794-4c4d2c55dbfb'),
-  },
-  {
-    name: 'Gubi',
-    discipline: 'lighting',
-    country: 'DK',
-    image: IMG('photo-1592622515232-6e3e2a0d3d9a'),
-  },
-  {
-    name: '&Tradition',
-    discipline: 'lighting',
-    country: 'DK',
-    image: IMG('photo-1606170033648-5d55a3edf314'),
-  },
-  {
-    name: 'Zumtobel',
-    discipline: 'lighting',
-    country: 'AT',
-    image: IMG('photo-1497366754035-f200968a6e72'),
-  },
-  {
-    name: 'Formalighting',
-    discipline: 'lighting',
-    country: 'IT',
-    image: IMG('photo-1581784878214-8d5596b98a01'),
-  },
-  {
-    name: 'Lamp83',
-    discipline: 'lighting',
-    country: 'TR',
-    image: IMG('photo-1559924508-1461423083c5'),
-  },
-
-  // ------------------------------------------------------------ Outdoor
-  {
-    name: 'Pedrali',
-    discipline: 'outdoor',
-    country: 'IT',
-    image: IMG('photo-1762608675427-09ac2dbd1540'),
-  },
-  {
-    name: 'Magis',
-    discipline: 'outdoor',
-    country: 'IT',
-    image: IMG('photo-1758445041789-1d27c2f21a88'),
-  },
-  {
-    name: 'Enea',
-    discipline: 'outdoor',
-    country: 'ES',
-    image: IMG('photo-1765097732474-973a92d6fb4c'),
-  },
-
-  // ---------------------------------------------------------- Acoustics
-  {
-    name: 'Framery',
-    discipline: 'acoustics',
-    country: 'FI',
-    image: IMG('photo-1756480336914-c282fdc8372b'),
-  },
-  {
-    name: 'Caimi Snowsound',
-    discipline: 'acoustics',
-    country: 'IT',
-    image: IMG('photo-1773127962331-299cf7663a0b'),
-  },
-  {
-    name: 'BuzziSpace',
-    discipline: 'acoustics',
-    country: 'BE',
-    image: IMG('photo-1676477605752-224a26e6ec71'),
-  },
-  {
-    name: 'Cascando',
-    discipline: 'acoustics',
-    country: 'NL',
-    image: IMG('photo-1758800601600-f691cd1ba66d'),
-  },
-] as const
 
 /**
  * LINES WE NO LONGER SHOW

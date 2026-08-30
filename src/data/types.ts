@@ -167,6 +167,54 @@ export interface Product {
    * is here so the office can keep a number against a piece for itself.
    */
   price?: number | null
+
+  /**
+   * Foreign key -> brands.id. The house that makes the piece.
+   *
+   * OPTIONAL, and nullable in the database too. Most of the catalogue predates
+   * the brands table and a piece whose manufacturer is not recorded is a
+   * normal state rather than an error — so this is read as "unknown" when
+   * absent, never as a failure. Added by supabase-brands.sql, which is also
+   * why the type allows the column to be missing entirely.
+   */
+  brand_id?: string | null
+}
+
+/**
+ * One partner manufacturer.
+ *
+ * WHY THIS IS A TABLE AND NOT A CONSTANT
+ *   These twenty-nine were a hardcoded array in src/data/company.ts, which is
+ *   why `website` and `description_*` were empty on every one of them: both
+ *   are facts only the office holds, and neither could be filled in without a
+ *   developer editing TypeScript. They are nullable here for the same reason
+ *   they were empty there — they are genuinely not known yet — and the brands
+ *   page renders each the moment it is set.
+ */
+export interface Brand {
+  id: string
+  /** Appears in no URL today, but is the stable key the seed matches on. */
+  slug: string
+  name: string
+  /**
+   * One of the six the interface can label. Constrained in the database,
+   * because the chip row and the card badge both read their text from the
+   * locale key `b2b.brands.<discipline>` — an unlabelled seventh value would
+   * render as a missing key rather than as a name.
+   */
+  discipline: string
+  /** Where the house is from. Shown small, under the name. */
+  country: string | null
+  /** A room this house's work belongs in. Not their own photography. */
+  image: string | null
+  /** A licensed logo file, when the office has one. */
+  logo: string | null
+  website: string | null
+  description_ka: string | null
+  description_en: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
 }
 
 /* -------------------------------------------------------------------------- */

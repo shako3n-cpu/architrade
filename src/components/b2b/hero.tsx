@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { Button } from '@/components/ui/button'
-import { BRANDS, PROJECTS, SECTORS } from '@/data/company'
+import { BRAND_COUNT_AT_SEED, PROJECTS, SECTORS } from '@/data/company'
+import { useBrands } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
 import { BELOW_SM, useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
@@ -54,9 +55,18 @@ export function B2bHero() {
 
   const projectCount = PROJECTS.reduce((total, group) => total + group.projects.length, 0)
 
+  /*
+   * The live count, with the seeded one standing in for the single paint
+   * before it lands. This figure is the largest text above the fold; letting
+   * it flash a dash or a zero on every visit to keep it live for the rare day
+   * the office adds a house would be a poor trade. It self-corrects within
+   * one round trip and is never wrong for longer than that.
+   */
+  const brandCount = useBrands().data?.length ?? BRAND_COUNT_AT_SEED
+
   const figures = [
     { value: projectCount, label: t('b2b.hero.statProjects') },
-    { value: BRANDS.length, label: t('b2b.hero.statBrands') },
+    { value: brandCount, label: t('b2b.hero.statBrands') },
     { value: SECTORS.length, label: t('b2b.hero.statSectors') },
   ]
 

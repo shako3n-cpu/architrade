@@ -130,6 +130,7 @@ function AdminChrome({ children }: { children: ReactNode }) {
               {t('admin.navProducts')}
             </AdminLink>
             <AdminLink to="/admin/categories">{t('admin.navCategories')}</AdminLink>
+            <AdminLink to="/admin/brands">{t('admin.navBrands')}</AdminLink>
             {isAdmin && <AdminLink to="/admin/users">{t('admin.navUsers')}</AdminLink>}
           </nav>
 

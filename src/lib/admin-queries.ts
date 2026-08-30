@@ -1,4 +1,4 @@
-import type { Category, Product, StaffMember, StaffRole } from '@/data/types'
+import type { Brand, Category, Product, StaffMember, StaffRole } from '@/data/types'
 import { getSupabase } from './supabase'
 
 /**
@@ -26,6 +26,8 @@ export type ProductDraft = {
   materials_en: string
   dimensions: string
   category_id: string
+  /** Foreign key -> brands.id. Empty string means "not recorded". */
+  brand_id: string
   images: string[]
   featured: boolean
   price: number | null
@@ -63,10 +65,26 @@ export function slugify(source: string): string {
   return slug || `item-${Date.now().toString(36)}`
 }
 
+/**
+ * An empty select is "" in a form and NULL in a uuid column.
+ *
+ * Sending "" straight through fails the insert with an invalid-input-syntax
+ * error naming a type rather than a field, which is a confusing way to be told
+ * that an optional picker was left alone. Both foreign keys are optional in
+ * the form, so both are normalised in one place rather than at each call site.
+ */
+function withNullableKeys(draft: ProductDraft) {
+  return {
+    ...draft,
+    category_id: draft.category_id || null,
+    brand_id: draft.brand_id || null,
+  }
+}
+
 export async function createProduct(draft: ProductDraft): Promise<Product> {
   const { data, error } = await getSupabase()
     .from('products')
-    .insert(draft)
+    .insert(withNullableKeys(draft))
     .select()
     .single()
 
@@ -77,7 +95,7 @@ export async function createProduct(draft: ProductDraft): Promise<Product> {
 export async function updateProduct(id: string, draft: ProductDraft): Promise<Product> {
   const { data, error } = await getSupabase()
     .from('products')
-    .update(draft)
+    .update(withNullableKeys(draft))
     .eq('id', id)
     .select()
     .single()
@@ -280,6 +298,7 @@ export type WriteFailure =
   | 'notPermitted'
   | 'categoryHasChildren'
   | 'categoryHasProducts'
+  | 'brandHasProducts'
   | 'unknown'
 
 /**
@@ -300,6 +319,7 @@ export function explainWriteFailure(error: unknown): WriteFailure {
   // or reworded later. See supabase-category-tree.sql section 2.
   if (message.includes('CATEGORY_HAS_CHILDREN')) return 'categoryHasChildren'
   if (message.includes('CATEGORY_HAS_PRODUCTS')) return 'categoryHasProducts'
+  if (message.includes('BRAND_HAS_PRODUCTS')) return 'brandHasProducts'
 
   if (code === UNIQUE_VIOLATION) return 'duplicateSlug'
   if (
@@ -433,4 +453,108 @@ export async function createStaffAccount(input: {
 
   const detail = await readFunctionError(error)
   throw detail ? new Error(detail) : error
+}
+
+/* -------------------------------------------------------------------------- */
+/* Brands                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/** The fields the brands screen edits. `slug` is set on create and never again. */
+export type BrandDraft = {
+  slug?: string
+  name: string
+  discipline: string
+  country: string | null
+  image: string | null
+  logo: string | null
+  website: string | null
+  description_ka: string | null
+  description_en: string | null
+  sort_order?: number
+  is_active?: boolean
+}
+
+/**
+ * EVERY house, hidden ones included — the dashboard's read.
+ *
+ * The public `fetchBrands` filters on `is_active`, which is right for the site
+ * and useless here: the whole point of hiding a brand is that somebody can
+ * still find it and bring it back.
+ */
+export async function fetchAllBrands(signal?: AbortSignal): Promise<Brand[]> {
+  const query = getSupabase()
+    .from('brands')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true })
+
+  const { data, error } = await (signal ? query.abortSignal(signal) : query)
+  if (error) throw error
+  return (data ?? []) as Brand[]
+}
+
+export async function createBrand(draft: BrandDraft): Promise<Brand> {
+  const { data, error } = await getSupabase().from('brands').insert(draft).select().single()
+  if (error) throw error
+  return data as Brand
+}
+
+/**
+ * Any subset of a brand's editable fields.
+ *
+ * One function for every edit on the screen — rename, re-file, hide, reorder —
+ * for the same reason `updateCategory` is one function: they are the same
+ * UPDATE with a different key, and the database applies the discipline check
+ * whichever key it arrived under.
+ */
+export async function updateBrand(
+  id: string,
+  patch: Partial<Omit<BrandDraft, 'slug'>>,
+): Promise<Brand> {
+  const { data, error } = await getSupabase()
+    .from('brands')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Brand
+}
+
+/**
+ * Deletes a brand.
+ *
+ * The guard is in the DATABASE — supabase-brands.sql installs a before-delete
+ * trigger that refuses a brand still named on a product, and `brand_id` is
+ * `on delete restrict` behind it. Checking here as well would be a race and a
+ * lie, exactly as it would be for a category: another tab can file a product
+ * against this brand between the check and the delete.
+ */
+export async function deleteBrand(id: string): Promise<void> {
+  const { error } = await getSupabase().from('brands').delete().eq('id', id)
+  if (error) throw error
+}
+
+/**
+ * Writes a new order to the whole list.
+ *
+ * Renumbered from 10 in steps of 10 for the same reason the category tree is:
+ * two rows sharing a sort_order break the tie on name, and the list then
+ * appears to reorder itself at random.
+ */
+export async function reorderBrands(idsInOrder: string[]): Promise<void> {
+  const supabase = getSupabase()
+
+  const results = await Promise.all(
+    idsInOrder.map((id, index) =>
+      supabase
+        .from('brands')
+        .update({ sort_order: (index + 1) * 10 })
+        .eq('id', id),
+    ),
+  )
+
+  const failure = results.find((result) => result.error)
+  if (failure?.error) throw failure.error
 }

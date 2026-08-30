@@ -1,4 +1,4 @@
-import type { Category, Product } from '@/data/types'
+import type { Brand, Category, Product } from '@/data/types'
 import { buildCategoryTree, subtreeIds } from './category-tree'
 import { getSupabase } from './supabase'
 
@@ -62,8 +62,20 @@ const CATEGORY_COLUMNS_BASE = 'id, slug, title_ka, title_en, created_at'
 // prettier-ignore
 const CATEGORY_COLUMNS_FLAT = 'id, slug, title_ka, title_en, created_at, group_key, image, sort_order'
 
+/*
+ * `brand_id` is listed here WITHOUT a fallback rung, unlike the archive
+ * columns below and unlike the late additions to `categories`.
+ *
+ * That is the existing rule for this list rather than a new one: every other
+ * name in it — materials_ka, dimensions, images — is also required outright,
+ * because they arrived with the base schema and a database missing them is not
+ * a half-migrated installation, it is a broken one. supabase-brands.sql is
+ * part of the schema on the same terms. The archive columns get a fallback
+ * only because they were bolted on afterwards, for RBAC, on a database that
+ * was already serving.
+ */
 // prettier-ignore
-const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at'
+const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, brand_id, created_at'
 
 /**
  * The same list plus the two archive columns, for the dashboard, which has to
@@ -72,7 +84,7 @@ const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, descripti
  * and has no use for the values themselves.
  */
 // prettier-ignore
-const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, created_at, is_archived, deleted_at'
+const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, brand_id, created_at, is_archived, deleted_at'
 
 /** Postgres "undefined column", surfaced by PostgREST as the error code. */
 const UNDEFINED_COLUMN = '42703'
@@ -488,4 +500,46 @@ export async function fetchCategoryPage(
     .order('created_at', { ascending: false })
 
   return { category, products: unwrap<Product>(await withSignal(query, signal)), categories }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Brands                                                                     */
+/* -------------------------------------------------------------------------- */
+
+// prettier-ignore
+const BRAND_COLUMNS = 'id, slug, name, discipline, country, image, logo, website, description_ka, description_en, sort_order, is_active, created_at'
+
+/**
+ * Every ACTIVE partner house, in the order the office arranged them.
+ *
+ * Hiding rather than deleting is the useful operation here: an agency
+ * agreement lapses far more often than a house stops existing, and a hidden
+ * row keeps its photograph, its country and whatever description was written
+ * for the day it comes back. So the filter is on `is_active` and the dashboard
+ * is the only place that sees everything.
+ *
+ * Ordered in the database rather than in the client, because `sort_order` is
+ * what the dashboard's reordering writes, and sorting it again here would let
+ * the two disagree.
+ *
+ * Returns an empty array on a database that has no brands table yet, rather
+ * than throwing: /brands then renders its empty state, which is the truthful
+ * thing for a site whose partner list has not been migrated.
+ */
+export async function fetchBrands(signal?: AbortSignal): Promise<Brand[]> {
+  const query = getSupabase()
+    .from('brands')
+    .select(BRAND_COLUMNS)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true })
+
+  const result = (await withSignal(query, signal)) as unknown as {
+    data: Brand[] | null
+    error: PgError | null
+  }
+
+  // 42P01 is "undefined table" — the migration has not been run here.
+  if (result.error?.code === '42P01') return []
+  return unwrap<Brand>(result)
 }

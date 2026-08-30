@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import {
+  fetchBrands,
   fetchCatalogue,
   fetchCategories,
   fetchCategoryBySlug,
@@ -110,4 +111,15 @@ export function useCategoryPage(slug: string) {
     useCallback((signal: AbortSignal) => fetchCategoryPage(slug, signal), [slug]),
     [slug],
   )
+}
+
+/**
+ * Every active partner house.
+ *
+ * Its own hook rather than a field on useCatalogue: the brands page needs
+ * these and no products, and the catalogue pages need products and no brands.
+ * Folding them together would make each page pay for the other's query.
+ */
+export function useBrands() {
+  return useAsync(useCallback((signal: AbortSignal) => fetchBrands(signal), []), [])
 }
