@@ -125,7 +125,12 @@ function AdminChrome({ children }: { children: ReactNode }) {
             {role === 'operator' ? t('admin.roleOperator') : t('admin.badge')}
           </span>
 
-          <nav aria-label={t('admin.navLabel')} className="flex items-center gap-6">
+          {/* `flex-wrap` and a tighter gap below `sm`. The header around
+              this wraps, but the nav did not, so its links could not break:
+              at 375px the four of them measured 559px inside a 335px column
+              and the last one was clipped off the right edge of the screen.
+              Three fitted, which is why adding Brands is what exposed it. */}
+          <nav aria-label={t('admin.navLabel')} className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:gap-6">
             <AdminLink to="/admin" end>
               {t('admin.navProducts')}
             </AdminLink>

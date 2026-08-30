@@ -109,7 +109,6 @@ const publicRoutes = (
   <Route path="/:lang" element={<RootLayout />}>
     <Route index element={<Home />} />
 
-    {/* TEMPORARY: data review sheet, replaced by the real catalogue. */}
     <Route path="catalog" element={<Catalog />} />
     <Route path="catalog/:categorySlug" element={<CategoryPage />} />
     <Route path="collections" element={<Collections />} />

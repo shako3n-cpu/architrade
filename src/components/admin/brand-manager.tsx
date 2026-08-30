@@ -128,7 +128,14 @@ export function BrandManager({ brands, onChanged }: { brands: Brand[]; onChanged
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-3 py-2">
+              /* THE CONTROLS DROP BELOW THE NAME ON A PHONE.
+                  Five 44px targets are 220px of a 335px row, which left the
+                  name 103px: the longest one truncated and the discipline line
+                  wrapped to five lines, so rows measured 69–115px tall and the
+                  list read as ragged. Stacked, the name gets the full width
+                  and the strip gets its own line, where 220px is comfortable.
+                  Side by side again from `sm`, where there is room for both. */
+              <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:gap-3">
                 <div className="min-w-0 flex-1">
                   <p
                     className={cn(
@@ -148,7 +155,9 @@ export function BrandManager({ brands, onChanged }: { brands: Brand[]; onChanged
                   </p>
                 </div>
 
-                <div className="flex shrink-0 items-center">
+                {/* `-ml-3` pulls the strip left so the first icon sits over
+                    the text's left edge rather than one button-padding in. */}
+                <div className="-ml-3 flex shrink-0 items-center sm:ml-0">
                   <RowButton
                     label={t('admin.brandMoveUp')}
                     disabled={index === 0 || busyId !== null}

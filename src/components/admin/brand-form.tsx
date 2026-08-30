@@ -110,7 +110,12 @@ export function BrandForm({
             label={t('admin.brandSlug')}
             value={slug}
             onChange={setSlug}
-            placeholder={slugify(name) || 'herman-miller'}
+            /* NOT `slugify(name) || 'herman-miller'`. slugify falls back to
+               `item-<timestamp>` for empty input, which is truthy, so the
+               example never showed — the field advertised a different piece of
+               junk on every keystroke instead. Ask whether there is a name
+               first. */
+            placeholder={name.trim() ? slugify(name) : 'herman-miller'}
           />
         )}
 

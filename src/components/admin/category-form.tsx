@@ -114,7 +114,11 @@ export function CategoryForm({
             label={t('admin.catSlug')}
             value={slug}
             onChange={setSlug}
-            placeholder={slugify(titleEn || titleKa) || 'office-chairs'}
+            /* Guarded on there being a title at all: slugify returns
+               `item-<timestamp>` for empty input, which is truthy, so this
+               example never appeared and a changing placeholder showed in its
+               place. Same fix as brand-form.tsx. */
+            placeholder={(titleEn || titleKa).trim() ? slugify(titleEn || titleKa) : 'office-chairs'}
             hint="/catalog/…"
           />
         )}
