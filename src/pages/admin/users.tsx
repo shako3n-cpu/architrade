@@ -4,7 +4,12 @@ import { UserMinus } from 'lucide-react'
 import type { StaffMember, StaffRole } from '@/data/types'
 import { useAuth } from '@/hooks/use-auth'
 import { useAsync } from '@/hooks/use-async'
-import { fetchStaff, removeStaff, updateStaffRole } from '@/lib/admin-queries'
+import {
+  fetchStaff,
+  FunctionMissingError,
+  removeStaff,
+  updateStaffRole,
+} from '@/lib/admin-queries'
 import { QueryState } from '@/components/ui/query-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { StaffForm } from '@/components/admin/staff-form'
@@ -51,7 +56,9 @@ function StaffTable({ rows, onChanged }: { rows: StaffMember[]; onChanged: () =>
    * Both actions fail the same way and are reported the same way. The message
    * that matters most is the database refusing to remove the last
    * administrator — a rule the browser deliberately does not duplicate, so
-   * there is one copy of it and it cannot drift.
+   * there is one copy of it and it cannot drift. The `admins_keep_one_admin`
+   * trigger still fires when removal arrives by cascade from auth.users, so
+   * routing removal through the edge function did not step around it.
    */
   const run = async (userId: string, action: () => Promise<void>) => {
     setError(null)
@@ -62,9 +69,15 @@ function StaffTable({ rows, onChanged }: { rows: StaffMember[]; onChanged: () =>
       onChanged()
     } catch (cause) {
       setError(
-        t('admin.errorUnknown', {
-          message: cause instanceof Error ? cause.message : String(cause),
-        }),
+        // Removal goes through the edge function now, so it can fail the same
+        // way creation can: the function is simply not deployed. That needs
+        // its own sentence — "Edge Function returned a non-2xx status" sends
+        // whoever reads it looking at permissions instead of at a deploy.
+        cause instanceof FunctionMissingError
+          ? t('admin.staffFunctionMissing')
+          : t('admin.errorUnknown', {
+              message: cause instanceof Error ? cause.message : String(cause),
+            }),
       )
     } finally {
       setBusyId(null)

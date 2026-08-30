@@ -60,7 +60,7 @@ function cors(origin: string | null) {
     // site on the internet.
     'Access-Control-Allow-Origin': origin ?? '*',
     'Access-Control-Allow-Headers': ALLOWED_HEADERS,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
     Vary: 'Origin',
   }
 }
@@ -100,7 +100,9 @@ Deno.serve(async (request: Request) => {
   const origin = request.headers.get('origin')
 
   if (request.method === 'OPTIONS') return preflight(request)
-  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin)
+  if (request.method !== 'POST' && request.method !== 'DELETE') {
+    return json({ error: 'Method not allowed' }, 405, origin)
+  }
 
   const service = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -161,7 +163,13 @@ Deno.serve(async (request: Request) => {
     return json({ error: 'Administrators only' }, 403, origin)
   }
 
-  /* ---- 3. Is the request sound? -------------------------------------- */
+  /* ---- 3. Removing somebody takes a different path ------------------- */
+
+  if (request.method === 'DELETE') {
+    return await removeStaffMember(service, request, origin, caller.user.id)
+  }
+
+  /* ---- 4. Is the request sound? -------------------------------------- */
 
   let body: { email?: string; password?: string; role?: string }
   try {
@@ -180,7 +188,7 @@ Deno.serve(async (request: Request) => {
   }
   if (!ROLES.includes(role)) return json({ error: 'Unknown role' }, 400, origin)
 
-  /* ---- 4. Do it ------------------------------------------------------- */
+  /* ---- 5. Do it ------------------------------------------------------- */
 
   const { data: created, error: createError } = await service.auth.admin.createUser({
     email,
@@ -209,3 +217,119 @@ Deno.serve(async (request: Request) => {
 
   return json({ staff }, 201, origin)
 })
+
+/**
+ * ============================================================================
+ * REMOVE A STAFF MEMBER, IDENTITY AND ALL
+ * ----------------------------------------------------------------------------
+ * DELETE /functions/v1/admin-users
+ *   Authorization: Bearer <the calling admin's access token>
+ *   { "user_id": "..." }
+ *
+ * WHAT WAS WRONG BEFORE
+ *   Removing somebody deleted their row from `admins` and stopped there,
+ *   because deleting an auth identity needs the service_role key and no
+ *   browser may hold one. So the login survived every removal — invisible in
+ *   the dashboard, unable to do anything, and still holding its email address.
+ *   Re-adding that same person then failed on "A user with this email address
+ *   has already been registered", naming a conflict with an account the
+ *   dashboard had already claimed to delete and could not show.
+ *
+ * ONE DELETE, NOT TWO
+ *   `admins.user_id` is `references auth.users(id) ON DELETE CASCADE`, so
+ *   removing the identity removes the staff row with it, in one statement the
+ *   database makes atomic. Deleting both by hand would open the window this
+ *   endpoint exists to close: a failure between the two leaves exactly the
+ *   half-removed state that caused the bug.
+ *
+ * REPAIRING WHAT THE OLD FLOW LEFT
+ *   An account deleted the old way — or by hand in the Supabase dashboard —
+ *   can leave a staff row whose identity is already gone. Deleting the
+ *   identity then reports "not found" and cascades nothing, so this falls back
+ *   to clearing the staff row directly. Either way the caller gets a clean
+ *   result rather than an error about a state they did not create.
+ * ============================================================================
+ */
+async function removeStaffMember(
+  service: ReturnType<typeof createClient>,
+  request: Request,
+  origin: string | null,
+  callerId: string,
+) {
+  /*
+   * The id may arrive in the body or in the query string.
+   *
+   * A DELETE with a body is legal and supabase-js sends one, but bodies on
+   * DELETE are the sort of thing an intermediary drops, and the failure would
+   * look like "no user_id" rather than like a stripped body. Reading both
+   * costs three lines and removes a class of works-here-not-there.
+   */
+  let userId = ''
+  try {
+    const body = (await request.json()) as { user_id?: string }
+    userId = body.user_id?.trim() ?? ''
+  } catch {
+    userId = ''
+  }
+  if (!userId) userId = new URL(request.url).searchParams.get('user_id')?.trim() ?? ''
+
+  if (!userId) return json({ error: 'A user_id is required' }, 400, origin)
+
+  /*
+   * AN ADMIN MAY NOT REMOVE THEMSELVES.
+   *
+   * Not paternalism: this endpoint is the only way to grant staff access, and
+   * it is administrators-only. The last admin deleting their own account locks
+   * everybody out of the dashboard permanently, with no path back that does
+   * not involve the Supabase console and the service_role key.
+   */
+  if (userId === callerId) {
+    return json({ error: 'You cannot remove your own account' }, 400, origin)
+  }
+
+  /* Nor the last administrator, for the same reason by a different route. */
+  const { data: target, error: targetError } = await service
+    .from('admins')
+    .select('role')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (targetError) {
+    return json({ error: 'Could not look that account up', detail: targetError.message }, 500, origin)
+  }
+
+  if (target?.role === 'admin') {
+    const { count, error: countError } = await service
+      .from('admins')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('role', 'admin')
+
+    if (countError) {
+      return json({ error: 'Could not count administrators', detail: countError.message }, 500, origin)
+    }
+    if ((count ?? 0) <= 1) {
+      return json({ error: 'This is the last administrator' }, 400, origin)
+    }
+  }
+
+  /* ---- Do it. The cascade takes the staff row with the identity. ------- */
+
+  const { error: deleteError } = await service.auth.admin.deleteUser(userId)
+
+  if (deleteError) {
+    // The identity is already gone but a staff row is still pointing at it —
+    // the residue of the old two-step removal. Clear the row so the dashboard
+    // can finish what the previous flow started.
+    const alreadyGone = /not.?found/i.test(deleteError.message)
+    if (!alreadyGone) {
+      return json({ error: deleteError.message }, 400, origin)
+    }
+
+    const { error: rowError } = await service.from('admins').delete().eq('user_id', userId)
+    if (rowError) return json({ error: rowError.message }, 400, origin)
+
+    return json({ removed: userId, identity: 'was already gone' }, 200, origin)
+  }
+
+  return json({ removed: userId, identity: 'deleted' }, 200, origin)
+}

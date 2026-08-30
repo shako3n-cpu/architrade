@@ -373,17 +373,36 @@ export async function updateStaffRole(userId: string, role: StaffRole): Promise<
 }
 
 /**
- * Takes somebody off the staff list. ADMINS ONLY.
+ * Takes somebody off the staff list AND deletes their login. ADMINS ONLY.
  *
- * Their Supabase Auth account is NOT deleted — removing that needs the
- * service_role key, which no browser may hold. They keep an account they can
- * sign into and it can do nothing: /admin shows them "this account cannot edit
- * the catalog" and every write policy refuses them. Delete the account itself
- * in Dashboard -> Authentication -> Users if you want it gone entirely.
+ * THIS USED TO LEAVE THE ACCOUNT BEHIND, AND THAT WAS THE BUG
+ *   It deleted the row from `admins` and stopped, because removing an auth
+ *   identity needs the service_role key and no browser may hold one. The login
+ *   survived every removal: invisible in the dashboard, unable to do anything,
+ *   and still holding its email address. Re-adding the same person then failed
+ *   on "A user with this email address has already been registered" — a
+ *   conflict with an account the dashboard had already said it deleted and had
+ *   no way to show.
+ *
+ *   So removal goes through the same edge function that creates accounts,
+ *   which holds the key on a server. One call: `admins.user_id` is
+ *   `on delete cascade` against auth.users, so deleting the identity takes the
+ *   staff row with it, atomically, rather than this having to delete two
+ *   things and hope both land.
  */
 export async function removeStaff(userId: string): Promise<void> {
-  const { error } = await getSupabase().from('admins').delete().eq('user_id', userId)
-  if (error) throw error
+  const { error } = await getSupabase().functions.invoke('admin-users', {
+    method: 'DELETE',
+    body: { user_id: userId },
+  })
+
+  if (!error) return
+
+  const status = (error as { context?: { status?: number } }).context?.status
+  if (status === 404) throw new FunctionMissingError('admin-users is not deployed')
+
+  const detail = await readFunctionError(error)
+  throw detail ? new Error(detail) : error
 }
 
 /**
