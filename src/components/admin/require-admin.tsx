@@ -160,8 +160,11 @@ function AdminLink({ to, end, children }: { to: string; end?: boolean; children:
       end={end}
       className={({ isActive }) =>
         cn(
-          'text-xs tracking-[0.12em] uppercase transition-colors duration-300',
-          isActive ? 'text-brass' : 'text-muted hover:text-ink',
+          'rounded-xs border px-3 py-1.5 text-xs tracking-[0.12em] uppercase',
+          'transition-colors duration-300',
+          isActive
+            ? 'border-brass/40 bg-brass/10 text-brass'
+            : 'border-transparent text-muted hover:border-hairline hover:text-ink',
         )
       }
     >
