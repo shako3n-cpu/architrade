@@ -75,16 +75,19 @@ export function Footer() {
       </div>
 
       <Container>
-        <div className="grid grid-cols-1 gap-12 py-16 md:grid-cols-2 md:py-20 lg:grid-cols-12 lg:gap-8">
+        <div className="grid grid-cols-1 gap-9 py-12 md:grid-cols-2 md:gap-12 md:py-20 lg:grid-cols-12 lg:gap-8">
           {/* Wordmark + about */}
           <div className="lg:col-span-4 lg:pr-10">
             <Wordmark className="text-lg" />
             <p className="mt-6 max-w-md text-sm leading-relaxed text-muted">{t('footer.about')}</p>
           </div>
 
+          {/* Two columns from the smallest screen, not just from `lg`. These
+              are short labels — "Showroom", "Brands", "Office" — and stacking
+              them one per line ran eleven rows down a phone for no gain. */}
           <nav
             aria-label={t('footer.navLabel')}
-            className="contents lg:col-span-5 lg:grid lg:grid-cols-2 lg:gap-8"
+            className="grid grid-cols-2 gap-8 lg:col-span-5"
           >
             <FooterColumn title={t('footer.quickLinks')} links={quickLinks} />
             <FooterColumn title={t('footer.categories')} links={categoryLinks} />
@@ -159,18 +162,29 @@ export function Footer() {
 
             <span aria-hidden="true" className="hidden h-3 w-px bg-hairline md:block" />
 
-            <Link
-              to={localePath('/privacy')}
-              className="inline-flex min-h-11 items-center text-xs text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
-            >
-              {t('footer.privacy')}
-            </Link>
-            <Link
-              to={localePath('/terms')}
-              className="inline-flex min-h-11 items-center text-xs text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
-            >
-              {t('footer.terms')}
-            </Link>
+            {/*
+             * The two policy links are wrapped TOGETHER so they wrap as one
+             * item rather than individually. Loose in the parent flex row they
+             * each took a whole line on a phone — the Georgian
+             * "კონფიდენციალურობის პოლიტიკა" is 27 characters, and with a 28px
+             * gap beside it there was no room for anything else, so the bottom
+             * bar ran to three rows. As a pair with a tighter gap of their own
+             * they fit one line together and the bar is two rows.
+             */}
+            <div className="flex items-center gap-x-5">
+              <Link
+                to={localePath('/privacy')}
+                className="inline-flex min-h-11 items-center text-xs text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
+              >
+                {t('footer.privacy')}
+              </Link>
+              <Link
+                to={localePath('/terms')}
+                className="inline-flex min-h-11 items-center text-xs text-muted transition-colors duration-300 hover:text-brass sm:min-h-0"
+              >
+                {t('footer.terms')}
+              </Link>
+            </div>
           </div>
         </div>
       </Container>

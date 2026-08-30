@@ -14,6 +14,14 @@ import { cn } from '@/lib/utils'
 /**
  * Slide-in navigation for tablet and phone (hidden from `lg` up).
  *
+ * COMPACT ON PURPOSE
+ *   The rows carried desktop-sized type and padding — 24px headings with 16px
+ *   above and below, which made a top-level row 65px tall. With the catalogue
+ *   tree in here the list overflowed its own panel and the visitor had to
+ *   scroll a menu. Rows are tighter now, and the branch rows carry an explicit
+ *   `min-h-11` so the padding can come down without the tap target coming down
+ *   with it: 44px is the floor whatever the padding says.
+ *
  * Built on Radix Dialog, which handles the parts that are easy to get wrong:
  * focus is trapped inside the panel while it is open, Escape closes it, the
  * page behind it cannot scroll, and focus returns to the menu button on close.
@@ -66,7 +74,7 @@ export function MobileDrawer({ tree }: { tree: CategoryNode[] }) {
             </Dialog.Close>
           </div>
 
-          <nav aria-label={t('header.mainNavLabel')} className="flex-1 overflow-y-auto px-6 py-8">
+          <nav aria-label={t('header.mainNavLabel')} className="flex-1 overflow-y-auto px-6 py-5">
             <ul className="flex flex-col">
               {MAIN_NAV.map((item) =>
                 item.to === '/catalog' && tree.length > 0 ? (
@@ -77,7 +85,7 @@ export function MobileDrawer({ tree }: { tree: CategoryNode[] }) {
                   <li key={item.to}>
                     <Link
                       to={localePath(item.to)}
-                      className="block border-b border-hairline py-4 font-heading text-2xl text-ink transition-colors duration-300 hover:text-brass"
+                      className="block border-b border-hairline py-3 font-heading text-xl text-ink transition-colors duration-300 hover:text-brass"
                     >
                       {t(item.labelKey)}
                     </Link>
@@ -87,7 +95,7 @@ export function MobileDrawer({ tree }: { tree: CategoryNode[] }) {
             </ul>
           </nav>
 
-          <div className="px-6 pb-8">
+          <div className="px-6 pb-6">
             <Divider className="mb-6" />
 
             <a
@@ -128,7 +136,7 @@ function CategoryAccordion({ tree }: { tree: CategoryNode[] }) {
     <div className="border-b border-hairline">
       <Link
         to={localePath('/catalog')}
-        className="block border-b border-hairline py-4 font-heading text-2xl text-ink transition-colors duration-300 hover:text-brass"
+        className="block border-b border-hairline py-3 font-heading text-xl text-ink transition-colors duration-300 hover:text-brass"
       >
         {t('nav.catalog')}
       </Link>
@@ -143,7 +151,7 @@ function CategoryAccordion({ tree }: { tree: CategoryNode[] }) {
               <div className="flex items-center justify-between gap-2">
                 <Link
                   to={localePath(`/catalog/${node.category.slug}`)}
-                  className="flex-1 py-3.5 pl-4 text-base text-ink transition-colors duration-300 hover:text-brass"
+                  className="flex min-h-11 flex-1 items-center py-2 pl-4 text-base text-ink transition-colors duration-300 hover:text-brass"
                 >
                   {categoryTitle(node.category, lang)}
                 </Link>
