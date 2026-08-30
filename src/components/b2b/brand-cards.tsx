@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
@@ -73,6 +73,29 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
 
   const filters: Filter[] = ['all', ...DISCIPLINES]
 
+  const scroller = useRef<HTMLDivElement>(null)
+  const activeChip = useRef<HTMLButtonElement>(null)
+
+  /*
+   * Bring the selected chip into view within the row.
+   *
+   * Arriving from a collection card lands on ?d=acoustics, whose chip is the
+   * last of seven and sits well off the right of a 375px screen — so without
+   * this the page opens filtered with nothing on screen saying why.
+   *
+   * By setting scrollLeft on the row itself, never scrollIntoView, which walks
+   * up the ancestors and would scroll the PAGE to reach a chip that is merely
+   * off to the side.
+   */
+  useEffect(() => {
+    const row = scroller.current
+    const chip = activeChip.current
+    if (!row || !chip) return
+
+    const centred = chip.offsetLeft - (row.clientWidth - chip.clientWidth) / 2
+    row.scrollLeft = Math.max(0, Math.min(centred, row.scrollWidth - row.clientWidth))
+  }, [filter])
+
   return (
     <Section
       spacing="lg"
@@ -96,29 +119,49 @@ export function B2bBrandCards({ showHeading = true }: { showHeading?: boolean })
           />
         )}
 
-        <div className="mt-12 flex flex-wrap items-center gap-x-2 gap-y-3">
-          {filters.map((value) => {
-            const active = filter === value
+        {/* THE FILTER BAR SCROLLS RATHER THAN WRAPS ON A PHONE
+            Seven chips carrying names like "არქიტექტურული განათება" fit about
+            one to a line at 375px: measured, the wrapped bar stood 295px tall
+            across five rows, and the brand cards it filters started that far
+            down the page. A single non-wrapping row that scrolls sideways is
+            44px whatever the labels say, in either language.
 
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setFilter(value)}
-                aria-pressed={active}
-                className={cn(
-                  'at-label min-h-11 border px-4 transition-colors duration-300 sm:min-h-10',
-                  active
-                    ? 'border-brass bg-brass text-background'
-                    : 'border-hairline text-muted hover:border-brass hover:text-brass',
-                )}
-              >
-                {t(`b2b.brands.${value}`)}
-              </button>
-            )
-          })}
+            `-mx-5 px-5` cancels the Container gutter so the row runs from one
+            screen edge to the other, and the last chip is cut off by the
+            screen rather than appearing to stop short of it. From `sm` there
+            is width to wrap, so it wraps and the bleed is dropped. */}
+        <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
+          <div
+            ref={scroller}
+            className="at-scroll-row -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:gap-x-2 sm:gap-y-3 sm:overflow-visible sm:px-0"
+          >
+            {filters.map((value) => {
+              const active = filter === value
 
-          <p className="at-label ml-auto text-muted" aria-live="polite">
+              return (
+                <button
+                  key={value}
+                  ref={active ? activeChip : undefined}
+                  type="button"
+                  onClick={() => setFilter(value)}
+                  aria-pressed={active}
+                  className={cn(
+                    'at-label min-h-11 shrink-0 border px-4 whitespace-nowrap transition-colors duration-300 sm:min-h-10',
+                    active
+                      ? 'border-brass bg-brass text-background'
+                      : 'border-hairline text-muted hover:border-brass hover:text-brass',
+                  )}
+                >
+                  {t(`b2b.brands.${value}`)}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Outside the scroller. Inside it, `ml-auto` would push the count
+              to the far end of a 700px scrolling row — off screen, which is
+              no place for the thing reporting how many results there are. */}
+          <p className="at-label text-muted sm:ml-auto sm:shrink-0" aria-live="polite">
             {t('b2b.brands.showing', { count: visible.length })}
           </p>
         </div>
