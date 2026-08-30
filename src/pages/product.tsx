@@ -44,9 +44,17 @@ export function Product() {
           <>
             <Section spacing="md">
               <Container>
-                <Breadcrumbs items={crumbs} className="mb-10" />
+                <Breadcrumbs items={crumbs} className="mb-5 sm:mb-10" />
 
-                <div className="grid grid-cols-1 gap-x-16 gap-y-12 lg:grid-cols-2">
+                {/*
+                 * The gap closes on a phone because the two halves are stacked
+                 * rather than side by side: 48px between a photograph and the
+                 * name of the thing in it reads as a break between sections,
+                 * not as breathing room, and it was pushing the title off the
+                 * fold. Side by side from `lg` the gap is horizontal and the
+                 * original value is right again.
+                 */}
+                <div className="grid grid-cols-1 gap-x-16 gap-y-7 lg:grid-cols-2 lg:gap-y-12">
                   {/* Keyed on the product so moving between two pieces resets
                       the gallery to the first photograph. */}
                   <ProductGallery
@@ -79,11 +87,11 @@ function ProductSkeleton() {
 
         <div
           aria-hidden="true"
-          className="grid animate-pulse grid-cols-1 gap-x-16 gap-y-12 lg:grid-cols-2"
+          className="grid animate-pulse grid-cols-1 gap-x-16 gap-y-7 lg:grid-cols-2 lg:gap-y-12"
         >
           <div>
             <div className="aspect-square w-full bg-surface" />
-            <div className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-5">
+            <div className="mt-2.5 grid grid-cols-5 gap-2 sm:mt-3 sm:gap-3">
               {Array.from({ length: 4 }, (_, index) => (
                 <div key={index} className="aspect-square bg-surface" />
               ))}

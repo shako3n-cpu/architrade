@@ -58,7 +58,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
       {many && (
         <ul
           aria-label={t('product.galleryLabel')}
-          className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-5"
+          className="mt-2.5 grid grid-cols-5 gap-2 sm:mt-3 sm:gap-3"
         >
           {images.map((src, index) => (
             <li key={src}>
