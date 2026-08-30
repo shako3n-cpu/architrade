@@ -4,6 +4,7 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { Button } from '@/components/ui/button'
 import { BRANDS, PROJECTS, SECTORS } from '@/data/company'
 import { useLanguage } from '@/hooks/use-language'
+import { BELOW_SM, useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
 
 /**
@@ -49,6 +50,7 @@ const HERO_SRCSET = HERO_WIDTHS.map((w) => `${heroSrc(w)} ${w}w`).join(', ')
 
 export function B2bHero() {
   const { t, localePath } = useLanguage()
+  const onPhone = useMediaQuery(BELOW_SM)
 
   const projectCount = PROJECTS.reduce((total, group) => total + group.projects.length, 0)
 
@@ -132,8 +134,27 @@ export function B2bHero() {
               even once the headline was pinned. Only from `md` — on a phone
               both languages wrap far past five lines anyway, and reserving
               there would just open a hole under the text. */}
+          {/*
+           * A SHORTER STANDFIRST ON A PHONE, WRITTEN RATHER THAN TRUNCATED.
+           *
+           * The full line runs 263 characters, which sets to NINE lines and
+           * 234px at 375px — most of the reason the hero came to 966px, and it
+           * pushed the two buttons most of a screen down. Clamping it would
+           * have cut Georgian mid-clause under a fade, which is worse than
+           * either version of the sentence.
+           *
+           * So there are two written sentences and the phone gets the shorter:
+           * the same claim — the agencies, and what they cover — with the list
+           * of building types and the delivery promise left for the width that
+           * can carry them.
+           *
+           * `md:min-h-[5lh]` still reserves five lines from `md` up, which is
+           * what stops the hero jumping when the language switches. It is not
+           * applied below that: both languages wrap well past five lines on a
+           * phone, so reserving there would only open a hole.
+           */}
           <p className="mt-7 max-w-2xl text-base leading-relaxed text-ink-muted md:min-h-[5lh] md:text-lg">
-            {t('b2b.hero.description')}
+            {t(onPhone ? 'b2b.hero.descriptionShort' : 'b2b.hero.description')}
           </p>
 
           {/*
