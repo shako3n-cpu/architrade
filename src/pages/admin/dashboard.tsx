@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArchiveRestore, Archive, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import type { Category, Product } from '@/data/types'
 import { useCatalogue } from '@/hooks/use-catalog'
 import { useAuth } from '@/hooks/use-auth'
+import { useAsync } from '@/hooks/use-async'
 import {
   archiveProduct,
   deleteProduct,
   explainWriteFailure,
+  fetchAllBrands,
   restoreProduct,
 } from '@/lib/admin-queries'
 import { QueryState } from '@/components/ui/query-state'
@@ -32,6 +34,13 @@ export function AdminDashboard() {
   // are meant to be visible; every public query filters them out.
   const catalogue = useCatalogue(true)
   const { isAdmin } = useAuth()
+
+  /*
+   * Every house, hidden ones included — `fetchAllBrands`, not the public
+   * reader. A piece supplied by a house whose agreement has lapsed still has
+   * to be filed against that house, so the form's picker has to offer it.
+   */
+  const brands = useAsync(useCallback((signal: AbortSignal) => fetchAllBrands(signal), []), [])
 
   const [query, setQuery] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -90,6 +99,7 @@ export function AdminDashboard() {
         onOpenChange={setModalOpen}
         product={editing}
         categories={catalogue.data?.categories ?? []}
+        brands={brands.data ?? []}
         onSaved={catalogue.retry}
       />
     </>

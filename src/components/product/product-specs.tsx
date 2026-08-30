@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { useLanguage } from '@/hooks/use-language'
-import type { Category, Product } from '@/data/types'
+import type { Brand, Category, Product } from '@/data/types'
 import { categoryTitle, productMaterials } from '@/lib/localize'
 import { cn } from '@/lib/utils'
 
@@ -19,11 +19,14 @@ import { cn } from '@/lib/utils'
 export function ProductSpecs({
   product,
   category,
+  brand,
   className,
 }: {
   product: Product
   /** Undefined when the product's category row could not be resolved. */
   category?: Category
+  /** Undefined when no house is recorded, or the row could not be resolved. */
+  brand?: Brand
   className?: string
 }) {
   const { lang, localePath, t } = useLanguage()
@@ -42,6 +45,14 @@ export function ProductSpecs({
           </Link>
         </Row>
       )}
+
+      {/* Only when a house is actually recorded. Most of the catalogue
+          predates the brands table, and a "Brand: —" line says nothing except
+          that the record is unfinished — the same rule the rest of this sheet
+          follows. The name is plain text rather than a link: /brands is a
+          filtered wall, not a page per manufacturer, so a link would land the
+          reader somewhere that does not answer what they clicked for. */}
+      {brand && <Row label={t('product.brand')}>{brand.name}</Row>}
 
       {product.dimensions && <Row label={t('product.dimensions')}>{product.dimensions}</Row>}
 

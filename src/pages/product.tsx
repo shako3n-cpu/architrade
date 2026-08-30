@@ -7,7 +7,7 @@ import { Breadcrumbs, type Crumb } from '@/components/ui/breadcrumbs'
 import { ProductGallery } from '@/components/product/product-gallery'
 import { ProductInfo } from '@/components/product/product-info'
 import { RelatedProducts } from '@/components/product/related-products'
-import { useProductPage } from '@/hooks/use-catalog'
+import { useBrands, useProductPage } from '@/hooks/use-catalog'
 import { useLanguage } from '@/hooks/use-language'
 import { categoryTitle, productImageAlt, productTitle } from '@/lib/localize'
 
@@ -23,6 +23,8 @@ export function Product() {
   const { lang, t } = useLanguage()
   const page = useProductPage(slug)
 
+  const brands = useBrands().data ?? []
+
   return (
     <QueryState result={page} skeleton={<ProductSkeleton />}>
       {({ product, categories, related }) => {
@@ -31,6 +33,15 @@ export function Product() {
         if (!product) return <NotFound />
 
         const category = categories.find((item) => item.id === product.category_id)
+
+        /*
+         * Resolved from the brands list rather than joined onto the product
+         * query. The list is small, cached by the hook and already fetched for
+         * the header on most journeys, so this costs nothing extra — and a
+         * piece with no `brand_id` simply finds nothing, which is exactly the
+         * "not recorded" the spec sheet is written to omit.
+         */
+        const brand = brands.find((item) => item.id === product.brand_id)
 
         const crumbs: Crumb[] = [
           { label: t('nav.home'), to: '/' },
@@ -63,7 +74,7 @@ export function Product() {
                     alt={productImageAlt(product, lang)}
                   />
 
-                  <ProductInfo product={product} category={category} />
+                  <ProductInfo product={product} category={category} brand={brand} />
                 </div>
               </Container>
             </Section>

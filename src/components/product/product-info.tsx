@@ -3,7 +3,7 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { ProductSpecs } from './product-specs'
 import { InquiryBox } from './inquiry-box'
 import { useLanguage } from '@/hooks/use-language'
-import type { Category, Product } from '@/data/types'
+import type { Brand, Category, Product } from '@/data/types'
 import { categoryTitle, productDescription, productTitle } from '@/lib/localize'
 
 /**
@@ -18,10 +18,13 @@ import { categoryTitle, productDescription, productTitle } from '@/lib/localize'
 export function ProductInfo({
   product,
   category,
+  brand,
 }: {
   product: Product
   /** Undefined when the product's category row could not be resolved. */
   category?: Category
+  /** Undefined when no house is recorded against the piece. */
+  brand?: Brand
 }) {
   const { lang, localePath, t } = useLanguage()
 
@@ -95,7 +98,7 @@ export function ProductInfo({
       <InquiryBox product={product} className="mt-10" />
 
       <h2 className="sr-only">{t('product.specTitle')}</h2>
-      <ProductSpecs product={product} category={category} className="mt-10" />
+      <ProductSpecs product={product} category={category} brand={brand} className="mt-10" />
     </div>
   )
 }

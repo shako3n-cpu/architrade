@@ -12,6 +12,8 @@ import {
 } from '@/lib/admin-queries'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { buildCategoryTree, flattenTree } from '@/lib/category-tree'
+import type { Brand } from '@/data/types'
 import { CheckboxField, SelectField, TextAreaField, TextField } from './field'
 import { ImageUpload } from './image-upload'
 
@@ -31,6 +33,7 @@ export function ProductFormModal({
   onOpenChange,
   product,
   categories,
+  brands,
   onSaved,
 }: {
   open: boolean
@@ -38,6 +41,8 @@ export function ProductFormModal({
   /** Null to create a new piece. */
   product: Product | null
   categories: Category[]
+  /** Every house, hidden ones included — see the note on the picker below. */
+  brands: Brand[]
   /** Called after a successful save so the table can reload. */
   onSaved: () => void
 }) {
@@ -59,9 +64,37 @@ export function ProductFormModal({
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }))
 
-  const categoryOptions = categories.map((category) => ({
-    value: category.id,
-    label: i18n.language === 'ka' ? category.title_ka : category.title_en,
+  /*
+   * THE CATEGORY PICKER SHOWS THE TREE, NOT A FLAT LIST.
+   *
+   * It used to map `categories` in whatever order the query returned, which
+   * put "Sofas" and "Living Room" side by side as equals. With six parents and
+   * twenty-three children that is twenty-nine indistinguishable names, and the
+   * one thing the person filing a piece needs to know — which room this
+   * belongs under — was the thing the list did not say.
+   *
+   * Indented depth-first instead, the same treatment the category screen's own
+   * parent picker uses, so the two read identically.
+   */
+  const categoryOptions = flattenTree(buildCategoryTree(categories)).map((node) => ({
+    value: node.category.id,
+    label: `${' '.repeat(node.depth * 3)}${
+      i18n.language === 'ka' ? node.category.title_ka : node.category.title_en
+    }`,
+  }))
+
+  /*
+   * The brand picker offers hidden houses too, and deliberately.
+   *
+   * A hidden brand is one whose agency agreement has lapsed, not one that
+   * never existed — the pieces already supplied by it are still in the
+   * catalogue and still have to be filed correctly. Hiding it from this list
+   * would make an editor re-file real stock under the wrong house to get the
+   * form to save.
+   */
+  const brandOptions = brands.map((brand) => ({
+    value: brand.id,
+    label: brand.is_active ? brand.name : `${brand.name} (${t('admin.brandHidden')})`,
   }))
 
   const submit = async (event: React.FormEvent) => {
@@ -188,6 +221,16 @@ export function ProductFormModal({
                   required
                 />
 
+                <SelectField
+                  label={t('admin.brand')}
+                  value={draft.brand_id}
+                  onChange={(value) => set('brand_id', value)}
+                  options={brandOptions}
+                  placeholder={t('admin.chooseBrand')}
+                />
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
                 <TextField
                   label={t('admin.price')}
                   type="number"
@@ -268,6 +311,7 @@ function emptyDraft(): ProductDraft {
     materials_en: '',
     dimensions: '',
     category_id: '',
+    brand_id: '',
     images: [],
     featured: false,
     price: null,
@@ -285,6 +329,7 @@ function draftFrom(product: Product): ProductDraft {
     materials_en: product.materials_en ?? '',
     dimensions: product.dimensions ?? '',
     category_id: product.category_id ?? '',
+    brand_id: product.brand_id ?? '',
     images: product.images ?? [],
     featured: product.featured,
     price: product.price ?? null,

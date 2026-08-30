@@ -1,6 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ImagePlus, Loader2, Star, X } from 'lucide-react'
+import { ImagePlus, Loader2, MousePointer2, Star, X } from 'lucide-react'
 import {
   MAX_IMAGE_BYTES,
   ACCEPTED_IMAGE_TYPES,
@@ -116,6 +116,26 @@ export function ImageUpload({
     void deleteProductImage(url)
   }
 
+  /*
+   * THE SECOND PHOTOGRAPH IS THE HOVER ONE, AND NOW IT SAYS SO.
+   *
+   * `productHoverImage` in src/lib/localize.ts reads `images[1]`, so position
+   * has always decided which picture appears when a visitor points at a card.
+   * The box labelled only the cover, which left the single most-noticed effect
+   * on the catalogue grid as an unlabelled side effect of upload order — the
+   * only way to choose it was to promote pictures to cover until the right one
+   * happened to land second.
+   *
+   * So the second slot is labelled like the first, and any picture can be sent
+   * there directly.
+   */
+  const makeHover = (url: string) => {
+    const rest = images.filter((item) => item !== url)
+    // Splice at 1, not unshift: sending a picture to hover must never quietly
+    // change the cover, which is the more consequential of the two.
+    onChange([...rest.slice(0, 1), url, ...rest.slice(1)])
+  }
+
   const makeCover = (url: string) => {
     onChange([url, ...images.filter((item) => item !== url)])
   }
@@ -194,17 +214,56 @@ export function ImageUpload({
                 <img src={url} alt="" className="h-full w-full object-cover" />
               </div>
 
-              {index === 0 ? (
+              {index < 2 ? (
                 <span className="absolute top-1.5 left-1.5 bg-background/95 px-1.5 py-0.5 text-[9px] tracking-[0.12em] text-brass uppercase">
-                  {t('admin.cover')}
+                  {t(index === 0 ? 'admin.cover' : 'admin.hoverShot')}
                 </span>
               ) : (
+                <span className="absolute top-1.5 left-1.5 flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => makeCover(url)}
+                    title={t('admin.makeCover')}
+                    aria-label={t('admin.makeCover')}
+                    className="inline-flex size-6 items-center justify-center bg-background/95 text-muted transition-colors duration-300 hover:text-brass"
+                  >
+                    <Star aria-hidden="true" className="size-3.5 stroke-[1.5]" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => makeHover(url)}
+                    title={t('admin.makeHover')}
+                    aria-label={t('admin.makeHover')}
+                    className="inline-flex size-6 items-center justify-center bg-background/95 text-muted transition-colors duration-300 hover:text-brass"
+                  >
+                    <MousePointer2 aria-hidden="true" className="size-3.5 stroke-[1.5]" />
+                  </button>
+                </span>
+              )}
+
+              {/* The cover can be sent to the hover slot too — swapping the
+                  two is otherwise a three-step shuffle through a third
+                  picture. Only offered when there IS a second slot to fill. */}
+              {index === 0 && images.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => makeHover(url)}
+                  title={t('admin.makeHover')}
+                  aria-label={t('admin.makeHover')}
+                  className="absolute bottom-1.5 left-1.5 inline-flex size-6 items-center justify-center bg-background/95 text-muted transition-colors duration-300 hover:text-brass"
+                >
+                  <MousePointer2 aria-hidden="true" className="size-3.5 stroke-[1.5]" />
+                </button>
+              )}
+
+              {index === 1 && (
                 <button
                   type="button"
                   onClick={() => makeCover(url)}
                   title={t('admin.makeCover')}
                   aria-label={t('admin.makeCover')}
-                  className="absolute top-1.5 left-1.5 inline-flex size-6 items-center justify-center bg-background/95 text-muted transition-colors duration-300 hover:text-brass"
+                  className="absolute bottom-1.5 left-1.5 inline-flex size-6 items-center justify-center bg-background/95 text-muted transition-colors duration-300 hover:text-brass"
                 >
                   <Star aria-hidden="true" className="size-3.5 stroke-[1.5]" />
                 </button>
