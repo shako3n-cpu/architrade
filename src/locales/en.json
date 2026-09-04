@@ -199,6 +199,10 @@
     "retry": "Try again",
     "emptyTitle": "Nothing here yet",
     "emptyBody": "No products have been added to this section yet.",
+    "placeholderEyebrow": "Coming soon",
+    "placeholderBody": "This page is being written. The catalogue and our contact details are ready in the meantime.",
+    "notFoundTitle": "We could not find that page",
+    "notFoundBody": "The address may be mistyped, or the page may have moved. Everything else is still here.",
     "notConfiguredTitle": "The database is not configured",
     "notConfiguredBody": "Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.",
     "notConfiguredDeployed": "This deployment was built without the Supabase keys. In Vercel, add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY under Settings → Environment Variables with the Preview environment ticked, then redeploy — variables are read at build time, not at page load."
@@ -488,7 +492,8 @@
       "servicesDescription": "Furniture, lighting and acoustics, offered separately or as one supply package. Most clients take more than one, which is where the value is: nobody is left arguing about whose delivery is late.",
       "collectionsEyebrow": "Collections",
       "collectionsTitle": "What we furnish, setting by setting.",
-      "collectionsDescription": "We represent a selected group of manufacturers rather than a catalogue of everything. Each is reviewed on product and on service before we put them into a building."
+      "collectionsDescription": "We represent a selected group of manufacturers rather than a catalogue of everything. Each is reviewed on product and on service before we put them into a building.",
+      "collectionTitle": "Collection"
     },
     "collections": {
       "lightingBody": "Decorative and technical together: pendants, linear profiles, track and recessed office luminaires from UGR<19 upward.",

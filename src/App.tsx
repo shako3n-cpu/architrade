@@ -5,6 +5,7 @@ import { Catalog } from '@/pages/catalog'
 import { Product } from '@/pages/product'
 import { CategoryPage } from '@/pages/category'
 import { Placeholder } from '@/pages/placeholder'
+import { NotFound } from '@/pages/not-found'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { RequireAdmin } from '@/components/admin/require-admin'
 import { AdminLogin } from '@/pages/admin/login'
@@ -41,6 +42,8 @@ import '@/i18n'
  * visit), and RootLayout handles an unknown code such as /de/about.
  *
  * The Placeholder pages below are temporary and get replaced page by page.
+ * They take a translation KEY rather than a title, because they are reachable
+ * in both languages like every other public page.
  * ============================================================================
  */
 
@@ -112,17 +115,20 @@ const publicRoutes = (
     <Route path="catalog" element={<Catalog />} />
     <Route path="catalog/:categorySlug" element={<CategoryPage />} />
     <Route path="collections" element={<Collections />} />
-    <Route path="collections/:slug" element={<Placeholder title="Collection" />} />
+    <Route
+      path="collections/:slug"
+      element={<Placeholder titleKey="b2b.pages.collectionTitle" />}
+    />
     <Route path="product/:slug" element={<Product />} />
     <Route path="about" element={<About />} />
     <Route path="services" element={<Services />} />
     <Route path="brands" element={<Brands />} />
-    <Route path="showroom" element={<Placeholder title="Showroom" />} />
+    <Route path="showroom" element={<Placeholder titleKey="nav.showroom" />} />
     <Route path="contact" element={<Contact />} />
-    <Route path="privacy" element={<Placeholder title="Privacy policy" />} />
-    <Route path="terms" element={<Placeholder title="Terms and conditions" />} />
+    <Route path="privacy" element={<Placeholder titleKey="footer.privacy" />} />
+    <Route path="terms" element={<Placeholder titleKey="footer.terms" />} />
 
-    <Route path="*" element={<Placeholder title="Page not found" />} />
+    <Route path="*" element={<NotFound />} />
   </Route>
 )
 
