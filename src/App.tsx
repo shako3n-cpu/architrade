@@ -16,8 +16,6 @@ import { Collections } from '@/pages/collections'
 import { Contact } from '@/pages/contact'
 import { Brands } from '@/pages/brands'
 import { AdminCategories } from '@/pages/admin/categories'
-import { DemoCategories } from '@/pages/demo/categories'
-import { DemoBrands } from '@/pages/demo/brands'
 import { AdminBrands } from '@/pages/admin/brands'
 import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
@@ -164,12 +162,6 @@ function PublicSite() {
       ) : (
         adminRoutes
       )}
-
-      {/* The structure screen with an in-memory catalogue behind it, so the
-          drag and the folding can be seen without a database or a sign-in.
-          Off the production catalogue domains for the same reason /admin is. */}
-      {!IS_PUBLIC_ONLY_HOST && <Route path="/demo/categories" element={<DemoCategories />} />}
-      {!IS_PUBLIC_ONLY_HOST && <Route path="/demo/brands" element={<DemoBrands />} />}
 
       {publicRoutes}
 

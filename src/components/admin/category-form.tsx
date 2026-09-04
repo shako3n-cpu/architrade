@@ -60,7 +60,7 @@ export function CategoryForm({
   initialParentId?: string | null
   onCancel: () => void
   onSubmit: (draft: CategorySubmit) => Promise<void>
-  /** Injectable so the screen runs without Supabase. See /demo/categories. */
+  /** Injectable, for a caller that must not write to the real bucket. */
   uploadImage?: ImageUploader
   removeImage?: ImageRemover
 }) {

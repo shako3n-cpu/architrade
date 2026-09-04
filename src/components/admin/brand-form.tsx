@@ -49,7 +49,7 @@ export function BrandForm({
   brand?: Brand
   onCancel: () => void
   onSubmit: (draft: BrandSubmit) => Promise<void>
-  /** Injectable so the form runs without Supabase. See /demo/brands. */
+  /** Injectable, for a caller that must not write to the real bucket. */
   uploadImage?: ImageUploader
   removeImage?: ImageRemover
 }) {

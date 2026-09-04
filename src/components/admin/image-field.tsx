@@ -48,7 +48,7 @@ export function ImageField({
   value: string
   onChange: (value: string) => void
   disabled?: boolean
-  /** Injectable so the screen can run without Supabase. See /demo/categories. */
+  /** Injectable. Defaults to the real bucket, which is what every screen uses. */
   upload?: ImageUploader
   remove?: ImageRemover
 }) {

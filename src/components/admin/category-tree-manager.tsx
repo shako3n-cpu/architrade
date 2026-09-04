@@ -40,7 +40,7 @@ const COLLAPSED_KEY = 'archtrade-admin-categories-collapsed'
  * The four writes this screen makes.
  *
  * Named as a group and injectable so the screen can be driven without a
- * database behind it — the demo route at /demo/categories passes an in-memory
+ * database behind it — a caller may pass an in-memory
  * version, which is how the drag and the folding get exercised locally. The
  * default is the real thing, so every ordinary caller is unaffected.
  */
