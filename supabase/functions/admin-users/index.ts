@@ -30,11 +30,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
  *
  *   SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided to deployed
  *   functions automatically, and neither belongs in the project's .env.
- *
- *   If you ever have to supply the key yourself, set it as SERVICE_ROLE_KEY —
- *   the SUPABASE_ prefix is reserved and secrets cannot be set under it:
- *
- *     supabase secrets set SERVICE_ROLE_KEY=<the key>
+ *   Nothing here needs a secret set by hand.
  * ============================================================================
  */
 
@@ -106,16 +102,12 @@ Deno.serve(async (request: Request) => {
 
   const service = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    // ORDER MATTERS, and it is the reverse of what it looks like it should be.
-    // Supabase injects SUPABASE_SERVICE_ROLE_KEY into every deployed function
-    // and that value is always right for the project it is running in. A key
-    // set by hand can be stale, or from another project, or the wrong kind of
-    // key altogether — and this project has one that is, which is what made
-    // account creation fail with "Invalid API key" from inside the function.
-    //
-    // So: the injected key wins, and SERVICE_ROLE_KEY is the fallback for an
-    // environment that does not provide one (self-hosted, mainly).
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || '',
+    // Injected by Supabase into every deployed function, and always the right
+    // key for the project it is running in. Never set by hand: a key typed in
+    // here can be stale, from another project, or the wrong kind of key
+    // altogether, and the failure it produces is a misleading "Invalid API
+    // key" raised from inside the function rather than at the caller.
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
