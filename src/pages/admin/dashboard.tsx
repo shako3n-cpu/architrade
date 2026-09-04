@@ -16,6 +16,7 @@ import { QueryState } from '@/components/ui/query-state'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ProductFormModal } from '@/components/admin/product-form-modal'
+import { ancestorPath, buildCategoryTree, flattenTree } from '@/lib/category-tree'
 import { RETENTION_DAYS, daysUntilPurge } from '@/lib/retention'
 import { cn } from '@/lib/utils'
 
@@ -166,6 +167,23 @@ function ProductTable({
 
   const inTab = status === 'archived' ? archivedOnes : liveOnes
 
+  /*
+   * FILTERING BY A SECTION MEANS THE WHOLE BRANCH.
+   *
+   * The filter compared `category_id` for equality, which was right when the
+   * catalogue was flat and became silently wrong the moment it was not:
+   * choosing "Exterior facade" matched only what is filed directly on it, and
+   * nothing is — the doors and the windows hold the products. The filter
+   * returned an empty table for a section full of stock.
+   */
+  const branchIds = useMemo(() => {
+    if (!categoryId) return null
+    const node = flattenTree(buildCategoryTree(categories)).find(
+      (entry) => entry.category.id === categoryId,
+    )
+    return node ? new Set(flattenTree([node]).map((entry) => entry.category.id)) : null
+  }, [categories, categoryId])
+
   const visible = useMemo(() => {
     // Matching on BOTH titles regardless of the interface language: a manager
     // typing a Georgian name should find the piece even with the dashboard in
@@ -173,14 +191,14 @@ function ProductTable({
     const needle = query.trim().toLowerCase()
 
     return inTab.filter((product) => {
-      if (categoryId && product.category_id !== categoryId) return false
+      if (branchIds && !branchIds.has(product.category_id)) return false
       if (!needle) return true
       return (
         product.title_ka.toLowerCase().includes(needle) ||
         product.title_en.toLowerCase().includes(needle)
       )
     })
-  }, [inTab, query, categoryId])
+  }, [inTab, query, branchIds])
 
   /**
    * One path for all three actions, because all three fail identically: a
@@ -251,9 +269,11 @@ function ProductTable({
           className="min-h-11 border border-hairline bg-background px-3.5 py-2.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none sm:text-sm"
         >
           <option value="">{t('admin.allCategories')}</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {name(category)}
+          {/* Depth-first and indented, so a filter list of thirty names is
+              still the tree the office built rather than an alphabet. */}
+          {flattenTree(buildCategoryTree(categories)).map((node) => (
+            <option key={node.category.id} value={node.category.id}>
+              {`${'   '.repeat(node.depth)}${name(node.category)}`}
             </option>
           ))}
         </select>
@@ -284,7 +304,7 @@ function ProductTable({
           <table className="w-full min-w-[46rem] border-collapse text-left">
             <thead>
               <tr className="border-b border-hairline bg-surface">
-                <Th className="w-20">{t('admin.colPhoto')}</Th>
+                <Th className="w-32">{t('admin.colPhoto')}</Th>
                 <Th>{t('admin.colTitle')}</Th>
                 <Th>{t('admin.colCategory')}</Th>
                 <Th className="w-28">{t('admin.colPrice')}</Th>
@@ -305,8 +325,12 @@ function ProductTable({
                       busyId === product.id && 'opacity-50',
                     )}
                   >
-                    <td className="p-3">
-                      <div className="size-14 overflow-hidden border border-hairline bg-surface">
+                    <td className="p-4">
+                      {/* 96px, up from 56. A catalogue is checked by looking
+                          at the pictures — a thumbnail too small to tell an
+                          oak door from a walnut one is a thumbnail that costs
+                          a click to be useful, on every row. */}
+                      <div className="size-24 overflow-hidden border border-hairline bg-surface">
                         {cover && (
                           <img
                             src={cover}
@@ -318,19 +342,22 @@ function ProductTable({
                       </div>
                     </td>
 
-                    <td className="p-3">
-                      <p className="text-sm text-ink">{productName(product)}</p>
-                      <p className="mt-0.5 text-xs text-muted">
+                    <td className="p-4">
+                      {/* The name is the thing being looked for, so it is the
+                          largest text on the row rather than the same 14px as
+                          the price beside it. */}
+                      <p className="text-base leading-snug text-ink">{productName(product)}</p>
+                      <p className="mt-1 text-sm text-muted">
                         {lang === 'ka' ? product.title_en : product.title_ka}
                       </p>
-                      <span className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                      <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                         {product.featured && (
-                          <span className="text-[9px] tracking-[0.14em] text-brass uppercase">
+                          <span className="text-[10px] tracking-[0.14em] text-brass uppercase">
                             {t('product.featuredBadge')}
                           </span>
                         )}
                         {product.is_archived && (
-                          <span className="border border-hairline px-1.5 py-0.5 text-[9px] tracking-[0.14em] text-muted uppercase">
+                          <span className="border border-hairline px-1.5 py-0.5 text-[10px] tracking-[0.14em] text-muted uppercase">
                             {t('admin.archived')}
                           </span>
                         )}
@@ -338,15 +365,39 @@ function ProductTable({
                       </span>
                     </td>
 
-                    <td className="p-3 text-sm text-muted">
-                      {category ? name(category) : t('admin.noCategory')}
+                    <td className="p-4 text-sm">
+                      {/*
+                       * THE WHOLE PATH, NOT THE LAST STEP.
+                       *
+                       * This said "Doors". Since the catalogue gained real
+                       * depth there can be doors under Exterior facade and
+                       * doors under Interior, and one word cannot tell them
+                       * apart — the column named the piece's category without
+                       * saying which category it was. The parents are drawn
+                       * quieter than the leaf: they are context, the last one
+                       * is the answer.
+                       */}
+                      {category ? (
+                        <span className="text-muted">
+                          {pathTo(categories, category).map((step, index, all) => (
+                            <span key={step.id}>
+                              {index > 0 && <span className="mx-1 opacity-50">/</span>}
+                              <span className={index === all.length - 1 ? 'text-ink' : undefined}>
+                                {name(step)}
+                              </span>
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="text-muted">{t('admin.noCategory')}</span>
+                      )}
                     </td>
 
-                    <td className="p-3 text-sm text-muted">
+                    <td className="p-4 text-sm text-muted">
                       {product.price == null ? '—' : product.price}
                     </td>
 
-                    <td className="p-3">
+                    <td className="p-4">
                       <div className="flex items-center justify-end gap-1">
                         <IconButton
                           label={t('admin.edit')}
@@ -429,6 +480,12 @@ function ProductTable({
   )
 }
 
+/** Top-level row down to this one, inclusive. Just this row if it has no parent. */
+function pathTo(categories: Category[], category: Category): Category[] {
+  const path = ancestorPath(categories, category.slug)
+  return path.length > 0 ? path : [category]
+}
+
 /** Which of the two lists the dashboard is showing. */
 type ProductStatus = 'live' | 'archived'
 
@@ -483,7 +540,7 @@ function Th({ children, className }: { children: React.ReactNode; className?: st
   return (
     <th
       scope="col"
-      className={cn('p-3 text-[10px] tracking-[0.16em] text-muted uppercase', className)}
+      className={cn('p-4 text-[10px] tracking-[0.16em] text-muted uppercase', className)}
     >
       {children}
     </th>

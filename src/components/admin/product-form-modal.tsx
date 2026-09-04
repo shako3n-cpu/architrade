@@ -12,9 +12,9 @@ import {
 } from '@/lib/admin-queries'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { buildCategoryTree, flattenTree } from '@/lib/category-tree'
 import type { Brand } from '@/data/types'
 import { CheckboxField, SelectField, TextAreaField, TextField } from './field'
+import { CategoryPicker } from './category-picker'
 import { ImageUpload } from './image-upload'
 
 /**
@@ -63,40 +63,6 @@ export function ProductFormModal({
 
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }))
-
-  /*
-   * THE CATEGORY PICKER SHOWS THE TREE, NOT A FLAT LIST.
-   *
-   * It used to map `categories` in whatever order the query returned, which
-   * put "Sofas" and "Living Room" side by side as equals. With six parents and
-   * twenty-three children that is twenty-nine indistinguishable names, and the
-   * one thing the person filing a piece needs to know — which room this
-   * belongs under — was the thing the list did not say.
-   *
-   * Indented depth-first instead, the same treatment the category screen's own
-   * parent picker uses, so the two read identically.
-   *
-   * A CATEGORY THAT HAS SUBCATEGORIES IS A HEADING, NOT A SHELF.
-   *
-   * "Exterior facade" holds doors and windows; the doors hold the products.
-   * Filing a piece under the heading itself puts it on a page whose whole job
-   * is to list the subcategories, so it appears in neither — and nothing about
-   * a flat, equal-looking list said so. Parents are still drawn, because they
-   * are the only thing that says WHERE a child sits, but they cannot be
-   * chosen.
-   *
-   * With one exception: whatever the product is filed under right now stays
-   * selectable even if it is a parent. Rows filed before this rule existed are
-   * real, and a form that will not show the value it was opened with is a form
-   * that re-files a product the moment it is saved.
-   */
-  const categoryOptions = flattenTree(buildCategoryTree(categories)).map((node) => ({
-    value: node.category.id,
-    label: `${' '.repeat(node.depth * 3)}${
-      i18n.language === 'ka' ? node.category.title_ka : node.category.title_en
-    }`,
-    disabled: node.children.length > 0 && node.category.id !== draft.category_id,
-  }))
 
   /*
    * The brand picker offers hidden houses too, and deliberately.
@@ -227,12 +193,14 @@ export function ProductFormModal({
               />
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <SelectField
-                  label={t('admin.category')}
+                {/* Remounted with the modal, so the chain it shows is always
+                    the one belonging to the piece being opened. */}
+                <CategoryPicker
+                  key={product?.id ?? 'new'}
+                  categories={categories}
                   value={draft.category_id}
                   onChange={(value) => set('category_id', value)}
-                  options={categoryOptions}
-                  placeholder={t('admin.chooseCategory')}
+                  language={i18n.language}
                   required
                 />
 

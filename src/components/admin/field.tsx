@@ -131,9 +131,7 @@ export function SelectField({
   label: string
   value: string
   onChange: (value: string) => void
-  /** `disabled` renders the entry but refuses it — used for headings that are
-      part of the list's shape without being valid answers. */
-  options: { value: string; label: string; disabled?: boolean }[]
+  options: { value: string; label: string }[]
   /** Shown as a disabled first entry when nothing is chosen yet. */
   placeholder?: string
   required?: boolean
@@ -160,7 +158,7 @@ export function SelectField({
         )}
 
         {options.map((option) => (
-          <option key={option.value} value={option.value} disabled={option.disabled}>
+          <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}

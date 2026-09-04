@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Category, Product } from '@/data/types'
 import { CategoryTreeManager, type CategoryActions } from '@/components/admin/category-tree-manager'
+import { CategoryPicker } from '@/components/admin/category-picker'
 
 /**
  * ============================================================================
@@ -22,8 +23,9 @@ import { CategoryTreeManager, type CategoryActions } from '@/components/admin/ca
  * ============================================================================
  */
 export function DemoCategories() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [categories, setCategories] = useState<Category[]>(SEED)
+  const [filedUnder, setFiledUnder] = useState('')
 
   /*
    * The same four writes the dashboard makes, against an array. Ordering is
@@ -101,6 +103,33 @@ export function DemoCategories() {
         actions={actions}
         onChanged={() => {}}
       />
+
+      {/* The other half of the same decision: the tree above says where things
+          can go, this says what the product form does with it. Kept on the
+          same page because changing one without looking at the other is how
+          they drifted apart in the first place. */}
+      <div className="mt-12 border-t border-hairline pt-8">
+        <h2 className="font-heading text-lg text-ink">Filing a product</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+          The product form asks for the category one level at a time. A category that has
+          subcategories opens the next dropdown instead of finishing — the value below is empty
+          until a category with nothing under it is reached.
+        </p>
+
+        <div className="mt-5 max-w-md">
+          <CategoryPicker
+            categories={categories}
+            value={filedUnder}
+            onChange={setFiledUnder}
+            language={i18n.language}
+            required
+          />
+        </div>
+
+        <p className="mt-4 text-xs text-muted">
+          category_id: <span data-testid="filed-under">{filedUnder || '(none)'}</span>
+        </p>
+      </div>
     </div>
   )
 }
