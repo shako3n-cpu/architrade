@@ -47,25 +47,6 @@ export type CategoryDraft = {
 }
 
 /**
- * A URL-safe slug derived from the English title.
- *
- * The slug is what appears in the address bar, so it must be ASCII. Georgian
- * text transliterates to nothing useful here, which is why the English title
- * is the source and why a piece with no English title falls back to a stamp
- * rather than to an empty string.
- */
-export function slugify(source: string): string {
-  const slug = source
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 70)
-
-  return slug || `item-${Date.now().toString(36)}`
-}
-
-/**
  * An empty select is "" in a form and NULL in a uuid column.
  *
  * Sending "" straight through fails the insert with an invalid-input-syntax

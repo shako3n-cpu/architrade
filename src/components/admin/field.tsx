@@ -34,6 +34,7 @@ export function TextField({
   onChange,
   placeholder,
   hint,
+  error,
   required = false,
   type = 'text',
   disabled = false,
@@ -43,12 +44,23 @@ export function TextField({
   onChange: (value: string) => void
   placeholder?: string
   hint?: string
+  /**
+   * What is wrong with the current value, or undefined when nothing is.
+   *
+   * Rendered in ink rather than a warning colour because this palette has no
+   * red in it — the site is graphite, off-white and brass, and inventing a
+   * twelfth colour for one message would be the loudest thing on the screen.
+   * The darker border and the darker text are the signal; `aria-invalid` and
+   * `role="alert"` are what carry it to a screen reader.
+   */
+  error?: string
   required?: boolean
   type?: 'text' | 'email' | 'password' | 'number'
   disabled?: boolean
 }) {
   const id = useId()
   const hintId = hint ? `${id}-hint` : undefined
+  const errorId = error ? `${id}-error` : undefined
 
   return (
     <div>
@@ -63,10 +75,19 @@ export function TextField({
         required={required}
         disabled={disabled}
         placeholder={placeholder}
-        aria-describedby={hintId}
+        aria-invalid={error ? true : undefined}
+        // The error first: it is the more urgent of the two, and a field that
+        // is wrong should not have its hint read out ahead of the reason.
+        aria-describedby={[errorId, hintId].filter(Boolean).join(' ') || undefined}
         onChange={(event) => onChange(event.target.value)}
-        className={cn(CONTROL, 'mt-2')}
+        className={cn(CONTROL, 'mt-2', error && 'border-ink')}
       />
+
+      {error && (
+        <p id={errorId} role="alert" className="mt-1.5 text-xs text-ink">
+          {error}
+        </p>
+      )}
 
       {hint && (
         <p id={hintId} className="mt-1.5 text-xs text-muted">

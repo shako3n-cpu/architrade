@@ -22,9 +22,9 @@ import {
   deleteCategory,
   explainWriteFailure,
   reorderCategories,
-  slugify,
   updateCategory,
 } from '@/lib/admin-queries'
+import { slugify } from '@/lib/admin-validate'
 import type { Category } from '@/data/types'
 import { buildCategoryTree, flattenTree, visibleRows, type CategoryNode } from '@/lib/category-tree'
 import { project, siblingOrder, toFlatRows } from '@/lib/category-drag'
@@ -409,8 +409,14 @@ export function CategoryTreeManager({
               /* Derived here rather than in the form, which no longer asks for
                  one. Falling back to '' would be worse than any typo: an empty
                  slug is unique exactly once — `categories_slug_key` refuses the
-                 second — and gives the category `/catalog/` for an address. */
+                 second — and gives the category `/catalog/` for an address.
+
+                 slugify returns null when the titles yield nothing usable. The
+                 form refuses to submit in that case, so this is the second of
+                 two locks rather than the first: it exists so a caller that
+                 forgets the check cannot stamp a timestamp into an address. */
               const slug = draft.slug?.trim() || slugify(draft.title_en || draft.title_ka)
+              if (!slug) return
 
               const box: { row?: Category } = {}
               const ok = await run(null, async () => {

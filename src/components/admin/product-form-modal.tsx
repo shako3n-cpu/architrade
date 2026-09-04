@@ -6,10 +6,10 @@ import type { Category, Product } from '@/data/types'
 import {
   createProduct,
   explainWriteFailure,
-  slugify,
   updateProduct,
   type ProductDraft,
 } from '@/lib/admin-queries'
+import { checkEnglishTitle, slugify } from '@/lib/admin-validate'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Brand } from '@/data/types'
@@ -78,8 +78,17 @@ export function ProductFormModal({
     label: brand.is_active ? brand.name : `${brand.name} (${t('admin.brandHidden')})`,
   }))
 
+  /*
+   * The address comes from the English title, so a title it cannot be built
+   * from is stopped here. Only on create: an existing piece keeps the slug it
+   * already has, and its English title is no longer load-bearing.
+   */
+  const titleProblem = editing ? null : checkEnglishTitle(draft.title_en)
+  const titleError = titleProblem ? t(`admin.slugTitle_${titleProblem}`) : undefined
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (titleProblem) return
     setError(null)
     setSaving(true)
 
@@ -87,9 +96,13 @@ export function ProductFormModal({
     // this dashboard is for people who should not have to think about URLs.
     // On an existing piece it is left alone: changing it would break the
     // product's address and every link pointing at it.
+    //
+    // The `as string` is safe because `titleProblem` is checked above and
+    // blocks the submit: slugify only returns null for a title this form has
+    // already refused.
     const payload: ProductDraft = {
       ...draft,
-      slug: editing ? draft.slug : slugify(draft.title_en || draft.title_ka),
+      slug: editing ? draft.slug : (slugify(draft.title_en || draft.title_ka) as string),
     }
 
     try {
@@ -177,6 +190,7 @@ export function ProductFormModal({
                   value={draft.title_en}
                   onChange={(value) => set('title_en', value)}
                   required
+                  error={titleError}
                 />
               </div>
 
@@ -271,7 +285,7 @@ export function ProductFormModal({
                 </Button>
               </Dialog.Close>
 
-              <Button type="submit" size="sm" disabled={saving}>
+              <Button type="submit" size="sm" disabled={saving || Boolean(titleProblem)}>
                 {saving && <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />}
                 {t('admin.save')}
               </Button>

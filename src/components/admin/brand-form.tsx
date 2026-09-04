@@ -6,7 +6,7 @@ import { ImageField, type ImageRemover, type ImageUploader } from '@/components/
 import { DISCIPLINES } from '@/data/company'
 import type { Brand } from '@/data/types'
 import type { BrandDraft } from '@/lib/admin-queries'
-import { slugify } from '@/lib/admin-queries'
+import { checkEnglishTitle, checkSlug, slugify } from '@/lib/admin-validate'
 
 /** What the form hands back. `slug` is absent when editing — see below. */
 export type BrandSubmit = Omit<BrandDraft, 'slug'> & { slug?: string }
@@ -74,14 +74,26 @@ export function BrandForm({
     label: t(`b2b.brands.${value}`),
   }))
 
+  /*
+   * A partner house's address comes from its name, which is a Latin brand
+   * name in every case — these are European and American manufacturers. A
+   * name that yields no slug would otherwise be stamped with a timestamp.
+   */
+  const nameProblem = checkEnglishTitle(name)
+  const nameError = nameProblem ? t(`admin.slugName_${nameProblem}`) : undefined
+  const slugProblem = isNew ? checkSlug(slug) : null
+  const slugError = slugProblem ? t('admin.slugShape') : undefined
+  const blocked = Boolean(nameProblem) || Boolean(slugProblem)
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (blocked) return
     setSaving(true)
     try {
       await onSubmit({
         name: name.trim(),
         discipline,
-        ...(isNew ? { slug: slug.trim() || slugify(name) } : {}),
+        ...(isNew ? { slug: slug.trim() || (slugify(name) as string) } : {}),
         // Empty is stored as NULL, not as "". A card asks whether the field is
         // set, and an empty string is set — it would render a blank link.
         country: country.trim() || null,
@@ -102,7 +114,13 @@ export function BrandForm({
       <p className="at-label mb-5 text-brass-on-surface">{heading}</p>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <TextField label={t('admin.brandName')} value={name} onChange={setName} required />
+        <TextField
+          label={t('admin.brandName')}
+          value={name}
+          onChange={setName}
+          required
+          error={nameError}
+        />
 
         <SelectField
           label={t('admin.brandDiscipline')}
@@ -116,12 +134,11 @@ export function BrandForm({
             label={t('admin.brandSlug')}
             value={slug}
             onChange={setSlug}
-            /* NOT `slugify(name) || 'herman-miller'`. slugify falls back to
-               `item-<timestamp>` for empty input, which is truthy, so the
-               example never showed — the field advertised a different piece of
-               junk on every keystroke instead. Ask whether there is a name
-               first. */
-            placeholder={name.trim() ? slugify(name) : 'herman-miller'}
+            error={slugError}
+            /* slugify now returns null rather than inventing
+               `item-<timestamp>`, so the example shows whenever the name has
+               not yet produced anything usable. */
+            placeholder={slugify(name) ?? 'herman-miller'}
           />
         )}
 
@@ -194,7 +211,7 @@ export function BrandForm({
       </div>
 
       <div className="mt-6 flex items-center gap-3">
-        <Button type="submit" size="sm" disabled={saving}>
+        <Button type="submit" size="sm" disabled={saving || blocked}>
           {t('admin.brandSave')}
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={onCancel} disabled={saving}>

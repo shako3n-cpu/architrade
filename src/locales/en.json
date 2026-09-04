@@ -393,7 +393,12 @@
     "makeHover": "Use as the hover photograph",
     "brand": "Brand",
     "chooseBrand": "Not recorded",
-    "brandHidden": "hidden"
+    "brandHidden": "hidden",
+    "slugTitle_notLatin": "The page address is built from this title, so write it in Latin letters.",
+    "slugTitle_noSlug": "No page address can be built from this title. Add at least one Latin letter or number.",
+    "slugName_notLatin": "The page address is built from this name, so write it in Latin letters.",
+    "slugName_noSlug": "No page address can be built from this name. Add at least one Latin letter or number.",
+    "slugShape": "Lower-case Latin letters, numbers and single hyphens, for example herman-miller."
   },
   "b2b": {
     "hero": {

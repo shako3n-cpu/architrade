@@ -5,6 +5,7 @@ import { CheckboxField, TextField } from '@/components/admin/field'
 import { ImageField, type ImageRemover, type ImageUploader } from '@/components/admin/image-field'
 import type { Category } from '@/data/types'
 import type { CategoryDraft } from '@/lib/admin-queries'
+import { checkEnglishTitle } from '@/lib/admin-validate'
 
 /** What the form hands back. `slug` is absent when editing — see below. */
 export type CategorySubmit = Omit<CategoryDraft, 'slug'> & { slug?: string }
@@ -75,8 +76,18 @@ export function CategoryForm({
   const isNew = !category
   const parentId = category ? (category.parent_id ?? null) : (initialParentId ?? null)
 
+  /*
+   * The address is built from the English title, so a title the address
+   * cannot be built from is refused here rather than quietly stamped with a
+   * timestamp by the caller. Checked on every keystroke so the message
+   * arrives while the field is still in hand, not after Save.
+   */
+  const titleProblem = checkEnglishTitle(titleEn)
+  const titleError = titleProblem ? t(`admin.slugTitle_${titleProblem}`) : undefined
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (titleProblem) return
     setSaving(true)
     try {
       await onSubmit({
@@ -105,6 +116,7 @@ export function CategoryForm({
           value={titleEn}
           onChange={setTitleEn}
           required
+          error={titleError}
           /* The address is built from this one, so it is worth saying so
              where the value is typed rather than in a field of its own. */
           hint={isNew ? t('admin.catSlugFromEnglish') : undefined}
@@ -126,7 +138,7 @@ export function CategoryForm({
       </div>
 
       <div className="mt-6 flex items-center gap-3">
-        <Button type="submit" size="sm" disabled={saving}>
+        <Button type="submit" size="sm" disabled={saving || Boolean(titleProblem)}>
           {t('admin.catSave')}
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={onCancel} disabled={saving}>
