@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { CheckboxField, SelectField, TextAreaField, TextField } from '@/components/admin/field'
+import { ImageField, type ImageRemover, type ImageUploader } from '@/components/admin/image-field'
 import { DISCIPLINES } from '@/data/company'
 import type { Brand } from '@/data/types'
 import type { BrandDraft } from '@/lib/admin-queries'
@@ -40,12 +41,17 @@ export function BrandForm({
   brand,
   onCancel,
   onSubmit,
+  uploadImage,
+  removeImage,
 }: {
   heading: string
   /** Undefined when creating. */
   brand?: Brand
   onCancel: () => void
   onSubmit: (draft: BrandSubmit) => Promise<void>
+  /** Injectable so the form runs without Supabase. See /demo/brands. */
+  uploadImage?: ImageUploader
+  removeImage?: ImageRemover
 }) {
   const { t } = useTranslation()
 
@@ -127,8 +133,36 @@ export function BrandForm({
           hint={t('admin.brandCountryHint')}
         />
 
-        <TextField label={t('admin.brandImage')} value={image} onChange={setImage} />
-        <TextField label={t('admin.brandLogo')} value={logo} onChange={setLogo} />
+        {/*
+         * BOTH PICTURES ARE UPLOADED, NOT TYPED.
+         *
+         * These were two text boxes labelled "Photograph URL" and "Logo URL",
+         * which asks the office to produce a hosted address for a file sitting
+         * on a desktop — something they have no way to do. The supplier sends a
+         * logo as an attachment, not as a link. The result was twenty-nine
+         * houses with both fields empty and a logo wall of blank rectangles.
+         *
+         * Same box the category banner and the product photographs use, and
+         * the same bucket: `product-images` is public to read and writable only
+         * by staff, which is exactly what a brand picture needs. A second
+         * bucket would need its own policies to say the same thing twice.
+         */}
+        <ImageField
+          label={t('admin.brandImage')}
+          value={image}
+          onChange={setImage}
+          disabled={saving}
+          upload={uploadImage}
+          remove={removeImage}
+        />
+        <ImageField
+          label={t('admin.brandLogo')}
+          value={logo}
+          onChange={setLogo}
+          disabled={saving}
+          upload={uploadImage}
+          remove={removeImage}
+        />
 
         <div className="sm:col-span-2">
           <TextField
