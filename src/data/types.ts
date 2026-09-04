@@ -2,25 +2,20 @@
  * ============================================================================
  * DATA TYPES
  * ----------------------------------------------------------------------------
- * This file holds two families of shapes, and it matters which one you use.
+ * One property per column in Supabase, named exactly as the column is named
+ * (snake_case, `title_ka`, `created_at`, ...). Everything on the site reads
+ * from the database, so these shapes are the only ones there are.
  *
- *   1. `Product` / `Category`  — THE DATABASE ROWS.
- *      One property per column in Supabase, named exactly as the column is
- *      named (snake_case, `title_ka`, `created_at`, ...). Anything that talks
- *      to Supabase uses these. This is where the site is heading.
- *
- *   2. `SeedProduct` / `SeedCategory` — THE LOCAL CATALOGUE FILES.
- *      The richer hand-written shapes used by products.ts and categories.ts
- *      while the catalogue still lives in the repository. They stay until the
- *      content has been moved into Supabase, then they go.
- *
- * Both exist at once on purpose: pages migrate one at a time, so for a while
- * some read the database and some read the files.
+ * There used to be a second family — `SeedProduct`, `SeedCategory`,
+ * `Collection` and the helpers under them — for a catalogue that lived in the
+ * repository as TypeScript. The content moved into Supabase and the last file
+ * importing those shapes stopped being reachable, so they went. See the dead
+ * code note in HANDOVER.md if you are looking for them in the history.
  * ============================================================================
  */
 
 /* -------------------------------------------------------------------------- */
-/* 1. Database rows                                                           */
+/* Database rows                                                              */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -218,101 +213,7 @@ export interface Brand {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 2. Local catalogue files                                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Text that exists in both languages.
- * Every visitor-facing string in the local catalogue uses this shape:
- *
- *   name: { ka: "მაგიდა", en: "Table" }
- *
- * Both are required — if one is missing TypeScript flags it, which stops
- * a half-translated product reaching the site.
- */
-export type Localized = {
-  ka: string
-  en: string
-}
-
-/** A sub-group inside a category, e.g. "Sofas" inside "Living room". */
-export type Subcategory = {
-  /** URL fragment. Lowercase, hyphens only, must be unique in its category. */
-  slug: string
-  name: Localized
-}
-
-export type SeedCategory = {
-  id: string
-  /** Appears in the URL: /ka/catalog/living-room */
-  slug: string
-  name: Localized
-  /** Banner + category-card photograph. */
-  image: string
-  /** Short paragraph shown on the category page under the banner. */
-  intro: Localized
-  subcategories: Subcategory[]
-}
-
-/** Whether a piece can be delivered now, ordered in, or made to measure. */
-export type Availability = 'in-stock' | 'on-order' | 'custom'
-
-/** A colour/finish option, shown as a small swatch on the product page. */
-export type Finish = {
-  name: Localized
-  /** Hex value used to paint the swatch, e.g. "#6B4E32". */
-  hex: string
-}
-
-export type SeedProduct = {
-  id: string
-  /** Appears in the URL: /ka/product/aria-oak-dining-table */
-  slug: string
-  /** Printed on the product card and used by catalogue search. */
-  articleNumber: string
-  categorySlug: string
-  subcategorySlug: string
-  /** Empty string when the piece belongs to no collection. */
-  collectionSlug: string
-  name: Localized
-  /** One line, shown on cards. */
-  shortDescription: Localized
-  /** Two or three sentences, shown on the product page. */
-  description: Localized
-  /** COVER PHOTO FIRST. A second photo enables the hover swap on cards. */
-  images: string[]
-  /** Human-readable material summary, e.g. "Solid oak, natural oil". */
-  materials: Localized
-  /** Centimetres. */
-  dimensions: { width: number; depth: number; height: number }
-  finishes: Finish[]
-  availability: Availability
-  /** Country of origin, shown in the specification table. */
-  origin: Localized
-  /** Warranty length in months. */
-  warrantyMonths: number
-  /** Adds the "New" badge and puts the piece in the home-page row. */
-  isNew: boolean
-  /** Eligible for featured placement on the home page. */
-  isFeatured: boolean
-}
-
-export type Collection = {
-  id: string
-  slug: string
-  name: Localized
-  /** One-line summary for the collections index. */
-  tagline: Localized
-  /** The longer story paragraph on the collection page. */
-  story: Localized
-  /** Large cover image for the index page. */
-  coverImage: string
-  /** Gallery shown on the collection detail page. */
-  images: string[]
-}
-
-/* -------------------------------------------------------------------------- */
-/* 3. Staff                                                                   */
+/* Staff                                                                      */
 /* -------------------------------------------------------------------------- */
 
 /**

@@ -38,59 +38,53 @@ was finished.
 
 ## Known issues / lessons
 
-### Dead code: three seed modules nothing imports
+### Dead code: removed, and what it taught
 
-Verified 2026-09-05, on `5cb51c1`. None of this is broken and none of it ships
-— the bundler already tree-shakes all of it — so there is no urgency. It is
-written down because it is invisible from the code: every one of these files
-looks alive until you check who imports it, and nobody does.
+Cleared on 2026-09-05. Kept here because the *way* it hid is worth knowing,
+not because anything is outstanding.
 
-**Three seed-data modules, 1,481 lines, imported by nothing.**
+**What went.** Three seed-data modules that nothing imported —
+`src/data/products.ts` (1,183 lines), `categories.ts` (199) and
+`collections.ts` (99) — along with the shapes in `src/data/types.ts` that
+existed only for them: `SeedProduct`, `SeedCategory`, `Collection`,
+`Localized`, `Subcategory`, `Availability` and `Finish`. Also three query
+functions whose callers had already gone (`fetchProductsByCategorySlug`,
+`fetchFeaturedProducts`, `fetchCategoryBySlug`) and 46 locale keys from each
+of `en.json` and `ka.json`, which emptied the `availability` namespace
+entirely.
 
-| file | lines |
-| --- | --- |
-| `src/data/products.ts` | 1,183 |
-| `src/data/categories.ts` | 199 |
-| `src/data/collections.ts` | 99 |
+`src/data/types.ts` itself stays. It is imported by 29 files and holds the
+database row shapes, which are now the only shapes there are.
 
-They were reachable until `f3c65ce` deleted `src/data/index.ts`, a barrel that
-re-exported them and that nothing imported either. The barrel was the only
-thing referencing them, so they were already unreachable — deleting it only
-made that visible. The app reads products, categories and collections from
-Supabase; these are leftovers from before the database existed, and the SQL
-seed files at the repository root are what actually populates it.
+**Deleting things exposes more dead things, one layer at a time.** This was
+not one clean sweep. Removing the `src/data/index.ts` barrel revealed the
+three seed modules; removing those revealed the seed-only types; removing two
+query functions revealed a third, `fetchCategoryBySlug`, whose only caller had
+been one of the two. Each round needed re-running the scan, and the locale
+count moved from 23 to 41 to 45 to 46 as components came out. If you do this
+again, expect to go round three or four times rather than once, and re-derive
+the numbers each time instead of working from a list.
 
-`src/data/types.ts` is NOT part of this. It is imported by 29 files and must
-stay. Three of its exports belong to the orphans, though, and would go with
-them: `Collection`, `SeedCategory` and `SeedProduct`.
+**Two traps, both of which caught me.**
 
-**Two fetchers in `src/lib/queries.ts`** — `fetchFeaturedProducts` and
-`fetchProductsByCategorySlug` — are dead for a related reason. Their only
-callers were five hooks in `use-catalog.ts` removed in `f3c65ce`, superseded
-by `useCatalogue`, `useProductPage` and `useCategoryPage`.
+A single-level import scan reports a file as *referenced* when its only
+referrer is itself dead. That is why the first audit missed these three
+modules entirely — they looked used, by a barrel that nothing used. Deadness
+is transitive; the scan has to be too.
 
-**41 locale keys in each of `en.json` and `ka.json` have no reference in
-`src/`.** That is up from 23 at the first audit, and the increase is a
-consequence of the same commit: deleting `components/home/hero.tsx` and
-`components/home/value-points.tsx` orphaned the `home.hero*`, `home.why*` and
-`home.stat*` strings they rendered. `admin.categoryDeleteNote` is a different
-kind of fossil — it says categories cannot be deleted from that screen, which
-stopped being true in `833ec03`.
+A plain text search for a locale key misses any key assembled at the call
+site, such as ``t(`admin.slugTitle_${problem}`)`` or
+``t(`b2b.services.${service.id}Name`)``. Strip the dynamic part and search the
+base before concluding a key is unused. Fifteen call sites in this repository
+build keys that way.
 
-**Before deleting any of it, re-derive the numbers rather than trusting this
-note.** They have moved twice already. The check that matters is whether
-anything imports a file, not whether the file looks used:
-
-```
-grep -rE "from ['\"](@/data/products|@/data/categories|@/data/collections)['\"]" src/
-```
-
-Two traps to know about. A single-level import scan will report these three as
-*referenced* while the barrel that referenced them is itself dead — deadness
-is transitive and the first audit missed exactly this. And a plain search for a
-locale key misses the ones built by template literal, such as
-``t(`admin.slugTitle_${problem}`)``; strip the suffix and search the base
-before concluding a key is unused.
+**What actually proved it was safe.** `tsc -b` catches a deleted export the
+moment something still wants it, so the code side verifies itself. Locale keys
+do not — i18next renders the key name as visible text instead of failing — so
+that half was checked by loading every public route in both languages plus
+product pages and the admin login, and scanning the rendered DOM for anything
+key-shaped. Zero hits across 30 page loads. Do the same if you remove more:
+a missing key is invisible to the compiler and obvious to a customer.
 
 ### Admin 2FA: the previous attempt did not work, and why
 

@@ -219,28 +219,6 @@ export async function fetchCategories(signal?: AbortSignal): Promise<Category[]>
   return rows ?? []
 }
 
-/** One category by the slug in the URL. Null when no such category exists. */
-export async function fetchCategoryBySlug(
-  slug: string,
-  signal?: AbortSignal,
-): Promise<Category | null> {
-  const one = (columns: string) => {
-    const query = getSupabase().from('categories').select(columns).eq('slug', slug)
-    return withSignal(query, signal).maybeSingle() as unknown as Promise<{
-      data: Category | null
-      error: PgError | null
-    }>
-  }
-
-  // maybeSingle returns null instead of erroring when nothing matches, which
-  // is exactly what a "category not found" page wants.
-  return withColumnFallback<Category>(
-    () => one(CATEGORY_COLUMNS),
-    () => one(CATEGORY_COLUMNS_FLAT),
-    () => one(CATEGORY_COLUMNS_BASE),
-  )
-}
-
 /**
  * Every product, newest first.
  *
@@ -297,50 +275,6 @@ export async function fetchProductBySlug(
   // the page shows "we could not find that piece" — which is the truth, as far
   // as the public site is concerned.
   return data as Product | null
-}
-
-/**
- * Products inside one category, found by the category's slug.
- *
- * Two round trips rather than a join, because the URL carries the slug but
- * products are linked by `category_id`.
- */
-export async function fetchProductsByCategorySlug(
-  slug: string,
-  signal?: AbortSignal,
-): Promise<Product[]> {
-  const category = await fetchCategoryBySlug(slug, signal)
-  if (!category) return []
-
-  return withArchiveFallback<Product>(async () => {
-    const base = getSupabase()
-      .from('products')
-      .select(PRODUCT_COLUMNS)
-      .eq('category_id', category.id)
-      .order('created_at', { ascending: false })
-
-    return (await withSignal(live(base), signal)) as unknown as {
-      data: Product[] | null
-      error: PgError | null
-    }
-  })
-}
-
-/** Products flagged `featured`, for the home page. */
-export async function fetchFeaturedProducts(limit = 6, signal?: AbortSignal): Promise<Product[]> {
-  return withArchiveFallback<Product>(async () => {
-    const base = getSupabase()
-      .from('products')
-      .select(PRODUCT_COLUMNS)
-      .eq('featured', true)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-
-    return (await withSignal(live(base), signal)) as unknown as {
-      data: Product[] | null
-      error: PgError | null
-    }
-  })
 }
 
 /**
@@ -458,14 +392,13 @@ export type CategoryPageData = {
 /**
  * The category page in two round trips.
  *
- * Deliberately NOT built from fetchCategoryBySlug + fetchProductsByCategorySlug:
- * that pair asks for the category twice (the second function looks it up again
- * internally to turn the slug into an id) and still leaves the page unable to
- * tell "no such category" from "a category with nothing in it" — both arrive as
- * an empty array. Fetching the whole categories table instead answers three
- * things at once: which category this is, whether it exists at all, and what to
- * put in the browse row. The table holds a handful of rows, so it is cheaper
- * than the extra request it replaces.
+ * Deliberately NOT the category-by-slug-then-products-by-category pair this
+ * replaced: that asked for the category twice, and still left the page unable
+ * to tell "no such category" from "a category with nothing in it" — both
+ * arrived as an empty array. Fetching the whole categories table instead
+ * answers three things at once: which category this is, whether it exists at
+ * all, and what to put in the browse row. The table holds a handful of rows,
+ * so it is cheaper than the extra request it replaces.
  */
 export async function fetchCategoryPage(
   slug: string,
