@@ -47,12 +47,27 @@ function inDisplayOrder(): Language[] {
 export function LanguageSwitcher({
   className,
   size = 'md',
+  lang: langOverride,
+  onSwitch,
 }: {
   className?: string
   /** "sm" is used inside the mobile drawer, where space is tighter. */
   size?: 'sm' | 'md'
+  /**
+   * Drive the control from somewhere other than the URL.
+   *
+   * The public site's language IS the first path segment, and the default
+   * behaviour reads and rewrites it. The back office has no such segment —
+   * /admin/categories is the whole address — so it passes its own pair and
+   * `useLanguage`'s navigation is left unused. See useAdminLanguage.
+   */
+  lang?: Language
+  onSwitch?: (next: Language) => void
 }) {
-  const { lang, switchLanguage, t } = useLanguage()
+  const fromUrl = useLanguage()
+  const lang = langOverride ?? fromUrl.lang
+  const switchLanguage = onSwitch ?? fromUrl.switchLanguage
+  const { t } = fromUrl
 
   const pad = size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5'
   // Without a floor these are ~20px tap targets on a phone.

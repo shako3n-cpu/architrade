@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { useAdminLanguage } from '@/hooks/use-admin-language'
+import { LanguageSwitcher } from '@/components/layout/language-switcher'
 import { SUPABASE_CONFIG_BODY_KEY, SupabaseConfigError } from '@/lib/supabase'
 import { takeSignOutReason } from '@/lib/auth'
 import { SITE_NAME } from '@/config/site'
@@ -23,6 +25,7 @@ export function AdminLogin() {
   const { status, signIn } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
+  const { lang, switchLanguage } = useAdminLanguage()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -68,6 +71,11 @@ export function AdminLogin() {
           <p className="mt-2 text-[10px] tracking-[0.18em] text-brass uppercase">
             {t('admin.badge')}
           </p>
+
+          {/* Here as well as in the header: this screen is the one somebody
+              sees BEFORE they are signed in, and being unable to read it is
+              the worst moment to have no way to change the language. */}
+          <LanguageSwitcher size="sm" className="mt-4 justify-center" lang={lang} onSwitch={switchLanguage} />
         </div>
 
         {timedOut && (

@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { AuthProvider } from '@/hooks/use-auth'
 import { SessionTimeout } from '@/components/admin/session-timeout'
+import { useAdminLanguage } from '@/hooks/use-admin-language'
 
 /**
  * The parent route for everything under /admin, including the login screen.
@@ -12,11 +13,17 @@ import { SessionTimeout } from '@/components/admin/session-timeout'
  * The admin area sits OUTSIDE the /:lang routes on purpose. It is a private
  * back office, not part of the public site: there is no reason for it to have
  * a Georgian address and an English address, and keeping it out means the
- * public header and footer are not drawn around it either. It still appears in
- * whichever language the manager last chose on the site, because i18next holds
- * that globally.
+ * public header and footer are not drawn around it either.
+ *
+ * Which leaves the language to be settled some other way, since there is no
+ * path segment to read it from. `useAdminLanguage` applies the remembered
+ * choice here, above the login screen as well as the dashboard — the sign-in
+ * form is the first thing anybody sees and it was Georgian regardless of who
+ * was looking at it.
  */
 export function AdminLayout() {
+  useAdminLanguage()
+
   return (
     <AuthProvider>
       <div className="min-h-dvh bg-background">

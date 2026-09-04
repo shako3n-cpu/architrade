@@ -4,6 +4,8 @@ import { Link, Navigate, NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { useAdminLanguage } from '@/hooks/use-admin-language'
+import { LanguageSwitcher } from '@/components/layout/language-switcher'
 import { SITE_NAME } from '@/config/site'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -109,6 +111,7 @@ function NotAnAdmin() {
 function AdminChrome({ children }: { children: ReactNode }) {
   const { email, role, isAdmin, signOut } = useAuth()
   const { t } = useTranslation()
+  const { lang, switchLanguage } = useAdminLanguage()
 
   return (
     <>
@@ -141,6 +144,13 @@ function AdminChrome({ children }: { children: ReactNode }) {
 
           <div className="ml-auto flex items-center gap-4">
             {email && <span className="hidden text-xs text-muted sm:inline">{email}</span>}
+
+            {/* The office has a full English translation and, until now, no
+                way to ask for it: with no language in the address there was
+                nothing for RootLayout to read, so the dashboard was Georgian
+                for everyone. Same control as the shop's, driven by the stored
+                preference instead of the URL. */}
+            <LanguageSwitcher size="sm" lang={lang} onSwitch={switchLanguage} />
 
             <button
               type="button"
