@@ -197,10 +197,3 @@ export const categories: SeedCategory[] = [
 export function getCategoryBySlug(slug: string) {
   return categories.find((category) => category.slug === slug)
 }
-
-/** Look up one subcategory inside a category. Returns undefined if either is unknown. */
-export function getSubcategory(categorySlug: string, subcategorySlug: string) {
-  return getCategoryBySlug(categorySlug)?.subcategories.find(
-    (subcategory) => subcategory.slug === subcategorySlug,
-  )
-}

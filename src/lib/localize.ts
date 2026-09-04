@@ -1,5 +1,5 @@
 import type { Language } from '@/config/site'
-import type { Category, CategoryGroup, Product } from '@/data/types'
+import type { Category, Product } from '@/data/types'
 
 /**
  * ============================================================================
@@ -19,19 +19,6 @@ import type { Category, CategoryGroup, Product } from '@/data/types'
 
 export function categoryTitle(category: Category, lang: Language): string {
   return lang === 'ka' ? category.title_ka : category.title_en
-}
-
-/**
- * Which half of the catalogue a category sits in.
- *
- * Defaults to 'home' rather than throwing, because `group_key` is optional —
- * see the note on the Category type. A database that predates the column puts
- * everything under home furniture, which is wrong but harmless, and the home
- * page notices and collapses its two tabs into one rather than showing an
- * empty Office panel.
- */
-export function categoryGroup(category: Category): CategoryGroup {
-  return category.group_key === 'office' ? 'office' : 'home'
 }
 
 /** The category's banner photograph, or null when the row has none. */

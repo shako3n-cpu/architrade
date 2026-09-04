@@ -26,12 +26,6 @@ export interface CatalogFilters {
   featuredOnly: boolean
 }
 
-export const EMPTY_FILTERS: CatalogFilters = {
-  category: '',
-  query: '',
-  featuredOnly: false,
-}
-
 /** True when nothing is narrowed — used to hide the "clear" control. */
 export function isUnfiltered(filters: CatalogFilters): boolean {
   return !filters.category && !filters.query.trim() && !filters.featuredOnly

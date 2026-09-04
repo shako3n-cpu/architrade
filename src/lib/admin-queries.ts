@@ -177,28 +177,6 @@ export async function createCategory(draft: CategoryDraft): Promise<Category> {
 }
 
 /**
- * Renames a category — its two titles only.
- *
- * The slug is deliberately NOT editable. It is the address of the category
- * page, so changing it breaks every existing link to that page, including any
- * a customer has bookmarked or that a search engine has indexed.
- */
-export async function renameCategory(
-  id: string,
-  titles: { title_ka: string; title_en: string },
-): Promise<Category> {
-  const { data, error } = await getSupabase()
-    .from('categories')
-    .update(titles)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as Category
-}
-
-/**
  * Any subset of a category's editable fields.
  *
  * One function rather than one per field, because every caller on the tree

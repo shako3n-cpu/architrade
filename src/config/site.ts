@@ -74,9 +74,9 @@ export const CONTACT = {
 /**
  * Built from the handles above rather than written out again, so the footer
  * link and the Messenger deep link cannot end up pointing at two different
- * pages. Not built with facebookPageUrl() from src/lib/contact.ts, even
- * though that produces the same string: this file must not import from lib,
- * which already imports from here.
+ * pages. It is spelled out here rather than shared with src/lib/contact.ts,
+ * which builds the same string for its own use: this file must not import
+ * from lib, which already imports from here.
  *
  * PLACEHOLDER: the Instagram and Pinterest handles are still guesses — give
  * them the same treatment as facebookHandle once the real accounts are known.
@@ -129,7 +129,6 @@ export const FOOTER_NAV = [
 ] as const
 
 export const SITE_NAME = 'ARCHTRADE'
-export const FOUNDED_YEAR = 2009
 
 /* -------------------------------------------------------------------------- */
 /* Hostnames                                                                  */

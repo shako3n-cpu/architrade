@@ -72,8 +72,6 @@ export const SERVICES: readonly Service[] = [
  */
 export const PROCESS_STEPS = ['brief', 'specify', 'supply', 'install'] as const
 
-export type ProcessStep = (typeof PROCESS_STEPS)[number]
-
 /* -------------------------------------------------------------------------- */
 /* Partner houses                                                             */
 /* -------------------------------------------------------------------------- */

@@ -40,11 +40,6 @@ export function messengerUrl(ref?: string): string {
   return ref ? `${base}?ref=${encodeURIComponent(ref)}` : base
 }
 
-/** The company's Facebook page itself, as opposed to a chat with it. */
-export function facebookPageUrl(): string {
-  return `https://facebook.com/${CONTACT.facebookHandle}`
-}
-
 /**
  * The absolute address of a page, for pasting into an enquiry message.
  *

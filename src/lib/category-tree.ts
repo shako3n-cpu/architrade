@@ -181,8 +181,3 @@ export function subtreeIds(nodes: CategoryNode[], slug: string): string[] {
   if (!node) return []
   return flattenTree([node]).map((entry) => entry.category.id)
 }
-
-/** Top-level rows the office has pinned, for the menu's highlighted column. */
-export function featuredNodes(nodes: CategoryNode[]): CategoryNode[] {
-  return flattenTree(nodes).filter((node) => node.category.featured === true)
-}

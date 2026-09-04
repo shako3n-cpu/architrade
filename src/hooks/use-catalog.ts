@@ -3,13 +3,8 @@ import {
   fetchBrands,
   fetchCatalogue,
   fetchCategories,
-  fetchCategoryBySlug,
   fetchCategoryPage,
-  fetchFeaturedProducts,
-  fetchProductBySlug,
   fetchProductPage,
-  fetchProducts,
-  fetchProductsByCategorySlug,
 } from '@/lib/queries'
 import { useAsync } from './use-async'
 
@@ -19,7 +14,7 @@ import { useAsync } from './use-async'
  * ----------------------------------------------------------------------------
  * What pages actually call. Each returns the same shape:
  *
- *   const { data, status, error, retry } = useProducts()
+ *   const { data, status, error, retry } = useCategories()
  *
  *   status === 'loading'  -> show the skeleton
  *   status === 'error'    -> show the error state, wire its button to retry
@@ -34,11 +29,6 @@ export function useCategories() {
   return useAsync(useCallback((signal: AbortSignal) => fetchCategories(signal), []), [])
 }
 
-/** Every product in the database, newest first. */
-export function useProducts() {
-  return useAsync(useCallback((signal: AbortSignal) => fetchProducts(signal), []), [])
-}
-
 /** Categories and products together, fetched in parallel. */
 export function useCatalogue(includeArchived = false) {
   return useAsync(
@@ -47,38 +37,6 @@ export function useCatalogue(includeArchived = false) {
       [includeArchived],
     ),
     [includeArchived],
-  )
-}
-
-/** One category by slug. `data` is null when the slug matches nothing. */
-export function useCategory(slug: string) {
-  return useAsync(
-    useCallback((signal: AbortSignal) => fetchCategoryBySlug(slug, signal), [slug]),
-    [slug],
-  )
-}
-
-/** One product by slug. `data` is null when the slug matches nothing. */
-export function useProduct(slug: string) {
-  return useAsync(
-    useCallback((signal: AbortSignal) => fetchProductBySlug(slug, signal), [slug]),
-    [slug],
-  )
-}
-
-/** Everything inside one category, found by that category's slug. */
-export function useCategoryProducts(slug: string) {
-  return useAsync(
-    useCallback((signal: AbortSignal) => fetchProductsByCategorySlug(slug, signal), [slug]),
-    [slug],
-  )
-}
-
-/** Products flagged `featured`, for the home page. */
-export function useFeaturedProducts(limit = 6) {
-  return useAsync(
-    useCallback((signal: AbortSignal) => fetchFeaturedProducts(limit, signal), [limit]),
-    [limit],
   )
 }
 
@@ -103,8 +61,7 @@ export function useProductPage(slug: string) {
  *
  * `data.category` is null when the slug matches nothing, which the page turns
  * into a not-found state rather than an error — a mistyped URL is not a
- * failure of the server. That is a distinction `useCategoryProducts` cannot
- * make, since it reports both cases as an empty array.
+ * failure of the server.
  */
 export function useCategoryPage(slug: string) {
   return useAsync(

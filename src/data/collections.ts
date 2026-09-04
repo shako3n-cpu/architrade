@@ -97,8 +97,3 @@ export const collections: Collection[] = [
     ],
   },
 ]
-
-/** Look up one collection by its slug. Returns undefined if the slug is unknown. */
-export function getCollectionBySlug(slug: string) {
-  return collections.find((collection) => collection.slug === slug)
-}
