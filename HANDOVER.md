@@ -38,6 +38,60 @@ was finished.
 
 ## Known issues / lessons
 
+### Dead code: three seed modules nothing imports
+
+Verified 2026-09-05, on `5cb51c1`. None of this is broken and none of it ships
+— the bundler already tree-shakes all of it — so there is no urgency. It is
+written down because it is invisible from the code: every one of these files
+looks alive until you check who imports it, and nobody does.
+
+**Three seed-data modules, 1,481 lines, imported by nothing.**
+
+| file | lines |
+| --- | --- |
+| `src/data/products.ts` | 1,183 |
+| `src/data/categories.ts` | 199 |
+| `src/data/collections.ts` | 99 |
+
+They were reachable until `f3c65ce` deleted `src/data/index.ts`, a barrel that
+re-exported them and that nothing imported either. The barrel was the only
+thing referencing them, so they were already unreachable — deleting it only
+made that visible. The app reads products, categories and collections from
+Supabase; these are leftovers from before the database existed, and the SQL
+seed files at the repository root are what actually populates it.
+
+`src/data/types.ts` is NOT part of this. It is imported by 29 files and must
+stay. Three of its exports belong to the orphans, though, and would go with
+them: `Collection`, `SeedCategory` and `SeedProduct`.
+
+**Two fetchers in `src/lib/queries.ts`** — `fetchFeaturedProducts` and
+`fetchProductsByCategorySlug` — are dead for a related reason. Their only
+callers were five hooks in `use-catalog.ts` removed in `f3c65ce`, superseded
+by `useCatalogue`, `useProductPage` and `useCategoryPage`.
+
+**41 locale keys in each of `en.json` and `ka.json` have no reference in
+`src/`.** That is up from 23 at the first audit, and the increase is a
+consequence of the same commit: deleting `components/home/hero.tsx` and
+`components/home/value-points.tsx` orphaned the `home.hero*`, `home.why*` and
+`home.stat*` strings they rendered. `admin.categoryDeleteNote` is a different
+kind of fossil — it says categories cannot be deleted from that screen, which
+stopped being true in `833ec03`.
+
+**Before deleting any of it, re-derive the numbers rather than trusting this
+note.** They have moved twice already. The check that matters is whether
+anything imports a file, not whether the file looks used:
+
+```
+grep -rE "from ['\"](@/data/products|@/data/categories|@/data/collections)['\"]" src/
+```
+
+Two traps to know about. A single-level import scan will report these three as
+*referenced* while the barrel that referenced them is itself dead — deadness
+is transitive and the first audit missed exactly this. And a plain search for a
+locale key misses the ones built by template literal, such as
+``t(`admin.slugTitle_${problem}`)``; strip the suffix and search the base
+before concluding a key is unused.
+
 ### Admin 2FA: the previous attempt did not work, and why
 
 An earlier branch (`Preview`, since deleted) added a six-digit email code to
