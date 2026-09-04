@@ -130,6 +130,28 @@ export function flattenTree(nodes: CategoryNode[]): CategoryNode[] {
   return nodes.flatMap((node) => [node, ...flattenTree(node.children)])
 }
 
+/**
+ * The same order as `flattenTree`, minus anything inside a collapsed branch.
+ *
+ * A collapsed row is still returned — it has to be, or there would be nothing
+ * left to click to open it again. Its descendants are what disappear, at every
+ * depth: collapsing "Office" hides its children and their children in one go,
+ * because the recursion simply stops rather than filtering afterwards.
+ *
+ * Collapsing is a view, never a fact about the catalogue. Nothing here reaches
+ * the database, and the public site does not import it.
+ */
+export function visibleRows(
+  nodes: CategoryNode[],
+  collapsed: ReadonlySet<string>,
+): CategoryNode[] {
+  return nodes.flatMap((node) =>
+    collapsed.has(node.category.id)
+      ? [node]
+      : [node, ...visibleRows(node.children, collapsed)],
+  )
+}
+
 /** The node for one slug, anywhere in the tree. Null when there is no such row. */
 export function findNode(nodes: CategoryNode[], slug: string): CategoryNode | null {
   for (const node of nodes) {

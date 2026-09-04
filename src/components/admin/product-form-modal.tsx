@@ -75,12 +75,27 @@ export function ProductFormModal({
    *
    * Indented depth-first instead, the same treatment the category screen's own
    * parent picker uses, so the two read identically.
+   *
+   * A CATEGORY THAT HAS SUBCATEGORIES IS A HEADING, NOT A SHELF.
+   *
+   * "Exterior facade" holds doors and windows; the doors hold the products.
+   * Filing a piece under the heading itself puts it on a page whose whole job
+   * is to list the subcategories, so it appears in neither — and nothing about
+   * a flat, equal-looking list said so. Parents are still drawn, because they
+   * are the only thing that says WHERE a child sits, but they cannot be
+   * chosen.
+   *
+   * With one exception: whatever the product is filed under right now stays
+   * selectable even if it is a parent. Rows filed before this rule existed are
+   * real, and a form that will not show the value it was opened with is a form
+   * that re-files a product the moment it is saved.
    */
   const categoryOptions = flattenTree(buildCategoryTree(categories)).map((node) => ({
     value: node.category.id,
     label: `${' '.repeat(node.depth * 3)}${
       i18n.language === 'ka' ? node.category.title_ka : node.category.title_en
     }`,
+    disabled: node.children.length > 0 && node.category.id !== draft.category_id,
   }))
 
   /*
