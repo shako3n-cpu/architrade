@@ -15,6 +15,7 @@ import {
 import { QueryState } from '@/components/ui/query-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { StaffForm } from '@/components/admin/staff-form'
+import { OwnPasswordForm } from '@/components/admin/own-password-form'
 import { ResetPasswordDialog } from '@/components/admin/reset-password-dialog'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +44,11 @@ export function AdminUsers() {
       <StaffForm onCreated={staff.retry} />
 
       <QueryState result={staff}>{(rows) => <StaffTable rows={rows} onChanged={staff.retry} />}</QueryState>
+
+      {/* Below the staff list, not above it. This screen is opened to manage
+          other people far more often than to change your own password, and the
+          form is the kind of thing that only needs finding twice a year. */}
+      <OwnPasswordForm />
     </>
   )
 }

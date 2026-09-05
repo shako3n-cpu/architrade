@@ -180,6 +180,71 @@ export async function hasValidSession(): Promise<boolean> {
 }
 
 /**
+ * ============================================================================
+ * CHANGING YOUR OWN PASSWORD
+ * ----------------------------------------------------------------------------
+ * Nothing here needs the service_role key or an edge function. Supabase lets a
+ * signed-in account change its own password from the browser, which is the one
+ * password operation that does not involve reaching into somebody else's
+ * account — see admin-users/index.ts for the one that does.
+ *
+ * THE CURRENT PASSWORD IS CHECKED, AND SUPABASE DOES NOT CHECK IT
+ *   `updateUser({ password })` will change the password of whoever holds the
+ *   session, without asking what the old one was. On its own that turns an
+ *   unlocked laptop into a permanent account takeover: anybody who walks past
+ *   a signed-in dashboard can set a password only they know, and the real
+ *   owner is locked out of an account that is still theirs on paper.
+ *
+ *   So the current password is verified first, by using it. Signing in with it
+ *   is the only way to prove it — there is no "check this password" endpoint —
+ *   and a failure here is the credential being wrong, which is exactly the
+ *   answer wanted. The session that comes back belongs to the same account, so
+ *   the person stays signed in either way.
+ *
+ * AND EVERY OTHER SESSION IS ENDED
+ *   `scope: 'others'` signs out every device except this one. Somebody
+ *   changing their own password usually has a reason, and "my account may have
+ *   been got into" is high on the list; leaving the other sessions running
+ *   would answer that with a new password and an unchanged intruder. The
+ *   current tab is deliberately spared — being thrown to the login screen as
+ *   the reward for changing your password reads as a failure.
+ * ============================================================================
+ */
+export async function changeOwnPassword(current: string, next: string): Promise<void> {
+  const supabase = getSupabase()
+
+  const { data } = await supabase.auth.getSession()
+  const email = data.session?.user.email
+  if (!email) throw new Error('notSignedIn')
+
+  // Proof of the old password. Same account, so this replaces the session with
+  // an equivalent one rather than signing anybody in as somebody else.
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email,
+    password: current,
+  })
+  // Deliberately not the message from Supabase: it says "Invalid login
+  // credentials", which names the email as a possible culprit when the email
+  // was not typed by anybody and cannot be wrong.
+  if (reauthError) throw new Error('wrongCurrentPassword')
+
+  const { error: updateError } = await supabase.auth.updateUser({ password: next })
+  if (updateError) throw updateError
+
+  /*
+   * Best effort, and deliberately not fatal. The password IS changed by this
+   * point; reporting a failure here would say the change did not happen and
+   * send somebody round again. A session left running elsewhere is worth
+   * knowing about, but not at the cost of lying about what just worked.
+   */
+  try {
+    await supabase.auth.signOut({ scope: 'others' })
+  } catch {
+    // Nothing useful to do. The password change stands.
+  }
+}
+
+/**
  * Whether the SERVER has stopped accepting this session.
  *
  * `hasValidSession` above never leaves the browser: it reads the stored token
