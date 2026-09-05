@@ -433,6 +433,46 @@ export async function createStaffAccount(input: {
   throw detail ? new Error(detail) : error
 }
 
+/**
+ * The shortest password the edge function will accept.
+ *
+ * A copy of `MIN_PASSWORD_LENGTH` in supabase/functions/admin-users/index.ts,
+ * which is the one that is ENFORCED — this exists so a field can state the
+ * rule before the request is sent, not so the browser can be trusted to keep
+ * it.
+ */
+export const MIN_STAFF_PASSWORD_LENGTH = 8
+
+/**
+ * Sets an operator's password. ADMINS ONLY, OPERATORS ONLY.
+ *
+ * The service_role key is what changes a password in Supabase Auth, so this
+ * goes through the same edge function as creating and removing accounts rather
+ * than anywhere near the browser. See supabase/functions/admin-users/index.ts,
+ * which re-checks the caller is an admin and the TARGET is an operator — the
+ * role is read from the table there, not taken from anything sent here.
+ *
+ * NOT A RESET LINK, BECAUSE THERE IS NOWHERE TO SEND ONE
+ *   An emailed link is the better flow and this project cannot run it: there
+ *   is no mail sender configured, which is also why new accounts are created
+ *   with `email_confirm: true`. The password is set directly and read out to
+ *   the operator instead.
+ */
+export async function resetOperatorPassword(userId: string, password: string): Promise<void> {
+  const { error } = await getSupabase().functions.invoke('admin-users', {
+    method: 'PATCH',
+    body: { user_id: userId, password },
+  })
+
+  if (!error) return
+
+  const status = (error as { context?: { status?: number } }).context?.status
+  if (status === 404) throw new FunctionMissingError('admin-users is not deployed')
+
+  const detail = await readFunctionError(error)
+  throw detail ? new Error(detail) : error
+}
+
 /* -------------------------------------------------------------------------- */
 /* Brands                                                                     */
 /* -------------------------------------------------------------------------- */

@@ -56,7 +56,11 @@ function cors(origin: string | null) {
     // site on the internet.
     'Access-Control-Allow-Origin': origin ?? '*',
     'Access-Control-Allow-Headers': ALLOWED_HEADERS,
-    'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
+    // PATCH belongs here, not only in the method check below. A method the
+    // preflight does not name is refused by the BROWSER, before the request is
+    // ever sent — so the function would read as correct and still fail, with a
+    // CORS message that says nothing about a method being missing.
+    'Access-Control-Allow-Methods': 'POST, PATCH, DELETE, OPTIONS',
     Vary: 'Origin',
   }
 }
@@ -96,7 +100,7 @@ Deno.serve(async (request: Request) => {
   const origin = request.headers.get('origin')
 
   if (request.method === 'OPTIONS') return preflight(request)
-  if (request.method !== 'POST' && request.method !== 'DELETE') {
+  if (request.method !== 'POST' && request.method !== 'DELETE' && request.method !== 'PATCH') {
     return json({ error: 'Method not allowed' }, 405, origin)
   }
 
@@ -159,6 +163,10 @@ Deno.serve(async (request: Request) => {
 
   if (request.method === 'DELETE') {
     return await removeStaffMember(service, request, origin, caller.user.id)
+  }
+
+  if (request.method === 'PATCH') {
+    return await resetOperatorPassword(service, request, origin)
   }
 
   /* ---- 4. Is the request sound? -------------------------------------- */
@@ -324,4 +332,90 @@ async function removeStaffMember(
   }
 
   return json({ removed: userId, identity: 'deleted' }, 200, origin)
+}
+
+
+/**
+ * ============================================================================
+ * SET AN OPERATOR'S PASSWORD
+ * ----------------------------------------------------------------------------
+ * PATCH /functions/v1/admin-users
+ *   Authorization: Bearer <the calling admin's access token>
+ *   { "user_id": "...", "password": "..." }
+ *
+ * WHY THE ADMIN TYPES A PASSWORD INSTEAD OF SENDING A LINK
+ *   The ordinary answer to "I have forgotten my password" is an emailed reset
+ *   link, and it is the better one, because nobody but the account holder ever
+ *   learns the secret. This project has no mail sender configured — the create
+ *   path above sets `email_confirm: true` for exactly that reason — so a link
+ *   would be generated and never delivered. Setting the password directly and
+ *   handing it over is the only flow that works here. If SMTP is ever
+ *   configured, replace this with `generateLink` and delete it.
+ *
+ * OPERATORS ONLY, AND THAT IS THE WHOLE SECURITY ARGUMENT
+ *   Whoever can set an account's password can sign in as that account. An
+ *   admin already outranks an operator in every way this dashboard offers, so
+ *   being able to reset one grants no reach they did not have. Another ADMIN
+ *   is a different matter: that is one peer silently taking over another's
+ *   fully privileged account, and it is refused here. So is the caller's own
+ *   account, which keeps this endpoint from being a way to change your own
+ *   password without knowing the old one.
+ *
+ *   A locked-out administrator is recovered from the Supabase console. That is
+ *   deliberately more friction than a click, and it is the right amount for
+ *   an operation nobody should be doing weekly.
+ *
+ * THE ROLE IS READ FROM THE TABLE, NOT FROM THE REQUEST
+ *   The caller sends a user_id and nothing else that matters. Whether that id
+ *   belongs to an operator is looked up here, so a caller cannot claim a
+ *   target is an operator in order to reset an admin.
+ * ============================================================================
+ */
+async function resetOperatorPassword(
+  service: ReturnType<typeof createClient>,
+  request: Request,
+  origin: string | null,
+) {
+  let body: { user_id?: string; password?: string }
+  try {
+    body = await request.json()
+  } catch {
+    return json({ error: 'Expected a JSON body' }, 400, origin)
+  }
+
+  const userId = body.user_id?.trim() ?? ''
+  const password = body.password ?? ''
+
+  if (!userId) return json({ error: 'A user_id is required' }, 400, origin)
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, 400, origin)
+  }
+
+  const { data: target, error: targetError } = await service
+    .from('admins')
+    .select('role')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (targetError) {
+    return json({ error: 'Could not look that account up', detail: targetError.message }, 500, origin)
+  }
+
+  // Not on the staff list at all. Refused rather than reported, because this
+  // endpoint has no business touching an account the dashboard does not manage
+  // — and answering differently for "no such user" would turn it into a way to
+  // ask which ids exist.
+  if (!target) return json({ error: 'That account is not on the staff list' }, 404, origin)
+
+  if (target.role !== 'operator') {
+    return json({ error: 'Only an operator password can be reset here' }, 403, origin)
+  }
+
+  const { error: updateError } = await service.auth.admin.updateUserById(userId, { password })
+
+  if (updateError) return json({ error: updateError.message }, 400, origin)
+
+  // The password is NOT echoed. The caller sent it and already has it; sending
+  // it back only widens where it can be logged.
+  return json({ reset: userId }, 200, origin)
 }

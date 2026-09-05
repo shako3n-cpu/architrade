@@ -1,18 +1,21 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { UserMinus } from 'lucide-react'
+import { KeyRound, UserMinus } from 'lucide-react'
 import type { StaffMember, StaffRole } from '@/data/types'
 import { useAuth } from '@/hooks/use-auth'
 import { useAsync } from '@/hooks/use-async'
 import {
   fetchStaff,
   FunctionMissingError,
+  MIN_STAFF_PASSWORD_LENGTH,
   removeStaff,
+  resetOperatorPassword,
   updateStaffRole,
 } from '@/lib/admin-queries'
 import { QueryState } from '@/components/ui/query-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { StaffForm } from '@/components/admin/staff-form'
+import { ResetPasswordDialog } from '@/components/admin/reset-password-dialog'
 import { cn } from '@/lib/utils'
 
 /**
@@ -51,6 +54,11 @@ function StaffTable({ rows, onChanged }: { rows: StaffMember[]; onChanged: () =>
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pendingRemove, setPendingRemove] = useState<StaffMember | null>(null)
+  const [pendingReset, setPendingReset] = useState<StaffMember | null>(null)
+  /* Only who it was for, never the password itself — the administrator typed
+     it and already has it, so keeping a copy here would buy nothing and mean a
+     secret sat in application state for the rest of the session. */
+  const [resetDone, setResetDone] = useState<string | null>(null)
 
   /**
    * Both actions fail the same way and are reported the same way. The message
@@ -145,6 +153,27 @@ function StaffTable({ rows, onChanged }: { rows: StaffMember[]; onChanged: () =>
 
                   <td className="p-3">
                     <div className="flex justify-end">
+                      {/* OPERATORS ONLY, and the button is absent rather than
+                          disabled for anybody else. A greyed-out control is a
+                          promise that the right circumstances would enable it,
+                          and no circumstances enable this one: the edge
+                          function refuses any target that is not an operator,
+                          because setting a password is being able to sign in
+                          as that person and an admin resetting an admin is one
+                          peer quietly taking over another's account. */}
+                      {member.role === 'operator' && (
+                        <button
+                          type="button"
+                          disabled={busyId === member.user_id}
+                          onClick={() => setPendingReset(member)}
+                          title={t('admin.staffResetPassword')}
+                          aria-label={t('admin.staffResetPassword')}
+                          className="inline-flex size-11 items-center justify-center text-muted transition-colors duration-300 hover:text-brass disabled:opacity-30 sm:size-9"
+                        >
+                          <KeyRound aria-hidden="true" className="size-4 stroke-[1.25]" />
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         disabled={isMe || busyId === member.user_id}
@@ -163,6 +192,37 @@ function StaffTable({ rows, onChanged }: { rows: StaffMember[]; onChanged: () =>
           </tbody>
         </table>
       </div>
+
+      <ResetPasswordDialog
+        open={pendingReset !== null}
+        onOpenChange={(next) => {
+          if (!next) setPendingReset(null)
+        }}
+        name={pendingReset?.email ?? ''}
+        busy={pendingReset !== null && busyId === pendingReset.user_id}
+        minLength={MIN_STAFF_PASSWORD_LENGTH}
+        onSubmit={(password) => {
+          if (!pendingReset) return
+          const member = pendingReset
+          setPendingReset(null)
+          setResetDone(null)
+
+          void run(member.user_id, async () => {
+            await resetOperatorPassword(member.user_id, password)
+            setResetDone(member.email ?? member.user_id)
+          })
+        }}
+      />
+
+      {/* Says it worked and stops there. The password is not repeated back:
+          the administrator chose it a moment ago and is about to read it out,
+          so printing it again only puts it on a screen somebody else can be
+          standing behind. */}
+      {resetDone && (
+        <p className="mt-6 border border-brass/40 bg-brass/5 p-4 text-sm text-ink">
+          {t('admin.staffResetDoneBody', { name: resetDone })}
+        </p>
+      )}
 
       <ConfirmDialog
         open={pendingRemove !== null}
