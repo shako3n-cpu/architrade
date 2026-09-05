@@ -22,7 +22,7 @@ import { TextField } from '@/components/admin/field'
  * would be worse than no link.
  */
 export function AdminLogin() {
-  const { status, signIn } = useAuth()
+  const { status, isAdmin, signIn } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
   const { lang, switchLanguage } = useAdminLanguage()
@@ -41,10 +41,30 @@ export function AdminLogin() {
    */
   const [timedOut] = useState(() => takeSignOutReason() === 'idle')
 
-  // Already signed in — go where they were headed, or to the dashboard.
+  /*
+   * Already signed in — go where they were headed, if they may go there.
+   *
+   * RequireAdmin remembers the address somebody was refused at so signing in
+   * can finish the journey, which is right for a session that simply expired
+   * and wrong for a question of rank. An operator whose session died on
+   * /admin/users was sent back to /admin/users and met the administrators-only
+   * screen: a refusal as the first thing you see after typing a correct
+   * password, on a page they had no link to and could not have chosen.
+   *
+   * So the stored address is honoured only when the person can actually use
+   * it. Everyone else lands on the products table, which is the screen this
+   * dashboard is mostly for.
+   *
+   * The refusal page itself stays. It is the right answer for an operator who
+   * types the address deliberately or follows a colleague's link — that is a
+   * wrong turn and deserves an explanation. It is not the right answer to
+   * "you have just signed in".
+   */
   if (status === 'ready') {
     const from = (location.state as { from?: string } | null)?.from
-    return <Navigate to={from && from.startsWith('/admin') ? from : '/admin'} replace />
+    const allowed =
+      from !== undefined && from.startsWith('/admin') && (isAdmin || !isAdminOnlyPath(from))
+    return <Navigate to={allowed ? from : '/admin'} replace />
   }
 
   const submit = async (event: React.FormEvent) => {
@@ -147,4 +167,17 @@ function describe(cause: unknown, t: TFunction): string {
   if (/failed to fetch|network/i.test(message)) return t('state.errorBody')
 
   return t('admin.errorUnknown', { message })
+}
+
+/**
+ * Addresses that RequireAdmin guards with `adminOnly`.
+ *
+ * Kept beside the redirect that needs it rather than exported from the route
+ * table, because it answers a different question: not "who may render this"
+ * — RequireAdmin still decides that, and is what actually enforces it — but
+ * "is it kind to send somebody here". A path missing from this list costs a
+ * refusal screen, not access.
+ */
+function isAdminOnlyPath(path: string): boolean {
+  return path.startsWith('/admin/users')
 }
