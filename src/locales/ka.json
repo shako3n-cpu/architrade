@@ -190,6 +190,7 @@
     "searchPlaceholder": "ძებნა სახელით…",
     "searchLabel": "პროდუქტების ძებნა სახელით",
     "filterByCategory": "ფილტრი კატეგორიით",
+    "allInside": "ყველა — {{name}}",
     "allCategories": "ყველა კატეგორია",
     "showing": "ნაჩვენებია {{shown}} / {{total}}",
     "colPhoto": "ფოტო",

@@ -32,6 +32,15 @@ import { SelectField } from './field'
  *   shows its chain exactly as stored and reports the value unchanged; nothing
  *   is re-filed by the act of looking at it. The moment that row is touched —
  *   any level re-picked — the rule applies and a leaf must be reached.
+ *
+ * FILTERING ASKS THE SAME QUESTION AND WANTS A DIFFERENT ANSWER
+ *   `allowSections` makes a section a legal choice, because "show me
+ *   everything in Office" is a perfectly good thing to ask a table even though
+ *   it is not a place to file a chair. `bare` drops the labels and the
+ *   vertical rhythm, so the same control can sit on one line beside a search
+ *   box, and turns the empty option into a real choice — "All categories"
+ *   rather than a disabled prompt — since clearing a filter is something you
+ *   do on purpose.
  */
 export function CategoryPicker({
   categories,
@@ -39,6 +48,8 @@ export function CategoryPicker({
   onChange,
   language,
   required = false,
+  allowSections = false,
+  bare = false,
 }: {
   categories: Category[]
   /** The chosen category id, or '' for nothing yet. */
@@ -46,6 +57,10 @@ export function CategoryPicker({
   onChange: (categoryId: string) => void
   language: string
   required?: boolean
+  /** Report a section as soon as it is picked, instead of demanding a leaf. */
+  allowSections?: boolean
+  /** Inline, unlabelled, and with a selectable empty option. For filtering. */
+  bare?: boolean
 }) {
   const { t } = useTranslation()
   const tree = buildCategoryTree(categories)
@@ -96,22 +111,58 @@ export function CategoryPicker({
     setPath(next)
 
     const deepest = next.length > 0 ? findByIds(tree, next) : null
-    // A section reports nothing. The form's own `required` then holds the save
-    // until the next dropdown is answered.
-    onChange(deepest && deepest.children.length === 0 ? deepest.category.id : '')
+    // Filing wants a leaf: a section reports nothing, and the form's own
+    // `required` holds the save until the next dropdown is answered. Filtering
+    // takes the section itself and shows the whole branch beneath it.
+    const answered = deepest !== null && (allowSections || deepest.children.length === 0)
+    onChange(answered ? deepest.category.id : '')
   }
 
   const deepest = chain.length > 0 ? chain[chain.length - 1] : null
-  const incomplete = deepest !== null && deepest.children.length > 0
+  const incomplete = !allowSections && deepest !== null && deepest.children.length > 0
+
+  const label = (index: number) =>
+    index === 0
+      ? t('admin.category')
+      : t('admin.subcategoryOf', { name: name(chain[index - 1].category) })
+
+  /* The empty option, which only filtering offers: at the top it clears the
+     filter, and deeper down it widens it back to the whole section rather than
+     clearing it — two different things that a single "Any" would blur. */
+  const anyLabel = (index: number) =>
+    index === 0
+      ? t('admin.allCategories')
+      : t('admin.allInside', { name: name(chain[index - 1].category) })
+
+  if (bare) {
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        {levels.map((options, index) => (
+          <select
+            key={index}
+            value={path[index] ?? ''}
+            onChange={(event) => choose(index, event.target.value)}
+            aria-label={label(index)}
+            className="min-h-11 border border-hairline bg-background px-3.5 py-2.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none sm:text-sm"
+          >
+            <option value="">{anyLabel(index)}</option>
+            {options.map((node) => (
+              <option key={node.category.id} value={node.category.id}>
+                {name(node.category)}
+              </option>
+            ))}
+          </select>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
       {levels.map((options, index) => (
         <SelectField
           key={index}
-          label={index === 0 ? t('admin.category') : t('admin.subcategoryOf', {
-            name: name(chain[index - 1].category),
-          })}
+          label={label(index)}
           value={path[index] ?? ''}
           onChange={(next) => choose(index, next)}
           placeholder={index === 0 ? t('admin.chooseCategory') : t('admin.chooseSubcategory')}

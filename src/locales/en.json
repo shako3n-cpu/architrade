@@ -190,6 +190,7 @@
     "searchPlaceholder": "Search by name…",
     "searchLabel": "Search products by name",
     "filterByCategory": "Filter by category",
+    "allInside": "All of {{name}}",
     "allCategories": "All categories",
     "showing": "Showing {{shown}} of {{total}}",
     "colPhoto": "Photo",

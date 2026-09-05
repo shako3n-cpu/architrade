@@ -16,6 +16,7 @@ import { QueryState } from '@/components/ui/query-state'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ProductFormModal } from '@/components/admin/product-form-modal'
+import { CategoryPicker } from '@/components/admin/category-picker'
 import { ancestorPath, buildCategoryTree, flattenTree } from '@/lib/category-tree'
 import { RETENTION_DAYS, daysUntilPurge } from '@/lib/retention'
 import { cn } from '@/lib/utils'
@@ -262,21 +263,27 @@ function ProductTable({
           />
         </div>
 
-        <select
+        {/* ONE LIST OF THIRTY WAS THE WRONG SHAPE FOR THE QUESTION.
+
+            Every category used to be an option here, depth-first and indented
+            with spaces, so choosing "Office Chairs" meant reading past five
+            sections and twenty shelves in a dropdown that ran most of the
+            height of the screen. The indentation was also the only thing
+            saying which was which, and a native select on a phone is free to
+            trim it.
+
+            Asked in steps it is two short lists: the sections, then what is
+            inside the one chosen. A section IS an answer here, unlike on the
+            form — "everything in Office" is a reasonable thing to ask a table,
+            and the branch filter below already understood it. */}
+        <CategoryPicker
+          categories={categories}
           value={categoryId}
-          onChange={(event) => onCategoryId(event.target.value)}
-          aria-label={t('admin.filterByCategory')}
-          className="min-h-11 border border-hairline bg-background px-3.5 py-2.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none sm:text-sm"
-        >
-          <option value="">{t('admin.allCategories')}</option>
-          {/* Depth-first and indented, so a filter list of thirty names is
-              still the tree the office built rather than an alphabet. */}
-          {flattenTree(buildCategoryTree(categories)).map((node) => (
-            <option key={node.category.id} value={node.category.id}>
-              {`${'   '.repeat(node.depth)}${name(node.category)}`}
-            </option>
-          ))}
-        </select>
+          onChange={onCategoryId}
+          language={lang}
+          allowSections
+          bare
+        />
 
         <p className="text-xs text-muted">
           {t('admin.showing', { shown: visible.length, total: inTab.length })}
