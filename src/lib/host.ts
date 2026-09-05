@@ -74,3 +74,37 @@ export const IS_ADMIN_HOST = HOST_MODE === 'admin'
 
 /** Serve the catalogue, and keep /admin off this hostname entirely. */
 export const IS_PUBLIC_ONLY_HOST = HOST_MODE === 'public'
+
+/**
+ * Where the catalogue lives, as seen from the back office.
+ *
+ * A relative "/ka" is right everywhere except the one place it matters. On
+ * localhost and on a preview URL both sites are served from the same origin,
+ * so the shop is one path away. On admin-architrade.vercel.app it is NOT: that
+ * hostname routes every address it does not recognise back to /admin, so a
+ * relative link would land the manager on the dashboard they were trying to
+ * leave.
+ *
+ * The catalogue's hostname is the admin one with the prefix taken off —
+ * admin-architrade.vercel.app -> architrade.vercel.app, admin.architrade.ge ->
+ * architrade.ge — which holds because that is how the pair is deployed.
+ * Derived rather than hard-coded so a new domain needs no second edit here.
+ *
+ * Returns a full URL only when it has to; a path otherwise.
+ */
+export function publicSiteUrl(path = '/', hostname?: string, protocol?: string): string {
+  const clean = path.startsWith('/') ? path : `/${path}`
+  if (typeof window === 'undefined') return clean
+
+  const host = (hostname ?? window.location.hostname).toLowerCase()
+  if (!isAdminHostname(host)) return clean
+
+  // Drop the prefix and whatever single character separates it: "admin-" and
+  // "admin." both leave the catalogue's hostname behind. A bare "admin" with
+  // nothing after it has no catalogue to point at, so it is left alone.
+  const rest = host.slice(ADMIN_HOST_PREFIX.length + 1)
+  if (!rest) return clean
+
+  const port = window.location.port ? `:${window.location.port}` : ''
+  return `${protocol ?? window.location.protocol}//${rest}${port}${clean}`
+}

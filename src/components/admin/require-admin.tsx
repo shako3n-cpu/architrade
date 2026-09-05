@@ -2,11 +2,12 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LogOut } from 'lucide-react'
+import { ExternalLink, LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAdminLanguage } from '@/hooks/use-admin-language'
 import { LanguageSwitcher } from '@/components/layout/language-switcher'
 import { SITE_NAME } from '@/config/site'
+import { publicSiteUrl } from '@/lib/host'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -151,6 +152,31 @@ function AdminChrome({ children }: { children: ReactNode }) {
                 for everyone. Same control as the shop's, driven by the stored
                 preference instead of the URL. */}
             <LanguageSwitcher size="sm" lang={lang} onSwitch={switchLanguage} />
+
+            {/*
+             * OUT TO THE CATALOGUE, NOT TO THE DASHBOARD.
+             *
+             * A plain relative link to "/" works everywhere the office is
+             * previewed — localhost, a Vercel preview — but not on the
+             * production hostname it is actually used from:
+             * admin-architrade.vercel.app routes every address it does not
+             * recognise straight back to /admin, so "/" would return the
+             * manager to the screen they just tried to leave. publicSiteUrl
+             * derives the shop's own hostname from this one instead.
+             *
+             * A real anchor, not a router Link: the destination is very likely
+             * a different origin, which react-router's client-side navigation
+             * cannot cross anyway.
+             */}
+            <a
+              href={publicSiteUrl(`/${lang}`)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-xs tracking-[0.12em] text-muted uppercase transition-colors duration-300 hover:text-brass"
+            >
+              <ExternalLink aria-hidden="true" className="size-4 stroke-[1.25]" />
+              {t('admin.viewSite')}
+            </a>
 
             <button
               type="button"
