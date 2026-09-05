@@ -415,7 +415,47 @@ async function resetOperatorPassword(
 
   if (updateError) return json({ error: updateError.message }, 400, origin)
 
-  // The password is NOT echoed. The caller sent it and already has it; sending
-  // it back only widens where it can be logged.
-  return json({ reset: userId }, 200, origin)
+  /*
+   * AND END THE SESSIONS THE OLD PASSWORD OPENED.
+   *
+   * Changing the password does not sign anybody out. Without this the person
+   * whose password was just reset stays signed in on every device they had
+   * open — which makes the reset close nothing, and is the opposite of what
+   * anybody clicking it believes they are doing. It matters most in the case
+   * the button exists for: an account somebody else may have got into.
+   *
+   * There is no admin API for it (auth.admin.signOut needs the target's own
+   * access token), so this goes through a SECURITY DEFINER function that
+   * deletes from auth.sessions. See supabase-revoke-sessions.sql.
+   *
+   * REPORTED, NOT FATAL
+   *   The password IS already changed by this point. Answering with an error
+   *   would say the reset failed when it did not, and would have the
+   *   administrator try again — reading out a second password while the first
+   *   one silently works. So a failure here comes back beside the success,
+   *   where it can be acted on without contradicting what just happened.
+   */
+  const { data: revoked, error: revokeError } = await service.rpc('revoke_user_sessions', {
+    target: userId,
+  })
+
+  if (revokeError) {
+    return json(
+      {
+        reset: userId,
+        sessions_revoked: false,
+        // Named plainly: the likeliest cause by far is that the SQL file has
+        // not been run on this project yet, and "function does not exist" read
+        // on its own sends people looking at permissions.
+        warning: 'The password was changed, but existing sessions could not be ended',
+        detail: revokeError.message,
+      },
+      200,
+      origin,
+    )
+  }
+
+  // The password is NOT echoed. The caller sent it and already has it, and
+  // sending it back only widens where it can be logged.
+  return json({ reset: userId, sessions_revoked: true, sessions: revoked ?? 0 }, 200, origin)
 }

@@ -179,6 +179,47 @@ export async function hasValidSession(): Promise<boolean> {
   return session.expires_at - EXPIRY_MARGIN_SECONDS > Date.now() / 1000
 }
 
+/**
+ * Whether the SERVER has stopped accepting this session.
+ *
+ * `hasValidSession` above never leaves the browser: it reads the stored token
+ * and looks at its expiry. That is the right check for "has this simply run
+ * out", and it is blind to the case this exists for — a session ended
+ * somewhere else while the token in this tab is still well inside its hour.
+ *
+ * An administrator resetting an operator's password ends that operator's
+ * sessions (see supabase-revoke-sessions.sql). Nothing about that reaches the
+ * operator's browser. Their access token stays cryptographically valid until
+ * it expires, so without asking the server they would keep working — for up to
+ * an hour — with a password that no longer exists.
+ *
+ * `getUser()` is the question that cannot be answered locally: it carries the
+ * token to /auth/v1/user, where GoTrue checks the session behind it still
+ * exists rather than only that the signature is good.
+ *
+ * ONLY A REFUSAL COUNTS
+ *   A network failure is not evidence of anything. Treating "the wifi dropped"
+ *   as "you have been signed out" would throw somebody off a half-filled form
+ *   for a blip, which is both hostile and, on a phone in a showroom, common.
+ *   So this returns false unless the server actually said no — and false is
+ *   the answer that changes nothing.
+ */
+export async function isSessionRejected(): Promise<boolean> {
+  try {
+    const { error } = await getSupabase().auth.getUser()
+    if (!error) return false
+
+    // supabase-js hangs the HTTP status off the error. 401 and 403 are the
+    // server refusing the token; anything else (429, 5xx, a gateway page) is
+    // the server having a bad day, which is not the same thing at all.
+    const status = (error as { status?: number }).status
+    return status === 401 || status === 403
+  } catch {
+    // Threw before it got an answer: no .env, DNS, offline. Not a refusal.
+    return false
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Why the login screen is showing                                            */
 /* -------------------------------------------------------------------------- */

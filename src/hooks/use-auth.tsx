@@ -6,6 +6,7 @@ import {
   clearAuthStorage,
   getSession,
   hasValidSession,
+  isSessionRejected,
   fetchRole,
   onAuthChange,
   signIn,
@@ -56,6 +57,16 @@ type AuthValue = {
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
+
+/**
+ * How often a visible tab asks whether its session is still accepted.
+ *
+ * A minute is the gap between an administrator resetting a password and the
+ * old session going. Shorter buys very little — somebody has already been
+ * spoken to by then — and costs a request a minute for every open dashboard,
+ * for the whole day, on every account.
+ */
+const SESSION_CHECK_MS = 60_000
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -150,15 +161,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // is already where they are.
     if (!sessionRef.current) return
 
-    if (await hasValidSession()) return
+    /*
+     * Two questions, and the local one first because it is free.
+     *
+     *   hasValidSession  — is the stored token still inside its life? Answered
+     *                      without a request. Catches an expired session and a
+     *                      refresh token that has run out.
+     *   isSessionRejected — will the SERVER still accept it? Answered by
+     *                      /auth/v1/user. Catches a session ended somewhere
+     *                      else while this token is still well inside its
+     *                      hour, which is exactly what a password reset does.
+     *
+     * The second cannot be skipped when the first says yes. That is the whole
+     * case: an operator whose password was just changed holds a token that
+     * looks perfectly good to their own browser.
+     */
+    if (await hasValidSession()) {
+      if (!(await isSessionRejected())) return
+    }
 
     // The token is past saving — revoked in the dashboard, signed out in
-    // another tab, or a refresh token that has run out. Drop it locally and
-    // let the guard send them to the login screen. No network sign-out call:
-    // the credential it would present is the dead one.
+    // another tab, its refresh token run out, or its session ended by a
+    // password reset. Drop it locally and let the guard send them to the login
+    // screen. No network sign-out call: the credential it would present is the
+    // dead one.
     clearAuthStorage()
     setSession(null)
   }, [])
+
+  /*
+   * A HEARTBEAT, SO AN IDLE TAB FINDS OUT TOO.
+   *
+   * revalidate runs on every admin route change, which covers somebody who is
+   * using the dashboard. It does nothing for a tab left open on one screen —
+   * and that is the likeliest shape of the situation this is for: a session
+   * somebody walked away from, on a machine the password was reset because of.
+   *
+   * A minute, and only while the tab is visible. A background tab cannot be
+   * doing any harm, so waking it to ask would be a request per minute per open
+   * tab in exchange for nothing; it is checked immediately on return instead,
+   * which is before the person can do anything with it.
+   */
+  useEffect(() => {
+    if (!session) return
+
+    const check = () => {
+      if (document.visibilityState === 'visible') void revalidate()
+    }
+
+    const timer = window.setInterval(check, SESSION_CHECK_MS)
+    document.addEventListener('visibilitychange', check)
+
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [session, revalidate])
 
   const value = useMemo(
     () => ({
