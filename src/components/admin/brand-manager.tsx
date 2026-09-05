@@ -135,24 +135,65 @@ export function BrandManager({ brands, onChanged }: { brands: Brand[]; onChanged
                   list read as ragged. Stacked, the name gets the full width
                   and the strip gets its own line, where 220px is comfortable.
                   Side by side again from `sm`, where there is room for both. */
-              <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(
-                      'truncate text-sm',
-                      brand.is_active ? 'text-ink' : 'text-muted line-through',
-                    )}
-                  >
-                    {brand.name}
-                  </p>
+              <div className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex min-w-0 flex-1 items-center gap-4">
+                  {/* THE PICTURE WAS ONLY EVER IN THE EDIT FORM.
+                      This list is how the office checks its own work, and a
+                      row of names is not checkable: whether a house has a
+                      photograph yet, and whether the one it has is the right
+                      one, were both questions that cost opening the form. The
+                      same 96px the products table uses, for the same reason
+                      and so the two screens are read the same way.
 
-                  {/* The missing-website note is the point of this screen, so
-                      it is on the row rather than hidden inside the form. */}
-                  <p className="at-label mt-0.5 text-muted">
-                    {t(`b2b.brands.${brand.discipline}`)}
-                    {brand.country ? ` · ${brand.country}` : ''}
-                    {brand.website ? '' : ` · ${t('admin.brandNoWebsite')}`}
-                  </p>
+                      The logo first, then the room photograph. The logo is
+                      what identifies a manufacturer at a glance; the image is
+                      a room its work belongs in, which says far less about
+                      WHICH house this is. */}
+                  <div className="grid size-24 shrink-0 place-items-center overflow-hidden border border-hairline bg-surface">
+                    {brand.logo ?? brand.image ? (
+                      <img
+                        src={brand.logo ?? brand.image ?? ''}
+                        alt=""
+                        loading="lazy"
+                        className={cn(
+                          'h-full w-full',
+                          /* A logo is artwork on its own ground and gets cropped
+                             by `cover` — letters clipped off at the edges. It is
+                             contained and padded instead. A room photograph has
+                             no such edge and fills the box. */
+                          brand.logo ? 'object-contain p-2' : 'object-cover',
+                          !brand.is_active && 'opacity-40 grayscale',
+                        )}
+                      />
+                    ) : (
+                      /* Not an empty box: "no picture yet" is a state the
+                         office is working through, so it says so. */
+                      <span className="at-label px-1 text-center text-muted/60">
+                        {t('admin.brandNoImage')}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={cn(
+                        /* 16px, up from 14. Same change the products table
+                           got: the name is what the row is looked up by. */
+                        'truncate text-base leading-snug',
+                        brand.is_active ? 'text-ink' : 'text-muted line-through',
+                      )}
+                    >
+                      {brand.name}
+                    </p>
+
+                    {/* The missing-website note is the point of this screen, so
+                        it is on the row rather than hidden inside the form. */}
+                    <p className="at-label mt-1 text-muted">
+                      {t(`b2b.brands.${brand.discipline}`)}
+                      {brand.country ? ` · ${brand.country}` : ''}
+                      {brand.website ? '' : ` · ${t('admin.brandNoWebsite')}`}
+                    </p>
+                  </div>
                 </div>
 
                 {/* `-ml-3` pulls the strip left so the first icon sits over
