@@ -6,6 +6,7 @@ import { ExternalLink, LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAdminLanguage } from '@/hooks/use-admin-language'
 import { LanguageSwitcher } from '@/components/layout/language-switcher'
+import { AdminMobileMenu } from '@/components/admin/admin-mobile-menu'
 import { SITE_NAME } from '@/config/site'
 import { publicSiteUrl } from '@/lib/host'
 import { Button } from '@/components/ui/button'
@@ -207,7 +208,7 @@ export function AdminHeader({
                 the two languages are set the same way. */}
           <nav
             aria-label={t('admin.navLabel')}
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:gap-6"
+            className="hidden flex-wrap items-center gap-x-4 gap-y-1 sm:gap-6 xl:flex"
           >
             <AdminLink to="/admin" end>
               {t('admin.navProducts')}
@@ -217,7 +218,7 @@ export function AdminHeader({
             {isAdmin && <AdminLink to="/admin/users">{t('admin.navUsers')}</AdminLink>}
           </nav>
 
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto hidden items-center gap-4 xl:flex">
             {/* Back, now that the bar is as wide as the window. It is the first
                 thing to go when space runs short — it is the only item here
                 that is not a control — so it appears at `2xl` and above.
@@ -268,6 +269,19 @@ export function AdminHeader({
               {t('admin.signOut')}
             </button>
           </div>
+
+          {/* Below `xl` the whole header is the wordmark and this. See
+              admin-mobile-menu.tsx for why the breakpoint is xl rather than lg
+              or sm: it is the narrowest width at which BOTH languages have
+              been measured on one line, so the header cannot change height
+              when somebody switches language. */}
+          <AdminMobileMenu
+            email={email}
+            isAdmin={isAdmin}
+            lang={lang}
+            switchLanguage={switchLanguage}
+            onSignOut={onSignOut}
+          />
         </div>
       </header>
     </>
