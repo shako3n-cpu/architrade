@@ -108,7 +108,14 @@ export function AdminDashboard() {
   )
 }
 
-function ProductTable({
+/*
+ * Exported for the same reason AdminHeader is: this screen cannot be opened on
+ * a machine without Supabase credentials, and a list with two presentations —
+ * a table above `md`, a compact list below — is exactly the kind of thing that
+ * has to be looked at rather than reasoned about. Pass products and categories
+ * and it draws anywhere. Nothing in the app imports it.
+ */
+export function ProductTable({
   products,
   categories,
   query,
@@ -305,9 +312,88 @@ function ProductTable({
               : t('admin.noProducts')}
         </p>
       ) : (
-        // Scrolls inside itself on a narrow screen rather than pushing the
-        // page sideways.
-        <div className="mt-6 overflow-x-auto border border-hairline">
+        <>
+        {/* TWO PRESENTATIONS OF THE SAME ROWS.
+
+            The table needs 736px to hold five columns, so on a phone it
+            scrolled sideways inside its own box — and every row was 128px
+            tall, which made twenty-one products about 2,700px of page that
+            also had to be dragged left and right to reach the buttons. Reading
+            a table through a 375px window is not reading a table.
+
+            Below `md` the same rows are drawn as a compact list instead: a
+            56px picture rather than 96, the name, the category path, the
+            price, and the buttons — around 80px each and nothing off-screen.
+            The 96px thumbnail earns its space on a desktop, where the whole
+            row is visible at once; on a phone it is most of the row.
+
+            Both are fed from `visible` and share RowActions, so the two cannot
+            drift apart on what they let somebody do. */}
+        <ul className="mt-6 border-t border-hairline md:hidden">
+          {visible.map((product) => {
+            const category = byId.get(product.category_id)
+            const cover = product.images?.[0]
+
+            return (
+              <li
+                key={product.id}
+                className={cn(
+                  'flex items-start gap-3 border-b border-hairline py-3',
+                  busyId === product.id && 'opacity-50',
+                )}
+              >
+                <div className="size-14 shrink-0 overflow-hidden border border-hairline bg-surface">
+                  {cover && (
+                    <img src={cover} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm leading-snug text-ink">{productName(product)}</p>
+
+                  {/* The second title is dropped here, not shrunk. It is the
+                      same piece named again in the other language, which is
+                      worth a line on a desktop and is not worth a third of a
+                      phone row. */}
+                  <p className="mt-0.5 truncate text-xs text-muted">
+                    {category
+                      ? pathTo(categories, category).map((step) => name(step)).join(' / ')
+                      : t('admin.noCategory')}
+                  </p>
+
+                  <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                    <span>{product.price == null ? '—' : product.price}</span>
+                    {product.featured && (
+                      <span className="text-[10px] tracking-[0.14em] text-brass uppercase">
+                        {t('product.featuredBadge')}
+                      </span>
+                    )}
+                    {product.is_archived && (
+                      <span className="border border-hairline px-1.5 py-0.5 text-[10px] tracking-[0.14em] text-muted uppercase">
+                        {t('admin.archived')}
+                      </span>
+                    )}
+                    <PurgeNotice deletedAt={product.deleted_at} />
+                  </span>
+                </div>
+
+                <RowActions
+                  product={product}
+                  isAdmin={isAdmin}
+                  busy={busyId === product.id}
+                  onEdit={onEdit}
+                  onArchive={(target) => setPending({ product: target, kind: 'archive' })}
+                  onDelete={(target) => setPending({ product: target, kind: 'delete' })}
+                  onRestore={(target) => void act(target, () => restoreProduct(target.id))}
+                />
+              </li>
+            )
+          })}
+        </ul>
+
+        {/* Scrolls inside itself rather than pushing the page sideways, for
+            the band between `md` and the 736px the table actually needs. */}
+        <div className="mt-6 hidden overflow-x-auto border border-hairline md:block">
           <table className="w-full min-w-[46rem] border-collapse text-left">
             <thead>
               <tr className="border-b border-hairline bg-surface">
@@ -405,50 +491,15 @@ function ProductTable({
                     </td>
 
                     <td className="p-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <IconButton
-                          label={t('admin.edit')}
-                          onClick={() => onEdit(product)}
-                          icon={<Pencil aria-hidden="true" className="size-4 stroke-[1.25]" />}
-                        />
-
-                        {product.is_archived ? (
-                          // Restoring is an administrator's call. An operator
-                          // cannot even see an archived row from the database's
-                          // point of view, so this would be refused anyway.
-                          isAdmin && (
-                            <IconButton
-                              label={t('admin.restore')}
-                              onClick={() => void act(product, () => restoreProduct(product.id))}
-                              disabled={busyId === product.id}
-                              icon={
-                                <ArchiveRestore
-                                  aria-hidden="true"
-                                  className="size-4 stroke-[1.25]"
-                                />
-                              }
-                            />
-                          )
-                        ) : (
-                          <IconButton
-                            label={t('admin.archive')}
-                            onClick={() => setPending({ product, kind: 'archive' })}
-                            disabled={busyId === product.id}
-                            icon={<Archive aria-hidden="true" className="size-4 stroke-[1.25]" />}
-                          />
-                        )}
-
-                        {/* Hidden from operators here, and refused for them by
-                            the delete policy in supabase-rbac.sql. */}
-                        {isAdmin && (
-                          <IconButton
-                            label={t('admin.delete')}
-                            onClick={() => setPending({ product, kind: 'delete' })}
-                            disabled={busyId === product.id}
-                            icon={<Trash2 aria-hidden="true" className="size-4 stroke-[1.25]" />}
-                          />
-                        )}
-                      </div>
+                      <RowActions
+                        product={product}
+                        isAdmin={isAdmin}
+                        busy={busyId === product.id}
+                        onEdit={onEdit}
+                        onArchive={(target) => setPending({ product: target, kind: 'archive' })}
+                        onDelete={(target) => setPending({ product: target, kind: 'delete' })}
+                        onRestore={(target) => void act(target, () => restoreProduct(target.id))}
+                      />
                     </td>
                   </tr>
                 )
@@ -456,6 +507,7 @@ function ProductTable({
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <ConfirmDialog
@@ -488,6 +540,77 @@ function ProductTable({
 }
 
 /** Top-level row down to this one, inclusive. Just this row if it has no parent. */
+/**
+ * The edit / archive / restore / delete strip.
+ *
+ * Shared by the table and the phone list so that what somebody is allowed to
+ * do cannot depend on the width of their screen — the rules here are subtle
+ * enough (an operator sees no delete, and no restore) that two copies would
+ * eventually disagree, and the disagreement would be invisible on whichever
+ * screen the reviewer was not using.
+ */
+function RowActions({
+  product,
+  isAdmin,
+  busy,
+  onEdit,
+  onArchive,
+  onDelete,
+  onRestore,
+}: {
+  product: Product
+  isAdmin: boolean
+  busy: boolean
+  onEdit: (product: Product) => void
+  onArchive: (product: Product) => void
+  onDelete: (product: Product) => void
+  onRestore: (product: Product) => void
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="flex shrink-0 items-center justify-end gap-1">
+      <IconButton
+        label={t('admin.edit')}
+        onClick={() => onEdit(product)}
+        icon={<Pencil aria-hidden="true" className="size-4 stroke-[1.25]" />}
+      />
+
+      {product.is_archived ? (
+        // Restoring is an administrator's call. An operator cannot even see an
+        // archived row from the database's point of view, so this would be
+        // refused anyway.
+        isAdmin && (
+          <IconButton
+            label={t('admin.restore')}
+            onClick={() => onRestore(product)}
+            disabled={busy}
+            icon={<ArchiveRestore aria-hidden="true" className="size-4 stroke-[1.25]" />}
+          />
+        )
+      ) : (
+        <IconButton
+          label={t('admin.archive')}
+          onClick={() => onArchive(product)}
+          disabled={busy}
+          icon={<Archive aria-hidden="true" className="size-4 stroke-[1.25]" />}
+        />
+      )}
+
+      {/* Hidden from operators here, and refused for them by the delete policy
+          in supabase-rbac.sql. */}
+      {isAdmin && (
+        <IconButton
+          label={t('admin.delete')}
+          onClick={() => onDelete(product)}
+          disabled={busy}
+          icon={<Trash2 aria-hidden="true" className="size-4 stroke-[1.25]" />}
+        />
+      )}
+    </div>
+  )
+}
+
 function pathTo(categories: Category[], category: Category): Category[] {
   const path = ancestorPath(categories, category.slug)
   return path.length > 0 ? path : [category]
