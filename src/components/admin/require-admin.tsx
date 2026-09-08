@@ -270,7 +270,29 @@ export function AdminHeader({
             </button>
           </div>
 
-          {/* Below `xl` the whole header is the wordmark and this. See
+          {/* THE ONE CONTROL THAT DOES NOT GO IN THE DRAWER.
+
+              Below `xl` everything else moved behind the button, and this went
+              with it — which put a link somebody uses several times an hour
+              two taps away, inside a panel they then have to dismiss. It is
+              the only item here that leaves the dashboard, and going to look
+              at the shop is most of what the office does between edits.
+
+              Icon only, and 44px, so it costs one control's width in a bar
+              that is otherwise a wordmark and a badge. `ml-auto` moves here
+              from the menu button, so the pair sits together on the right. */}
+          <a
+            href={publicSiteUrl(`/${lang}`)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={t('admin.viewSite')}
+            title={t('admin.viewSite')}
+            className="ml-auto inline-flex size-11 items-center justify-center text-ink transition-colors duration-300 hover:text-brass xl:hidden"
+          >
+            <ExternalLink aria-hidden="true" className="size-5 stroke-[1.25]" />
+          </a>
+
+          {/* Below `xl` the rest of the header is behind this. See
               admin-mobile-menu.tsx for why the breakpoint is xl rather than lg
               or sm: it is the narrowest width at which BOTH languages have
               been measured on one line, so the header cannot change height

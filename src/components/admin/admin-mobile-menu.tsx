@@ -84,7 +84,7 @@ export function AdminMobileMenu({
         <button
           type="button"
           aria-label={t('header.openMenu')}
-          className="-mr-2 ml-auto inline-flex size-11 items-center justify-center text-ink transition-colors duration-300 hover:text-brass xl:hidden"
+          className="-mr-2 inline-flex size-11 items-center justify-center text-ink transition-colors duration-300 hover:text-brass xl:hidden"
         >
           <Menu className="size-6 stroke-[1.25]" aria-hidden="true" />
         </button>
