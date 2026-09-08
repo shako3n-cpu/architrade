@@ -181,6 +181,70 @@ export async function hasValidSession(): Promise<boolean> {
 
 /**
  * ============================================================================
+ * "I HAVE FORGOTTEN MY PASSWORD"
+ * ----------------------------------------------------------------------------
+ * Sends a recovery link to the address, if that address has an account.
+ *
+ * NEEDS SMTP CONFIGURED, AND SAYS NOTHING WHEN IT IS NOT
+ *   Supabase sends this itself, through whatever mail sender the project is
+ *   configured with. Without one it falls back to a built-in sender capped at
+ *   a couple of messages an hour from a shared address, which is fine for a
+ *   test and useless in a showroom. The setting is Authentication -> Emails ->
+ *   SMTP in the dashboard.
+ *
+ * THE ANSWER IS THE SAME WHETHER OR NOT THE ACCOUNT EXISTS
+ *   Deliberately. An endpoint that says "no such account" is an endpoint that
+ *   confirms which addresses have one, and this one is open to anybody who can
+ *   reach the login screen. Supabase already behaves this way; this does not
+ *   undo it by reporting the difference, and the screen says "if that address
+ *   has an account, a link is on its way" rather than "sent".
+ *
+ * WHERE THE LINK LANDS
+ *   `redirectTo` must be on the Redirect URLs allow-list in the Supabase
+ *   dashboard or the link refuses to open. It is built from the CURRENT
+ *   origin, so the office works on localhost, on a preview URL and on the
+ *   admin hostname without three different builds — but every one of those
+ *   origins has to be on that list.
+ * ============================================================================
+ */
+export const RECOVERY_PATH = '/admin/reset-password'
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${window.location.origin}${RECOVERY_PATH}`,
+  })
+  if (error) throw error
+}
+
+/**
+ * Sets the password once a recovery link has been opened.
+ *
+ * No current password is asked for, unlike changeOwnPassword — the link IS the
+ * proof, and somebody arriving here by definition does not have the old one.
+ * That is also why the link is short-lived and single-use: it is a credential,
+ * and anybody holding it can take the account.
+ *
+ * Every other session goes, for the same reason as elsewhere: "I have
+ * forgotten my password" and "somebody else may be in my account" arrive
+ * through the same door, and a new password that leaves an intruder signed in
+ * answers neither.
+ */
+export async function completePasswordReset(next: string): Promise<void> {
+  const supabase = getSupabase()
+
+  const { error } = await supabase.auth.updateUser({ password: next })
+  if (error) throw error
+
+  try {
+    await supabase.auth.signOut({ scope: 'others' })
+  } catch {
+    // The password is changed either way. Not worth reporting a failure that
+    // would read as "it did not work".
+  }
+}
+
+/**
+ * ============================================================================
  * CHANGING YOUR OWN PASSWORD
  * ----------------------------------------------------------------------------
  * Nothing here needs the service_role key or an edge function. Supabase lets a

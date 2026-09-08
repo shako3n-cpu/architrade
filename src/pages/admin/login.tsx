@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useAdminLanguage } from '@/hooks/use-admin-language'
 import { LanguageSwitcher } from '@/components/layout/language-switcher'
 import { SUPABASE_CONFIG_BODY_KEY, SupabaseConfigError } from '@/lib/supabase'
-import { takeSignOutReason } from '@/lib/auth'
+import { requestPasswordReset, takeSignOutReason } from '@/lib/auth'
 import { SITE_NAME } from '@/config/site'
 import { Button } from '@/components/ui/button'
 import { TextField } from '@/components/admin/field'
@@ -40,6 +40,15 @@ export function AdminLogin() {
    * message is there in the first paint, with no flash of a plain form.
    */
   const [timedOut] = useState(() => takeSignOutReason() === 'idle')
+
+  /*
+   * The recovery request, kept beside the sign-in form rather than on its own
+   * screen. Somebody who has just failed to sign in is already looking at this
+   * box with their address typed into it; sending them somewhere else to type
+   * it again is a step that exists only to keep the two forms tidy.
+   */
+  const [recoverySent, setRecoverySent] = useState(false)
+  const [recovering, setRecovering] = useState(false)
 
   /*
    * Already signed in — go where they were headed, if they may go there.
@@ -139,6 +148,39 @@ export function AdminLogin() {
             {busy && <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />}
             {t('admin.signIn')}
           </Button>
+
+          {/* SAYS THE SAME THING WHETHER OR NOT THE ACCOUNT EXISTS.
+
+              "If that address has an account, a link is on its way" rather
+              than "sent" — this form is open to anybody who can reach the
+              login screen, and a message that distinguishes the two turns it
+              into a way of asking which addresses are staff. */}
+          {recoverySent ? (
+            <p role="status" className="text-center text-xs leading-relaxed text-muted">
+              {t('admin.recoverySent')}
+            </p>
+          ) : (
+            <button
+              type="button"
+              disabled={busy || recovering || !email.includes('@')}
+              onClick={() => {
+                setRecovering(true)
+                setError(null)
+                void requestPasswordReset(email)
+                  // Shown even on failure. The alternative reports whether the
+                  // address exists, which is the thing being avoided; a genuine
+                  // outage shows up in the logs rather than on this screen.
+                  .catch(() => {})
+                  .finally(() => {
+                    setRecovering(false)
+                    setRecoverySent(true)
+                  })
+              }}
+              className="w-full text-center text-xs text-muted underline transition-colors duration-300 hover:text-brass disabled:no-underline disabled:opacity-50"
+            >
+              {t('admin.recoveryAsk')}
+            </button>
+          )}
         </form>
 
         <p className="mt-6 text-center text-xs leading-relaxed text-muted">

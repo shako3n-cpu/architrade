@@ -9,6 +9,7 @@ import { NotFound } from '@/pages/not-found'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { RequireAdmin } from '@/components/admin/require-admin'
 import { AdminLogin } from '@/pages/admin/login'
+import { AdminResetPassword } from '@/pages/admin/reset-password'
 import { AdminDashboard } from '@/pages/admin/dashboard'
 import { About } from '@/pages/about'
 import { Services } from '@/pages/services'
@@ -60,6 +61,11 @@ function LanguageRedirect({ path = '' }: { path?: string }) {
 const adminRoutes = (
   <Route path="/admin" element={<AdminLayout />}>
     <Route path="login" element={<AdminLogin />} />
+
+    {/* Where a recovery link lands. Outside RequireAdmin on purpose: the guard
+        would send somebody with an expired link to the login screen, instead of
+        telling them the link expired. */}
+    <Route path="reset-password" element={<AdminResetPassword />} />
 
     <Route
       index

@@ -113,9 +113,18 @@ export function getSupabase(): SupabaseClient {
          * and a session on the admin hostname are separate: signing in on one
          * does not sign you in on the other. That is the correct behaviour
          * here, and it is why the back office lives on its own hostname.
+         *
+         *   detectSessionInUrl  a password-recovery link arrives as tokens in
+         *                     the URL fragment, and this is what turns them
+         *                     into a session. True is the default; it is
+         *                     written out because the reset screen stops
+         *                     working if it is ever switched off, in a way
+         *                     that looks like an expired link rather than a
+         *                     configuration change.
          */
         persistSession: true,
         autoRefreshToken: true,
+        detectSessionInUrl: true,
       },
     })
   }
