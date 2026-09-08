@@ -482,7 +482,7 @@
       "notesPlaceholder": "Building, floor area, programme dates, anything that shapes the specification",
       "submit": "Send the request",
       "cancel": "Cancel",
-      "placeholderNotice": "This form is not connected yet. Until it is, the buttons below open your email or Messenger with the same details filled in."
+      "placeholderNotice": "This form is not connected yet. Until it is, the button below opens your email with the same details filled in."
     },
     "clients": {
       "eyebrow": "References",

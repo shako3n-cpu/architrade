@@ -2,7 +2,6 @@ import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
-import { whatsappUrl } from '@/lib/contact'
 import { CONTACT } from '@/config/site'
 import { useLanguage } from '@/hooks/use-language'
 import type { Product } from '@/data/types'
@@ -15,8 +14,13 @@ import type { Product } from '@/data/types'
  *   There is no backend behind this form yet, and the panel says so rather
  *   than pretending. But a form that collects five fields and then throws them
  *   away is worse than no form, so what the visitor typed is composed into a
- *   message and carried into WhatsApp or email — the two channels the office
- *   already reads. Wiring it to a table later changes this one file.
+ *   message and carried into email, which the office already reads. Wiring it
+ *   to a table later changes this one file.
+ *
+ *   It used to offer WhatsApp beside email. Removed on request: two ways to
+ *   send the same enquiry is a decision the visitor has to make before they
+ *   can finish, and it splits where the replies arrive. The number is still on
+ *   the contact page for anybody who would rather call.
  *
  *   Nothing is stored in the browser either. A half-filled enquiry is not
  *   something to keep without asking.
@@ -49,7 +53,7 @@ export function SpecSheetModal({
   const set = (field: keyof Draft) => (event: { target: { value: string } }) =>
     setDraft((previous) => ({ ...previous, [field]: event.target.value }))
 
-  /** One message, readable by a person, in whichever channel they pick. */
+  /** One message, readable by a person, carried into their email client. */
   const message = [
     `${t('b2b.quote.title')} — ${productName} (${product.slug})`,
     draft.company && `${t('b2b.quote.company')}: ${draft.company}`,
@@ -131,11 +135,6 @@ export function SpecSheetModal({
               </Button>
             </Dialog.Close>
 
-            <Button asChild size="sm" variant="outline">
-              <a href={whatsappUrl(message)} target="_blank" rel="noopener noreferrer">
-                {CONTACT.whatsappDisplay}
-              </a>
-            </Button>
 
             <Button asChild size="sm">
               <a href={mailto}>{t('b2b.quote.submit')}</a>
