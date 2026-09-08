@@ -250,6 +250,40 @@ export async function fetchProducts(
   })
 }
 
+/**
+ * The products behind a list of slugs, for the shortlist preview in the header.
+ *
+ * WHY NOT `useCatalogue()`
+ *   The header is on every page, and `useAsync` holds no cache — calling the
+ *   catalogue hook there would fetch every product on every navigation,
+ *   including the pages that show none. This asks for the handful that are
+ *   actually saved, and only when the preview is first opened.
+ *
+ * The order that comes back is the database's, not the caller's. The shortlist
+ * is kept newest-first and that ordering is the visitor's, so the caller
+ * re-sorts; sorting here would quietly discard it.
+ *
+ * `live()` like every other public query: a piece the office has archived
+ * stops appearing in somebody's saved list, which is the same rule as the rest
+ * of the site.
+ */
+export async function fetchProductsBySlugs(
+  slugs: string[],
+  signal?: AbortSignal,
+): Promise<Product[]> {
+  // `in` with an empty list is valid SQL and a wasted round trip.
+  if (slugs.length === 0) return []
+
+  return withArchiveFallback<Product>(async () => {
+    const base = getSupabase().from('products').select(PRODUCT_COLUMNS).in('slug', slugs)
+
+    return (await withSignal(live(base), signal)) as unknown as {
+      data: Product[] | null
+      error: PgError | null
+    }
+  })
+}
+
 /** One product by the slug in the URL. Null when no such product exists. */
 export async function fetchProductBySlug(
   slug: string,

@@ -47,3 +47,12 @@ export function useMediaQuery(query: string): boolean {
 
 /** Tailwind's `sm` breakpoint, as a query. Below this is "a phone". */
 export const BELOW_SM = '(max-width: 639px)'
+
+/**
+ * A pointer that can hover, which is the real question a hover panel is asking.
+ *
+ * Not a width. A 1400px touch screen has no hover and a 900px laptop does, so
+ * a breakpoint answers the wrong question and gets both of them wrong. This is
+ * what the browser itself knows about the input device.
+ */
+export const CAN_HOVER = '(hover: hover) and (pointer: fine)'

@@ -166,7 +166,10 @@
     "emptyAction": "Browse the catalogue",
     "allGoneBody": "The pieces you saved are no longer in the catalogue.",
     "savedHere": "{{count}} saved on this device.",
-    "clear": "Clear the list"
+    "clear": "Clear the list",
+    "previewLabel": "Recently saved",
+    "previewAll": "See all {{count}}",
+    "previewFailed": "Could not load the list just now."
   },
   "state": {
     "loading": "Loading…",

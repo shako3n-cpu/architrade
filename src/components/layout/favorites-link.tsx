@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Bookmark } from 'lucide-react'
 import { useLanguage } from '@/hooks/use-language'
 import { useFavorites } from '@/hooks/use-favorites'
+import { FavoritesPreview } from './favorites-preview'
 
 /**
  * The shortlist, and how many pieces are on it.
@@ -23,14 +24,21 @@ export function FavoritesLink() {
 
   if (count === 0) return null
 
+  /*
+   * The preview renders nothing of its own on a device that cannot hover — it
+   * checks the pointer, not the width — so on a phone this stays exactly the
+   * link it was.
+   */
   return (
-    <Link
-      to={localePath('/favorites')}
-      aria-label={t('favorites.linkLabel', { count })}
-      className="inline-flex min-h-11 items-center gap-1.5 px-1 text-ink transition-colors duration-300 hover:text-brass sm:min-h-0"
-    >
-      <Bookmark aria-hidden="true" className="size-4 stroke-[1.25]" />
-      <span className="text-xs tabular-nums">{count}</span>
-    </Link>
+    <FavoritesPreview>
+      <Link
+        to={localePath('/favorites')}
+        aria-label={t('favorites.linkLabel', { count })}
+        className="inline-flex min-h-11 items-center gap-1.5 px-1 text-ink transition-colors duration-300 hover:text-brass sm:min-h-0"
+      >
+        <Bookmark aria-hidden="true" className="size-4 stroke-[1.25]" />
+        <span className="text-xs tabular-nums">{count}</span>
+      </Link>
+    </FavoritesPreview>
   )
 }
