@@ -16,6 +16,7 @@ import { Services } from '@/pages/services'
 import { Collections } from '@/pages/collections'
 import { Contact } from '@/pages/contact'
 import { Brands } from '@/pages/brands'
+import { Favorites } from '@/pages/favorites'
 import { AdminCategories } from '@/pages/admin/categories'
 import { AdminBrands } from '@/pages/admin/brands'
 import { AdminUsers } from '@/pages/admin/users'
@@ -129,6 +130,7 @@ const publicRoutes = (
     <Route path="about" element={<About />} />
     <Route path="services" element={<Services />} />
     <Route path="brands" element={<Brands />} />
+    <Route path="favorites" element={<Favorites />} />
     <Route path="showroom" element={<Placeholder titleKey="nav.showroom" />} />
     <Route path="contact" element={<Contact />} />
     <Route path="privacy" element={<Placeholder titleKey="footer.privacy" />} />

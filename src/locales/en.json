@@ -154,6 +154,20 @@
     "backToCatalog": "Back to the catalog",
     "brand": "Brand"
   },
+  "favorites": {
+    "eyebrow": "Saved on this device",
+    "title": "Favorites",
+    "intro": "Pieces you have kept while browsing. The list stays in this browser — no account, nothing sent to us — so it will not follow you to another device.",
+    "add": "Save to favorites",
+    "saved": "Saved",
+    "remove": "Remove from favorites",
+    "linkLabel": "Favorites, {{count}} saved",
+    "emptyBody": "Nothing saved yet. Use the bookmark on any piece to keep it here.",
+    "emptyAction": "Browse the catalogue",
+    "allGoneBody": "The pieces you saved are no longer in the catalogue.",
+    "savedHere": "{{count}} saved on this device.",
+    "clear": "Clear the list"
+  },
   "state": {
     "loading": "Loading…",
     "errorTitle": "Could not load the data",

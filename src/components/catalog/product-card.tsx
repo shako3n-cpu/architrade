@@ -13,6 +13,7 @@ import {
   productTitle,
 } from '@/lib/localize'
 import { cn } from '@/lib/utils'
+import { FavoriteButton } from './favorite-button'
 
 /**
  * One piece in a grid — the single product card used everywhere.
@@ -101,6 +102,10 @@ export function ProductCard({
             className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           />
         )}
+
+        {/* Over the photograph, opposite the Featured badge so the two never
+            collide on a row that is both. */}
+        <FavoriteButton slug={product.slug} onCard />
 
         {/* The table has a `featured` column, not an `is_new` one — so this
             says Featured. Do not relabel it "New" without adding that column. */}

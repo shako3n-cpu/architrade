@@ -5,6 +5,7 @@ import { InquiryBox } from './inquiry-box'
 import { useLanguage } from '@/hooks/use-language'
 import type { Brand, Category, Product } from '@/data/types'
 import { categoryTitle, productDescription, productTitle } from '@/lib/localize'
+import { FavoriteButtonLabelled } from '@/components/catalog/favorite-button'
 
 /**
  * Everything beside the photographs: what the piece is called, what it is,
@@ -67,9 +68,17 @@ export function ProductInfo({
       </h1>
 
       {/* Where a price would be on a shop. This site quotes per commission. */}
-      <p className="mt-5 text-sm tracking-[0.14em] text-brass uppercase">
-        {t('product.priceOnRequest')}
-      </p>
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <p className="text-sm tracking-[0.14em] text-brass uppercase">
+          {t('product.priceOnRequest')}
+        </p>
+
+        {/* Labelled here, unlike on a card. This is where the decision to keep
+            a piece is actually made — after reading the dimensions and the
+            materials — and a bare icon beside a heading is a guess. On a card
+            the icon is enough because it repeats across a grid. */}
+        <FavoriteButtonLabelled slug={product.slug} />
+      </div>
 
       {paragraphs.length > 0 && (
         <div className="mt-8 space-y-4">

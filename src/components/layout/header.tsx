@@ -8,6 +8,7 @@ import { Wordmark } from './wordmark'
 import { DesktopNav } from './desktop-nav'
 import { LanguageSwitcher } from './language-switcher'
 import { MobileDrawer } from './mobile-drawer'
+import { FavoritesLink } from './favorites-link'
 
 /**
  * Sticky site header.
@@ -59,6 +60,13 @@ export function Header() {
 
           {/* Right — language switcher, phone, and the mobile menu button. */}
           <div className="flex items-center justify-end gap-2 lg:flex-1 lg:gap-5">
+            {/* Before the language pair, because it is the only thing here that
+                changes as the visitor browses — a count that moves belongs
+                where the eye already returns. Shown at every width, unlike the
+                phone number: a shortlist is most useful on the device it was
+                built on, which is usually the phone. */}
+            <FavoritesLink />
+
             <LanguageSwitcher className="hidden sm:flex" />
 
             <span aria-hidden="true" className="hidden h-4 w-px bg-hairline lg:block" />
