@@ -112,7 +112,19 @@ export function SpecSheetModal({
             {t('b2b.quote.placeholderNotice')}
           </p>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          {/* WRAPS, BECAUSE THREE LABELS DO NOT FIT ON ONE LINE.
+
+              Every button here is `whitespace-nowrap` and the labels are
+              sentences rather than "OK": cancel, a full phone number, and
+              "Send the request" come to about 454px inside the 448px this
+              panel has between its padding. A nowrap row does not shrink and
+              this one is end-aligned, so the overflow went out of the LEFT
+              edge — the cancel button sat flush against the panel border while
+              everything else kept its margin, which reads as one button being
+              misplaced rather than as a row that does not fit.
+
+              Same fix, and the same reasoning, as b6d9b3a on ConfirmDialog. */}
+          <div className="mt-5 flex flex-col flex-wrap gap-3 sm:flex-row sm:justify-end">
             <Dialog.Close asChild>
               <Button type="button" variant="outline" size="sm">
                 {t('b2b.quote.cancel')}
