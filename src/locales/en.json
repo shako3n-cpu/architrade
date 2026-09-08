@@ -168,7 +168,6 @@
     "savedHere": "{{count}} saved on this device.",
     "clear": "Clear the list",
     "previewLabel": "Recently saved",
-    "previewAll": "See all {{count}}",
     "previewFailed": "Could not load the list just now."
   },
   "state": {

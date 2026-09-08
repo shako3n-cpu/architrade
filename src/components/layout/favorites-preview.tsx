@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bookmark } from 'lucide-react'
 import { useLanguage } from '@/hooks/use-language'
 import { useFavorites } from '@/hooks/use-favorites'
 import { CAN_HOVER, useMediaQuery } from '@/hooks/use-media-query'
@@ -190,14 +189,6 @@ export function FavoritesPreview({
               </ul>
             )}
 
-            <Link
-              to={localePath('/favorites')}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 border-t border-hairline p-3 text-xs tracking-[0.12em] text-muted uppercase transition-colors duration-300 hover:text-brass"
-            >
-              <Bookmark aria-hidden="true" className="size-3.5 stroke-[1.25]" />
-              {t('favorites.previewAll', { count })}
-            </Link>
           </div>
         </div>
       )}
