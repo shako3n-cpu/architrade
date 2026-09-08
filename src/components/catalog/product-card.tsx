@@ -10,6 +10,7 @@ import {
   productHoverImage,
   productImageAlt,
   productMaterials,
+  productPrice,
   productTitle,
 } from '@/lib/localize'
 import { cn } from '@/lib/utils'
@@ -64,6 +65,7 @@ export function ProductCard({
   const cover = productCover(product)
   const hover = productHoverImage(product)
   const materials = productMaterials(product, lang)
+  const price = productPrice(product, lang)
 
   /*
    * The hover photograph does NOT go through Media, so it does not get that
@@ -139,9 +141,17 @@ export function ProductCard({
         {/* Pushes the price line to the bottom, so cards of different text
             lengths still line up along their last row. */}
         <div className="mt-auto pt-3 sm:pt-5">
-          <p className="text-xs tracking-[0.14em] text-brass uppercase">
-            {t('product.priceOnRequest')}
-          </p>
+          {price ? (
+            /* A figure, so it is set like one: no uppercase, no letter
+               spacing, and in ink rather than brass. Those treatments belong
+               to the label it stands in for, and a grid of spaced-out brass
+               numerals is very hard to read down a column. */
+            <p className="text-sm text-ink">{price}</p>
+          ) : (
+            <p className="text-xs tracking-[0.14em] text-brass uppercase">
+              {t('product.priceOnRequest')}
+            </p>
+          )}
         </div>
       </div>
     </article>

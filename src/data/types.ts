@@ -150,16 +150,17 @@ export interface Product {
   deleted_at?: string | null
 
   /**
-   * Internal reference price, entered in the admin dashboard.
+   * The price, in lari, entered in the admin dashboard.
    *
    * OPTIONAL, and it stays optional: the column is added by
    * supabase-admin-setup.sql, so a database that has not had that file run
    * against it has no such column — the same reasoning as the three optional
    * columns on Category above.
    *
-   * NOT SHOWN ANYWHERE ON THE PUBLIC SITE. Every product reads "Price on
-   * request" by design, because no two commissions are quoted the same. This
-   * is here so the office can keep a number against a piece for itself.
+   * NULL IS A REAL ANSWER, not missing data. A piece with no price set reads
+   * "Price on request", which is what the whole catalogue read until the
+   * office started entering figures. So both states are ordinary and the site
+   * shows each of them properly — see `productPrice` in lib/localize.ts.
    */
   price?: number | null
 

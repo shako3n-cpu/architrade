@@ -4,7 +4,7 @@ import { ProductSpecs } from './product-specs'
 import { InquiryBox } from './inquiry-box'
 import { useLanguage } from '@/hooks/use-language'
 import type { Brand, Category, Product } from '@/data/types'
-import { categoryTitle, productDescription, productTitle } from '@/lib/localize'
+import { categoryTitle, productDescription, productPrice, productTitle } from '@/lib/localize'
 import { FavoriteButtonLabelled } from '@/components/catalog/favorite-button'
 
 /**
@@ -40,6 +40,8 @@ export function ProductInfo({
     .map((line) => line.trim())
     .filter(Boolean)
 
+  const price = productPrice(product, lang)
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -67,11 +69,21 @@ export function ProductInfo({
         {productTitle(product, lang)}
       </h1>
 
-      {/* Where a price would be on a shop. This site quotes per commission. */}
+      {/* The price when the office has set one, and "on request" when it has
+          not — which is still true of much of the catalogue, and deliberate for
+          anything quoted per commission. */}
       <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
-        <p className="text-sm tracking-[0.14em] text-brass uppercase">
-          {t('product.priceOnRequest')}
-        </p>
+        {price ? (
+          /* Not uppercase and not letter-spaced, unlike the line it replaces:
+             those treatments are for labels, and this is a figure to be read.
+             Larger, because on this page it is something the visitor came for
+             rather than a caption. */
+          <p className="font-heading text-2xl text-ink">{price}</p>
+        ) : (
+          <p className="text-sm tracking-[0.14em] text-brass uppercase">
+            {t('product.priceOnRequest')}
+          </p>
+        )}
 
         {/* Labelled here, unlike on a card. This is where the decision to keep
             a piece is actually made — after reading the dimensions and the
