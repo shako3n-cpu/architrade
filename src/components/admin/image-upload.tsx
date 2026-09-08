@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ImagePlus, Loader2, MousePointer2, Star, X } from 'lucide-react'
 import {
   MAX_IMAGE_BYTES,
+  MAX_SOURCE_BYTES,
   ACCEPTED_IMAGE_TYPES,
   deleteProductImage,
   describeRejection,
@@ -10,6 +11,8 @@ import {
   uploadProductImage,
 } from '@/lib/storage'
 import { explainWriteFailure } from '@/lib/admin-queries'
+import { loadImage, needsWork, PRODUCT_ASPECT } from '@/lib/image-crop'
+import { ImageCropper } from './image-cropper'
 import { cn } from '@/lib/utils'
 
 /**
@@ -31,11 +34,19 @@ export function ImageUpload({
   images,
   onChange,
   disabled = false,
+  upload = uploadProductImage,
 }: {
   /** Full public URLs. First entry is the cover. */
   images: string[]
   onChange: (images: string[]) => void
   disabled?: boolean
+  /**
+   * How a file becomes a URL. Defaults to the real bucket, so every live
+   * screen gets the real behaviour by passing nothing — the same arrangement
+   * ImageField and CategoryTreeManager use, and for the same reason: a screen
+   * that cannot be opened without credentials cannot be checked without one.
+   */
+  upload?: (file: File) => Promise<string>
 }) {
   const { t } = useTranslation()
   const inputId = useId()
@@ -45,6 +56,35 @@ export function ImageUpload({
   const [busy, setBusy] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
+  /*
+   * ONE AT A TIME, IN THE ORDER THEY WERE PICKED.
+   *
+   * Dropping four photographs means up to four crops, and they cannot all be
+   * asked at once. The loop below stops at each picture that needs one and
+   * waits — `askToCrop` hands back a promise that the dialog resolves — so the
+   * files upload in the order they were chosen, which is the order they will
+   * appear in, and the first one is the cover.
+   *
+   * The resolver lives in a ref rather than in state because it is not
+   * rendered: keeping it in state would re-render the whole box on every
+   * question asked, and a stale copy would silently strand the loop.
+   */
+  const [cropping, setCropping] = useState<File | null>(null)
+  const cropResolve = useRef<((file: File | null) => void) | null>(null)
+
+  const askToCrop = (file: File) =>
+    new Promise<File | null>((resolve) => {
+      cropResolve.current = resolve
+      setCropping(file)
+    })
+
+  const answerCrop = (file: File | null) => {
+    setCropping(null)
+    const resolve = cropResolve.current
+    cropResolve.current = null
+    resolve?.(file)
+  }
+
   const accept = async (files: FileList | File[]) => {
     setError(null)
     const chosen = Array.from(files)
@@ -52,8 +92,12 @@ export function ImageUpload({
 
     // Check everything before uploading anything, so a bad file in a batch is
     // reported up front rather than after three good ones have gone up.
+    //
+    // Against the SOURCE limit: anything oversized is about to be shrunk, and
+    // judging the original by the storage limit turned away exactly the phone
+    // photographs this exists to handle.
     for (const file of chosen) {
-      const rejection = describeRejection(file)
+      const rejection = describeRejection(file, MAX_SOURCE_BYTES)
       if (rejection === 'type') {
         setError(t('admin.imageWrongType', { name: file.name }))
         return
@@ -63,19 +107,47 @@ export function ImageUpload({
           t('admin.imageTooBig', {
             name: file.name,
             size: formatBytes(file.size),
-            max: formatBytes(MAX_IMAGE_BYTES),
+            max: formatBytes(MAX_SOURCE_BYTES),
           }),
         )
         return
       }
     }
 
-    setBusy((n) => n + chosen.length)
-
     const uploaded: string[] = []
     try {
       for (const file of chosen) {
-        uploaded.push(await uploadProductImage(file))
+        let ready = file
+
+        try {
+          const image = await loadImage(file)
+          const work = needsWork(image, PRODUCT_ASPECT)
+          if (work.crop || work.shrink) {
+            const cropped = await askToCrop(file)
+            // Cancelled. That one picture is dropped and the rest of the batch
+            // carries on — throwing away three good choices because the fourth
+            // was reconsidered would be its own small disaster.
+            if (!cropped) continue
+            ready = cropped
+          }
+        } catch {
+          // Unreadable as an image. Let the upload report it rather than
+          // inventing a second, differently-worded failure here.
+        }
+
+        if (ready.size > MAX_IMAGE_BYTES) {
+          setError(
+            t('admin.imageTooBig', {
+              name: ready.name,
+              size: formatBytes(ready.size),
+              max: formatBytes(MAX_IMAGE_BYTES),
+            }),
+          )
+          continue
+        }
+
+        setBusy((n) => n + 1)
+        uploaded.push(await upload(ready))
         setBusy((n) => n - 1)
       }
       onChange([...images, ...uploaded])
@@ -142,6 +214,14 @@ export function ImageUpload({
 
   return (
     <div>
+      {/* Mounted always, drawn only while a picture in the batch is waiting on
+          an answer. Cancelling drops that one file, not the whole batch. */}
+      <ImageCropper
+        file={cropping}
+        onCancel={() => answerCrop(null)}
+        onCropped={(cropped) => answerCrop(cropped)}
+      />
+
       <p className="text-[10px] tracking-[0.16em] text-muted uppercase">{t('admin.photos')}</p>
 
       <div

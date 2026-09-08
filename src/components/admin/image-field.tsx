@@ -4,12 +4,15 @@ import { ImagePlus, Loader2, X } from 'lucide-react'
 import {
   ACCEPTED_IMAGE_TYPES,
   MAX_IMAGE_BYTES,
+  MAX_SOURCE_BYTES,
   deleteProductImage,
   describeRejection,
   formatBytes,
   uploadProductImage,
 } from '@/lib/storage'
 import { explainWriteFailure } from '@/lib/admin-queries'
+import { loadImage, needsWork, PRODUCT_ASPECT } from '@/lib/image-crop'
+import { ImageCropper } from './image-cropper'
 import { cn } from '@/lib/utils'
 
 /** Uploads a file and returns the public URL to store on the row. */
@@ -58,6 +61,9 @@ export function ImageField({
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /* Held while the cropper is open. Null the rest of the time, which is also
+     what closes the dialog. */
+  const [cropping, setCropping] = useState<File | null>(null)
 
   const accept = async (files: FileList | File[]) => {
     setError(null)
@@ -66,12 +72,61 @@ export function ImageField({
     const file = Array.from(files)[0]
     if (!file) return
 
-    const rejection = describeRejection(file)
+    /*
+     * Judged against the SOURCE limit, not the storage one. Anything of the
+     * wrong shape or over 1200px is about to be cropped and re-encoded, so
+     * what matters is the size of the file that results — see MAX_SOURCE_BYTES.
+     * Checking the original against the storage limit turned away every phone
+     * photograph before the cropper could shrink it.
+     */
+    const rejection = describeRejection(file, MAX_SOURCE_BYTES)
     if (rejection === 'type') {
       setError(t('admin.imageWrongType', { name: file.name }))
       return
     }
     if (rejection === 'size') {
+      setError(
+        t('admin.imageTooBig', {
+          name: file.name,
+          size: formatBytes(file.size),
+          max: formatBytes(MAX_SOURCE_BYTES),
+        }),
+      )
+      return
+    }
+
+    /*
+     * A picture of the wrong shape goes to the cropper first, because the
+     * catalogue is going to crop it either way — `object-cover` on a 3:4 card
+     * takes the middle and says nothing. This is the same decision, made by
+     * somebody who can see the photograph.
+     *
+     * One that is already the right shape and small enough is uploaded as it
+     * is. Sending it through the canvas anyway would re-encode it for no
+     * reason, and re-encoding loses a little every time a row is re-saved.
+     */
+    try {
+      const image = await loadImage(file)
+      const work = needsWork(image, PRODUCT_ASPECT)
+      if (work.crop || work.shrink) {
+        setCropping(file)
+        return
+      }
+    } catch {
+      // Unreadable as an image. Let the upload attempt report it rather than
+      // inventing a second, differently-worded failure here.
+    }
+
+    await send(file)
+  }
+
+  /** The upload itself, once the picture is whatever shape it is going to be. */
+  const send = async (file: File) => {
+    // The storage limit applies here, to the finished article. A picture that
+    // came through the cropper is far under it; one that skipped the cropper
+    // was already small enough to skip it. This catches the case neither
+    // covers — an enormous file that is somehow already the right shape.
+    if (file.size > MAX_IMAGE_BYTES) {
       setError(
         t('admin.imageTooBig', {
           name: file.name,
@@ -125,6 +180,16 @@ export function ImageField({
 
   return (
     <div>
+      {/* Mounted always, drawn only while `cropping` holds a file. */}
+      <ImageCropper
+        file={cropping}
+        onCancel={() => setCropping(null)}
+        onCropped={(cropped) => {
+          setCropping(null)
+          void send(cropped)
+        }}
+      />
+
       <p className="text-[10px] tracking-[0.16em] text-muted uppercase">{label}</p>
 
       {value ? (

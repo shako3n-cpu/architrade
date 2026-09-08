@@ -27,6 +27,21 @@ export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'i
  */
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
+/**
+ * The largest file worth OPENING, which is a different question.
+ *
+ * MAX_IMAGE_BYTES is a limit on what gets stored and served. It was also being
+ * applied to what gets chosen, and that made the cropper unreachable for
+ * exactly the pictures it exists for: a 12MP photograph off a phone is around
+ * 5.6MB, so it was refused with "use a smaller version" by the very feature
+ * whose job is to make a smaller version.
+ *
+ * A picture that will be cropped and re-encoded is judged on its finished
+ * size, not its original. This bound is only about not handing the browser
+ * something that will exhaust it while decoding.
+ */
+export const MAX_SOURCE_BYTES = 30 * 1024 * 1024
+
 /** Human-readable size, for error messages. */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -41,11 +56,12 @@ export function formatBytes(bytes: number): string {
  * finds out immediately instead of waiting for a rejection from the server.
  * The storage policies enforce the real rules regardless.
  */
-export function describeRejection(file: File): string | null {
+export function describeRejection(file: File, limit = MAX_IMAGE_BYTES): string | null {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return 'type'
-  if (file.size > MAX_IMAGE_BYTES) return 'size'
+  if (file.size > limit) return 'size'
   return null
 }
+
 
 /**
  * A collision-proof object name that still says what it is.
