@@ -78,13 +78,21 @@ const CATEGORY_COLUMNS_FLAT = 'id, slug, title_ka, title_en, created_at, group_k
 const PRODUCT_COLUMNS = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, brand_id, created_at'
 
 /**
- * The same list plus the two archive columns, for the dashboard, which has to
- * show the archive, mark it, and say how long each piece has left before it is
- * purged. The public site never asks for either: it filters on them instead
- * and has no use for the values themselves.
+ * The same list plus the archive columns and the price, for the dashboard,
+ * which has to show the archive, mark it, and say how long each piece has left
+ * before it is purged. The public site never asks for any of them: it filters
+ * on the archive columns instead, and it has no price to show at all.
+ *
+ * `price` BELONGS TO THIS LIST AND NOT THE ONE ABOVE. It is an internal
+ * reference figure — see data/types.ts — so a public query must not return it
+ * to the browser at all. Leaving it out of BOTH lists, which is how this stood
+ * until now, meant the dashboard read `product.price` off a row that never
+ * carried one: every piece showed "—" however carefully it had been typed in,
+ * and opening one to edit loaded an empty price field that then saved a NULL
+ * back over the stored figure.
  */
 // prettier-ignore
-const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, brand_id, created_at, is_archived, deleted_at'
+const PRODUCT_COLUMNS_ADMIN = 'id, slug, title_ka, title_en, description_ka, description_en, materials_ka, materials_en, dimensions, images, featured, category_id, brand_id, created_at, price, is_archived, deleted_at'
 
 /** Postgres "undefined column", surfaced by PostgREST as the error code. */
 const UNDEFINED_COLUMN = '42703'
