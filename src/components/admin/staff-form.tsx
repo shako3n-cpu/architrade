@@ -5,6 +5,12 @@ import type { StaffRole } from '@/data/types'
 import { createStaffAccount, FunctionMissingError } from '@/lib/admin-queries'
 import { Button } from '@/components/ui/button'
 import { TextField } from '@/components/admin/field'
+import {
+  MIN_STAFF_PASSWORD_LENGTH,
+  isAcceptablePassword,
+  passwordProblem,
+  passwordProblemKey,
+} from '@/lib/password'
 
 /**
  * "Add an account" on /admin/users.
@@ -24,8 +30,19 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
+  /*
+   * The rule is stated on the field and the button refuses until it is met, so
+   * an administrator is not told what was wrong only after a round trip that
+   * has already been rejected. The edge function checks the same thing and is
+   * what actually enforces it.
+   */
+  const problem = password.length > 0 ? passwordProblem(password) : null
+  const canSubmit = email.length > 0 && isAcceptablePassword(password) && !busy
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (!canSubmit) return
+
     setError(null)
     setDone(false)
     setBusy(true)
@@ -70,6 +87,8 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
           type="password"
           value={password}
           onChange={setPassword}
+          hint={problem ? undefined : t('admin.staffPasswordRule', { count: MIN_STAFF_PASSWORD_LENGTH })}
+          error={problem ? t(passwordProblemKey(problem), { count: MIN_STAFF_PASSWORD_LENGTH }) : undefined}
           required
           disabled={busy}
         />
@@ -102,7 +121,7 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
         </p>
       )}
 
-      <Button type="submit" size="sm" className="mt-6" disabled={busy}>
+      <Button type="submit" size="sm" className="mt-6" disabled={!canSubmit}>
         {busy && <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />}
         {t('admin.staffCreate')}
       </Button>

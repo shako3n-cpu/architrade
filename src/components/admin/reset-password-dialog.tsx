@@ -3,7 +3,8 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { isAcceptablePassword } from '@/lib/password'
+import { PasswordHint } from './password-hint'
 
 /**
  * ============================================================================
@@ -98,8 +99,7 @@ function ResetForm({
   const [password, setPassword] = useState('')
   const [visible, setVisible] = useState(false)
 
-  const tooShort = password.length > 0 && password.length < minLength
-  const canSubmit = password.length >= minLength && !busy
+  const canSubmit = isAcceptablePassword(password) && !busy
 
   return (
     <form
@@ -143,9 +143,7 @@ function ResetForm({
         </button>
       </div>
 
-      <p className={cn('mt-2 text-xs', tooShort ? 'text-ink' : 'text-muted')}>
-        {t('admin.staffPasswordMin', { count: minLength })}
-      </p>
+      <PasswordHint value={password} />
 
       <div className="mt-6 flex flex-wrap justify-end gap-3">
         <Dialog.Close asChild>

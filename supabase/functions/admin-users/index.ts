@@ -40,6 +40,38 @@ const ROLES = ['admin', 'operator']
 const MIN_PASSWORD_LENGTH = 8
 
 /*
+ * The password rule, and the copy of it that is ENFORCED. src/lib/password.ts
+ * holds the browser's copy, which exists so a field can state the rule before
+ * a request is sent — it can be edited out of the page by anybody who cares
+ * to. These two must be changed together; neither can detect that the other
+ * has drifted.
+ *
+ * A symbol is anything that is not a letter and not a digit, and the classes
+ * are unicode-aware. `\W` would call every Georgian letter a symbol, which
+ * would let a Georgian password satisfy a rule it does not actually meet.
+ */
+const UPPERCASE = /\p{Lu}/u
+const SYMBOL = /[^\p{L}\p{N}]/u
+
+/*
+ * `\p{Nd}` and not `[0-9]`, so that this agrees with SYMBOL about what counts
+ * as a digit. With `[0-9]` a password containing ٤ would be told it has no
+ * number while that same character quietly satisfied the symbol rule.
+ */
+const NUMBER = /\p{Nd}/u
+
+/** What is wrong with a password, as a sentence, or null when nothing is. */
+function passwordProblem(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+  }
+  if (!UPPERCASE.test(password)) return 'Password must contain a capital letter'
+  if (!NUMBER.test(password)) return 'Password must contain a number'
+  if (!SYMBOL.test(password)) return 'Password must contain a symbol'
+  return null
+}
+
+/*
  * The headers supabase-js actually puts on the request. `authorization` and
  * `content-type` are the obvious two; `x-client-info` and `apikey` are added
  * by the library itself, and leaving them out of this list is what makes the
@@ -183,9 +215,8 @@ Deno.serve(async (request: Request) => {
   const role = body.role ?? 'operator'
 
   if (!email.includes('@')) return json({ error: 'A valid email is required' }, 400, origin)
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, 400, origin)
-  }
+  const weak = passwordProblem(password)
+  if (weak) return json({ error: weak }, 400, origin)
   if (!ROLES.includes(role)) return json({ error: 'Unknown role' }, 400, origin)
 
   /* ---- 5. Do it ------------------------------------------------------- */
@@ -387,9 +418,8 @@ async function resetOperatorPassword(
   const password = body.password ?? ''
 
   if (!userId) return json({ error: 'A user_id is required' }, 400, origin)
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, 400, origin)
-  }
+  const weak = passwordProblem(password)
+  if (weak) return json({ error: weak }, 400, origin)
 
   const { data: target, error: targetError } = await service
     .from('admins')

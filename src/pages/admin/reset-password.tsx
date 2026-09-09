@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { completePasswordReset } from '@/lib/auth'
-import { MIN_STAFF_PASSWORD_LENGTH } from '@/lib/admin-queries'
+import { MIN_STAFF_PASSWORD_LENGTH, isAcceptablePassword } from '@/lib/password'
+import { PasswordHint } from '@/components/admin/password-hint'
 import { onAuthChange, getSession } from '@/lib/auth'
 import { SITE_NAME } from '@/config/site'
-import { cn } from '@/lib/utils'
 
 /**
  * ============================================================================
@@ -89,8 +89,7 @@ export function AdminResetPassword() {
     }
   }, [])
 
-  const tooShort = password.length > 0 && password.length < MIN_STAFF_PASSWORD_LENGTH
-  const canSubmit = password.length >= MIN_STAFF_PASSWORD_LENGTH && !busy
+  const canSubmit = isAcceptablePassword(password) && !busy
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -180,9 +179,7 @@ export function AdminResetPassword() {
               </button>
             </div>
 
-            <p className={cn('mt-2 text-xs', tooShort ? 'text-ink' : 'text-muted')}>
-              {t('admin.staffPasswordMin', { count: MIN_STAFF_PASSWORD_LENGTH })}
-            </p>
+            <PasswordHint value={password} />
 
             <Button type="submit" variant="solid" className="mt-6 w-full" disabled={!canSubmit}>
               {t('admin.recoverySubmit')}

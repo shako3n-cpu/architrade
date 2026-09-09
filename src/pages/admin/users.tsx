@@ -7,7 +7,6 @@ import { useAsync } from '@/hooks/use-async'
 import {
   fetchStaff,
   FunctionMissingError,
-  MIN_STAFF_PASSWORD_LENGTH,
   removeStaff,
   resetOperatorPassword,
   updateStaffRole,
@@ -16,6 +15,7 @@ import { QueryState } from '@/components/ui/query-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { StaffForm } from '@/components/admin/staff-form'
 import { OwnPasswordForm } from '@/components/admin/own-password-form'
+import { MIN_STAFF_PASSWORD_LENGTH } from '@/lib/password'
 import { ResetPasswordDialog } from '@/components/admin/reset-password-dialog'
 import { cn } from '@/lib/utils'
 

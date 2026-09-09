@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { changeOwnPassword } from '@/lib/auth'
-import { MIN_STAFF_PASSWORD_LENGTH } from '@/lib/admin-queries'
-import { cn } from '@/lib/utils'
+import { MIN_STAFF_PASSWORD_LENGTH, isAcceptablePassword } from '@/lib/password'
+import { PasswordHint } from './password-hint'
 
 /**
  * ============================================================================
@@ -49,12 +49,10 @@ export function OwnPasswordForm() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  const tooShort = next.length > 0 && next.length < MIN_STAFF_PASSWORD_LENGTH
   // The new one being the old one again is not a failure Supabase reports, and
   // it is a wasted trip for somebody who mistyped which box they were in.
   const unchanged = next.length > 0 && next === current
-  const canSubmit =
-    current.length > 0 && next.length >= MIN_STAFF_PASSWORD_LENGTH && !unchanged && !busy
+  const canSubmit = current.length > 0 && isAcceptablePassword(next) && !unchanged && !busy
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -154,11 +152,14 @@ export function OwnPasswordForm() {
         </label>
       </div>
 
-      <p className={cn('mt-3 text-xs', tooShort || unchanged ? 'text-ink' : 'text-muted')}>
-        {unchanged
-          ? t('admin.passwordSameAsCurrent')
-          : t('admin.staffPasswordMin', { count: MIN_STAFF_PASSWORD_LENGTH })}
-      </p>
+      {/* The two complaints are exclusive: a password identical to the current
+          one already passes every rule, so there is never a second thing to
+          say. */}
+      {unchanged ? (
+        <p className="mt-3 text-xs text-ink">{t('admin.passwordSameAsCurrent')}</p>
+      ) : (
+        <PasswordHint value={next} className="mt-3" />
+      )}
 
       <Button type="submit" variant="solid" size="sm" className="mt-6" disabled={!canSubmit}>
         {t('admin.passwordOwnSubmit')}

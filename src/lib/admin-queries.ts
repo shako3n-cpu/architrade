@@ -434,16 +434,6 @@ export async function createStaffAccount(input: {
 }
 
 /**
- * The shortest password the edge function will accept.
- *
- * A copy of `MIN_PASSWORD_LENGTH` in supabase/functions/admin-users/index.ts,
- * which is the one that is ENFORCED — this exists so a field can state the
- * rule before the request is sent, not so the browser can be trusted to keep
- * it.
- */
-export const MIN_STAFF_PASSWORD_LENGTH = 8
-
-/**
  * Sets an operator's password. ADMINS ONLY, OPERATORS ONLY.
  *
  * The service_role key is what changes a password in Supabase Auth, so this
