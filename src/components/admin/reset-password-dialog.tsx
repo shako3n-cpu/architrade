@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { isAcceptablePassword } from '@/lib/password'
-import { PasswordHint } from './password-hint'
+import { PasswordFields } from './password-fields'
+import { passwordReady } from '@/lib/password'
 
 /**
  * ============================================================================
@@ -24,15 +23,15 @@ import { PasswordHint } from './password-hint'
  *     deleted rather than adapted.
  *
  * So this is built to be thrown away. It gets the minimum that a password
- * field owes anybody — a real minimum length, a way to see what was typed,
- * and no copy kept once the panel closes — and no more, because effort spent
- * here is effort spent on something with a known end date.
+ * field owes anybody — the shared rules, both boxes, a way to see what was
+ * typed, and no copy kept once the panel closes — and no more, because effort
+ * spent here is effort spent on something with a known end date.
  *
  * WHAT THIS DOES NOT DO
- *   It does not check the password against anything. No strength meter, no
- *   dictionary. The person choosing it is an administrator choosing for a
- *   colleague they are about to speak to, and a meter would only teach them to
- *   append a digit until the bar turned green.
+ *   It does not judge the password beyond the four stated rules. No strength
+ *   meter and no dictionary: a meter only teaches people to append a digit
+ *   until the bar turns green, and a rule that can be read and satisfied on
+ *   purpose is worth more than a score nobody can predict.
  * ============================================================================
  */
 export function ResetPasswordDialog({
@@ -40,7 +39,6 @@ export function ResetPasswordDialog({
   onOpenChange,
   name,
   busy = false,
-  minLength,
   onSubmit,
 }: {
   open: boolean
@@ -48,8 +46,6 @@ export function ResetPasswordDialog({
   /** Who the password is for. Shown so this cannot be done to the wrong row. */
   name: string
   busy?: boolean
-  /** Matches the edge function's own floor, which is the one that is enforced. */
-  minLength: number
   onSubmit: (password: string) => void
 }) {
   const { t } = useTranslation()
@@ -78,28 +74,20 @@ export function ResetPasswordDialog({
               watching `open` to blank it out, and no way for the password
               typed for one operator to still be sitting in the box when the
               next one is opened. */}
-          <ResetForm busy={busy} minLength={minLength} onSubmit={onSubmit} />
+          <ResetForm busy={busy} onSubmit={onSubmit} />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   )
 }
 
-/** The field itself. Mounted only while the panel is open — see above. */
-function ResetForm({
-  busy,
-  minLength,
-  onSubmit,
-}: {
-  busy: boolean
-  minLength: number
-  onSubmit: (password: string) => void
-}) {
+/** The fields themselves. Mounted only while the panel is open — see above. */
+function ResetForm({ busy, onSubmit }: { busy: boolean; onSubmit: (password: string) => void }) {
   const { t } = useTranslation()
   const [password, setPassword] = useState('')
-  const [visible, setVisible] = useState(false)
+  const [confirm, setConfirm] = useState('')
 
-  const canSubmit = isAcceptablePassword(password) && !busy
+  const canSubmit = passwordReady(password, confirm) && !busy
 
   return (
     <form
@@ -108,42 +96,15 @@ function ResetForm({
         if (canSubmit) onSubmit(password)
       }}
     >
-      <div className="relative mt-5">
-        <input
-          /* `new-password` rather than `current-password`: the second invites
-             the browser to offer the ADMIN's own saved password for this site,
-             which is the one thing that must not end up in this field. */
-          autoComplete="new-password"
-          type={visible ? 'text' : 'password'}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          minLength={minLength}
-          required
-          autoFocus
-          aria-label={t('admin.staffNewPassword')}
-          placeholder={t('admin.staffNewPassword')}
-          className="min-h-11 w-full border border-hairline bg-background py-2.5 pr-12 pl-3.5 text-base text-ink transition-colors duration-300 placeholder:text-muted/60 focus:border-brass focus:outline-none"
-        />
-
-        {/* Typed once, not twice. A confirm field catches typos in a password
-            the typist has to remember; this one is read back to somebody
-            immediately, so showing it does the same job without asking for the
-            same thing twice. */}
-        <button
-          type="button"
-          onClick={() => setVisible((was) => !was)}
-          aria-label={t(visible ? 'admin.staffHidePassword' : 'admin.staffShowPassword')}
-          className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center text-muted transition-colors duration-300 hover:text-brass"
-        >
-          {visible ? (
-            <EyeOff aria-hidden="true" className="size-4 stroke-[1.25]" />
-          ) : (
-            <Eye aria-hidden="true" className="size-4 stroke-[1.25]" />
-          )}
-        </button>
-      </div>
-
-      <PasswordHint value={password} />
+      <PasswordFields
+        value={password}
+        onChange={setPassword}
+        confirm={confirm}
+        onConfirmChange={setConfirm}
+        disabled={busy}
+        autoFocus
+        className="mt-5"
+      />
 
       <div className="mt-6 flex flex-wrap justify-end gap-3">
         <Dialog.Close asChild>

@@ -41,29 +41,30 @@ const MIN_PASSWORD_LENGTH = 8
 
 /*
  * The password rule, and the copy of it that is ENFORCED. src/lib/password.ts
- * holds the browser's copy, which exists so a field can state the rule before
- * a request is sent — it can be edited out of the page by anybody who cares
- * to. These two must be changed together; neither can detect that the other
- * has drifted.
+ * holds the browser's copy, which exists so a field can state the rules before
+ * a request is sent — it can be edited out of the page by anybody who cares to.
+ * These two must be changed together; neither can detect that the other has
+ * drifted.
  *
- * A symbol is anything that is not a letter and not a digit, and the classes
- * are unicode-aware. `\W` would call every Georgian letter a symbol, which
- * would let a Georgian password satisfy a rule it does not actually meet.
+ * PRINTABLE ASCII ONLY, NO SPACE. Georgian is refused deliberately: mkhedruli
+ * has no capitals, so a Georgian password could never satisfy the capital rule
+ * anyway, and a password typed at a login screen whose keyboard layout is
+ * whatever the last person left it on is one somebody eventually cannot type.
+ * Space goes with it — read aloud or written down, a leading or trailing space
+ * is lost silently and nothing recovers it.
  */
-const UPPERCASE = /\p{Lu}/u
-const SYMBOL = /[^\p{L}\p{N}]/u
-
-/*
- * `\p{Nd}` and not `[0-9]`, so that this agrees with SYMBOL about what counts
- * as a digit. With `[0-9]` a password containing ٤ would be told it has no
- * number while that same character quietly satisfied the symbol rule.
- */
-const NUMBER = /\p{Nd}/u
+const ALLOWED = /^[\x21-\x7e]+$/
+const UPPERCASE = /[A-Z]/
+const NUMBER = /[0-9]/
+const SYMBOL = /[^A-Za-z0-9]/
 
 /** What is wrong with a password, as a sentence, or null when nothing is. */
 function passwordProblem(password: string): string | null {
   if (password.length < MIN_PASSWORD_LENGTH) {
     return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+  }
+  if (!ALLOWED.test(password)) {
+    return 'Password must use Latin letters, numbers and symbols only'
   }
   if (!UPPERCASE.test(password)) return 'Password must contain a capital letter'
   if (!NUMBER.test(password)) return 'Password must contain a number'

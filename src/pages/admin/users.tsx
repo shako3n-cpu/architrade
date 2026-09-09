@@ -15,7 +15,6 @@ import { QueryState } from '@/components/ui/query-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { StaffForm } from '@/components/admin/staff-form'
 import { OwnPasswordForm } from '@/components/admin/own-password-form'
-import { MIN_STAFF_PASSWORD_LENGTH } from '@/lib/password'
 import { ResetPasswordDialog } from '@/components/admin/reset-password-dialog'
 import { cn } from '@/lib/utils'
 
@@ -206,7 +205,6 @@ function StaffTable({ rows, onChanged }: { rows: StaffMember[]; onChanged: () =>
         }}
         name={pendingReset?.email ?? ''}
         busy={pendingReset !== null && busyId === pendingReset.user_id}
-        minLength={MIN_STAFF_PASSWORD_LENGTH}
         onSubmit={(password) => {
           if (!pendingReset) return
           const member = pendingReset

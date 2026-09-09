@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { completePasswordReset } from '@/lib/auth'
-import { MIN_STAFF_PASSWORD_LENGTH, isAcceptablePassword } from '@/lib/password'
-import { PasswordHint } from '@/components/admin/password-hint'
+import { PasswordFields } from '@/components/admin/password-fields'
+import { passwordReady } from '@/lib/password'
 import { onAuthChange, getSession } from '@/lib/auth'
 import { SITE_NAME } from '@/config/site'
 
@@ -45,7 +44,7 @@ export function AdminResetPassword() {
 
   const [state, setState] = useState<'checking' | 'ready' | 'invalid'>('checking')
   const [password, setPassword] = useState('')
-  const [visible, setVisible] = useState(false)
+  const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -89,7 +88,7 @@ export function AdminResetPassword() {
     }
   }, [])
 
-  const canSubmit = isAcceptablePassword(password) && !busy
+  const canSubmit = passwordReady(password, confirm) && !busy
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -150,36 +149,16 @@ export function AdminResetPassword() {
               </p>
             )}
 
-            <div className="relative mt-6">
-              <input
-                autoComplete="new-password"
-                type={visible ? 'text' : 'password'}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                minLength={MIN_STAFF_PASSWORD_LENGTH}
-                required
-                autoFocus
-                disabled={busy}
-                aria-label={t('admin.staffNewPassword')}
-                placeholder={t('admin.staffNewPassword')}
-                className="min-h-11 w-full border border-hairline bg-background py-2.5 pr-12 pl-3.5 text-base text-ink transition-colors duration-300 placeholder:text-muted/60 focus:border-brass focus:outline-none disabled:opacity-50"
-              />
+            <PasswordFields
+              value={password}
+              onChange={setPassword}
+              confirm={confirm}
+              onConfirmChange={setConfirm}
+              disabled={busy}
+              autoFocus
+              className="mt-6"
+            />
 
-              <button
-                type="button"
-                onClick={() => setVisible((was) => !was)}
-                aria-label={t(visible ? 'admin.staffHidePassword' : 'admin.staffShowPassword')}
-                className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center text-muted transition-colors duration-300 hover:text-brass"
-              >
-                {visible ? (
-                  <EyeOff aria-hidden="true" className="size-4 stroke-[1.25]" />
-                ) : (
-                  <Eye aria-hidden="true" className="size-4 stroke-[1.25]" />
-                )}
-              </button>
-            </div>
-
-            <PasswordHint value={password} />
 
             <Button type="submit" variant="solid" className="mt-6 w-full" disabled={!canSubmit}>
               {t('admin.recoverySubmit')}

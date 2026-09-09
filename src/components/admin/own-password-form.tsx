@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { changeOwnPassword } from '@/lib/auth'
-import { MIN_STAFF_PASSWORD_LENGTH, isAcceptablePassword } from '@/lib/password'
-import { PasswordHint } from './password-hint'
+import { PasswordFields } from './password-fields'
+import { passwordReady } from '@/lib/password'
 
 /**
  * ============================================================================
@@ -44,7 +43,7 @@ export function OwnPasswordForm() {
 
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
-  const [visible, setVisible] = useState(false)
+  const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
@@ -52,7 +51,7 @@ export function OwnPasswordForm() {
   // The new one being the old one again is not a failure Supabase reports, and
   // it is a wasted trip for somebody who mistyped which box they were in.
   const unchanged = next.length > 0 && next === current
-  const canSubmit = current.length > 0 && isAcceptablePassword(next) && !unchanged && !busy
+  const canSubmit = current.length > 0 && passwordReady(next, confirm) && !unchanged && !busy
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -66,7 +65,7 @@ export function OwnPasswordForm() {
       await changeOwnPassword(current, next)
       setCurrent('')
       setNext('')
-      setVisible(false)
+      setConfirm('')
       setDone(true)
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : ''
@@ -99,67 +98,37 @@ export function OwnPasswordForm() {
         </p>
       )}
 
-      <div className="mt-5 grid gap-5 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-[10px] tracking-[0.16em] text-muted uppercase">
-            {t('admin.passwordCurrent')}
-          </span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={current}
-            onChange={(event) => setCurrent(event.target.value)}
-            required
-            disabled={busy}
-            className="mt-2 min-h-11 w-full border border-hairline bg-background px-3.5 py-2.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none disabled:opacity-50"
-          />
-        </label>
+      <label className="mt-5 block sm:max-w-xs">
+        <span className="text-[10px] tracking-[0.16em] text-muted uppercase">
+          {t('admin.passwordCurrent')}
+        </span>
+        {/* The current one has no reveal button and no second box. Putting a
+            password already in use on screen buys nothing, and it is not being
+            chosen — it is being proved. */}
+        <input
+          type="password"
+          autoComplete="current-password"
+          value={current}
+          onChange={(event) => setCurrent(event.target.value)}
+          required
+          disabled={busy}
+          className="mt-2 min-h-11 w-full border border-hairline bg-background px-3.5 py-2.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none disabled:opacity-50"
+        />
+      </label>
 
-        <label className="block">
-          <span className="text-[10px] tracking-[0.16em] text-muted uppercase">
-            {t('admin.passwordNew')}
-          </span>
+      <PasswordFields
+        value={next}
+        onChange={setNext}
+        confirm={confirm}
+        onConfirmChange={setConfirm}
+        disabled={busy}
+        label={t('admin.passwordNew')}
+        className="mt-5 sm:max-w-xs"
+      />
 
-          <div className="relative">
-            <input
-              type={visible ? 'text' : 'password'}
-              autoComplete="new-password"
-              value={next}
-              onChange={(event) => setNext(event.target.value)}
-              minLength={MIN_STAFF_PASSWORD_LENGTH}
-              required
-              disabled={busy}
-              className="mt-2 min-h-11 w-full border border-hairline bg-background py-2.5 pr-12 pl-3.5 text-base text-ink transition-colors duration-300 focus:border-brass focus:outline-none disabled:opacity-50"
-            />
-
-            {/* Shown rather than confirmed. A second box catches the same typos
-                and asks for the same thing twice; only the NEW one gets this,
-                because revealing the current one would put a password already
-                in use on screen for no gain. */}
-            <button
-              type="button"
-              onClick={() => setVisible((was) => !was)}
-              aria-label={t(visible ? 'admin.staffHidePassword' : 'admin.staffShowPassword')}
-              className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center text-muted transition-colors duration-300 hover:text-brass"
-            >
-              {visible ? (
-                <EyeOff aria-hidden="true" className="size-4 stroke-[1.25]" />
-              ) : (
-                <Eye aria-hidden="true" className="size-4 stroke-[1.25]" />
-              )}
-            </button>
-          </div>
-        </label>
-      </div>
-
-      {/* The two complaints are exclusive: a password identical to the current
-          one already passes every rule, so there is never a second thing to
-          say. */}
-      {unchanged ? (
-        <p className="mt-3 text-xs text-ink">{t('admin.passwordSameAsCurrent')}</p>
-      ) : (
-        <PasswordHint value={next} className="mt-3" />
-      )}
+      {/* Its own line, because it is not one of the four rules: a password
+          identical to the current one satisfies every one of them. */}
+      {unchanged && <p className="mt-3 text-xs text-ink">{t('admin.passwordSameAsCurrent')}</p>}
 
       <Button type="submit" variant="solid" size="sm" className="mt-6" disabled={!canSubmit}>
         {t('admin.passwordOwnSubmit')}

@@ -5,12 +5,8 @@ import type { StaffRole } from '@/data/types'
 import { createStaffAccount, FunctionMissingError } from '@/lib/admin-queries'
 import { Button } from '@/components/ui/button'
 import { TextField } from '@/components/admin/field'
-import {
-  MIN_STAFF_PASSWORD_LENGTH,
-  isAcceptablePassword,
-  passwordProblem,
-  passwordProblemKey,
-} from '@/lib/password'
+import { PasswordFields } from '@/components/admin/password-fields'
+import { passwordReady } from '@/lib/password'
 
 /**
  * "Add an account" on /admin/users.
@@ -25,19 +21,19 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [role, setRole] = useState<StaffRole>('operator')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
   /*
-   * The rule is stated on the field and the button refuses until it is met, so
-   * an administrator is not told what was wrong only after a round trip that
-   * has already been rejected. The edge function checks the same thing and is
-   * what actually enforces it.
+   * The rules are stated on the field and the button refuses until they are
+   * met, so an administrator is not told what was wrong only after a round
+   * trip that has already been rejected. The edge function checks the same
+   * thing and is what actually enforces it.
    */
-  const problem = password.length > 0 ? passwordProblem(password) : null
-  const canSubmit = email.length > 0 && isAcceptablePassword(password) && !busy
+  const canSubmit = email.includes('@') && passwordReady(password, confirm) && !busy
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -51,6 +47,7 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
       await createStaffAccount({ email, password, role })
       setEmail('')
       setPassword('')
+      setConfirm('')
       setRole('operator')
       setDone(true)
       onCreated()
@@ -72,7 +69,7 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
       <h2 className="font-heading text-lg text-ink">{t('admin.staffAddTitle')}</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">{t('admin.staffAddHint')}</p>
 
-      <div className="mt-6 grid gap-5 sm:grid-cols-2">
+      <div className="mt-6 sm:max-w-xs">
         <TextField
           label={t('admin.email')}
           type="email"
@@ -81,18 +78,17 @@ export function StaffForm({ onCreated }: { onCreated: () => void }) {
           required
           disabled={busy}
         />
-
-        <TextField
-          label={t('admin.staffPassword')}
-          type="password"
-          value={password}
-          onChange={setPassword}
-          hint={problem ? undefined : t('admin.staffPasswordRule', { count: MIN_STAFF_PASSWORD_LENGTH })}
-          error={problem ? t(passwordProblemKey(problem), { count: MIN_STAFF_PASSWORD_LENGTH }) : undefined}
-          required
-          disabled={busy}
-        />
       </div>
+
+      <PasswordFields
+        value={password}
+        onChange={setPassword}
+        confirm={confirm}
+        onConfirmChange={setConfirm}
+        disabled={busy}
+        label={t('admin.staffPassword')}
+        className="mt-5 sm:max-w-xs"
+      />
 
       <label className="mt-5 block">
         <span className="text-[10px] tracking-[0.16em] text-muted uppercase">
