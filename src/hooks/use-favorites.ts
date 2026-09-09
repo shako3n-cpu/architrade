@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   FAVORITES_KEY,
   readFavorites,
+  removeFavorite,
   toggleFavorite,
   writeFavorites,
 } from '@/lib/favorites'
@@ -80,9 +81,22 @@ export function useFavorites() {
     [commit],
   )
 
+  /*
+   * Removing is not `toggle` with a different name. A ✕ that says "remove"
+   * must never add, and the shortlist panel is exactly where a toggle would:
+   * the rows move up as the list shortens, so a second press at the same spot
+   * is easy and would put the piece back.
+   */
+  const remove = useCallback(
+    (slug: string) => {
+      commit(removeFavorite(readFavorites(), slug))
+    },
+    [commit],
+  )
+
   const clear = useCallback(() => commit([]), [commit])
 
   const has = useCallback((slug: string) => slugs.includes(slug), [slugs])
 
-  return { slugs, count: slugs.length, has, toggle, clear }
+  return { slugs, count: slugs.length, has, toggle, remove, clear }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { X } from 'lucide-react'
 import { useLanguage } from '@/hooks/use-language'
 import { useFavorites } from '@/hooks/use-favorites'
 import { CAN_HOVER, useMediaQuery } from '@/hooks/use-media-query'
@@ -73,7 +74,7 @@ export function FavoritesPreview({
   load?: (slugs: string[], signal?: AbortSignal) => Promise<Product[]>
 }) {
   const { t, lang, localePath } = useLanguage()
-  const { slugs, count } = useFavorites()
+  const { slugs, count, remove } = useFavorites()
   const canHover = useMediaQuery(CAN_HOVER)
 
   const [open, setOpen] = useState(false)
@@ -170,20 +171,46 @@ export function FavoritesPreview({
                 style={{ maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_PX}px` }}
               >
                 {rows.map((product) => (
-                  <li key={product.id} className="border-b border-hairline last:border-b-0">
+                  <li
+                    /* `group` so the remove button can stay invisible until the
+                       row is pointed at, and `relative` so the stretched link
+                       below has something to be stretched against. */
+                    key={product.id}
+                    className="group relative flex items-center gap-3 border-b border-hairline p-2 transition-colors duration-300 last:border-b-0 hover:bg-surface"
+                  >
+                    <Thumbnail src={productCover(product)} />
+
                     <Link
                       to={localePath(`/product/${product.slug}`)}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 p-2 transition-colors duration-300 hover:bg-surface"
+                      /* The link is the ROW, by way of `after:inset-0` — the
+                         same trick the product card uses. A button cannot be
+                         nested inside an anchor, so the ✕ is a sibling drawn
+                         over the stretched area rather than a child of it. */
+                      className="min-w-0 flex-1 truncate text-sm text-ink after:absolute after:inset-0 after:content-['']"
                     >
-                      <Thumbnail src={productCover(product)} />
-
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm text-ink">
-                          {productTitle(product, lang)}
-                        </span>
-                      </span>
+                      {productTitle(product, lang)}
                     </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => remove(product.slug)}
+                      aria-label={t('favorites.remove')}
+                      title={t('favorites.remove')}
+                      /* `relative` lifts it above the stretched link, or the
+                         click lands on the anchor and navigates away instead
+                         of removing anything.
+
+                         Shown on hover and on focus, never permanently: four
+                         standing ✕ marks read as a list of things to delete
+                         rather than a list of saved pieces. It is safe to hide
+                         because this panel only exists where there is a
+                         pointer — see CAN_HOVER — and the keyboard path is the
+                         focus state. */
+                      className="relative inline-flex size-8 shrink-0 items-center justify-center text-muted opacity-0 transition-[color,opacity] duration-300 group-hover:opacity-100 hover:text-ink focus-visible:opacity-100 focus-visible:outline-none"
+                    >
+                      <X aria-hidden="true" className="size-4 stroke-[1.25]" />
+                    </button>
                   </li>
                 ))}
               </ul>

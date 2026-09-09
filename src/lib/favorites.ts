@@ -80,8 +80,22 @@ export function writeFavorites(slugs: string[]): void {
  * a shortlist that appends to the bottom buries today's work under last week's.
  */
 export function toggleFavorite(slugs: string[], slug: string): string[] {
-  if (slugs.includes(slug)) return slugs.filter((entry) => entry !== slug)
+  if (slugs.includes(slug)) return removeFavorite(slugs, slug)
   return [slug, ...slugs].slice(0, MAX_FAVORITES)
+}
+
+/**
+ * Removes one slug, and only ever removes.
+ *
+ * Separate from `toggleFavorite` because a control that says "remove" must not
+ * be able to add. The ✕ on a shortlist row is pressed at the same spot
+ * repeatedly as the list shortens under the pointer, and a toggle would put
+ * back whatever a double press had just taken off — the one outcome the label
+ * promises cannot happen. Idempotent: removing something already gone is not
+ * an error, it is the state the caller asked for.
+ */
+export function removeFavorite(slugs: string[], slug: string): string[] {
+  return slugs.filter((entry) => entry !== slug)
 }
 
 /** The key, exported so the cross-tab listener can recognise its own writes. */
