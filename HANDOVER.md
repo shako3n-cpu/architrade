@@ -21,7 +21,7 @@ the second attempt failed on "A user with this email address has already been
 registered". The mechanism is `admins_user_id_fkey → auth.users` with
 `ON DELETE CASCADE`, plus the `admins_keep_one_admin` BEFORE DELETE trigger —
 both confirmed present in the live schema — behind the `admin-users` edge
-function, deployed at v11.
+function, deployed at v15 (checked 2026-09-17; the live source matches `main`).
 
 **The slug and title validation refuses a title an address cannot be built
 from.** A Georgian title typed into the English title field left Save
