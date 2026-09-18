@@ -1,12 +1,12 @@
 import { Suspense, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Move3d, RotateCcw } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/hooks/use-language'
 import { useMediaQuery } from '@/hooks/use-media-query'
-import { RoomScene, type StageLayout } from './room-scene'
+import { RoomScene, type ArmchairMode, type StageLayout } from './room-scene'
 import { useReducedMotion } from './use-reduced-motion'
 import './room-3d.css'
 
@@ -54,9 +54,38 @@ const COPY = {
   },
 } as const
 
+/**
+ * The armchair comparison. A developer's switch, not part of the design being
+ * evaluated, so it is English on both routes and says so. The first option
+ * is the default and has no parameter in the address.
+ */
+const ARMCHAIR_OPTIONS: { id: ArmchairMode; label: string }[] = [
+  { id: 'polyhaven', label: 'Poly Haven · brand' },
+  { id: 'procedural', label: 'Procedural' },
+  { id: 'polyhaven-raw', label: 'Poly Haven · original' },
+]
+const DEFAULT_ARMCHAIR = ARMCHAIR_OPTIONS[0].id
+
+function readArmchair(value: string | null): ArmchairMode {
+  return ARMCHAIR_OPTIONS.find((option) => option.id === value)?.id ?? DEFAULT_ARMCHAIR
+}
+
 export function RoomHero() {
   const { t, lang, localePath } = useLanguage()
   const copy = COPY[lang]
+
+  // In the address, so a comparison can be reloaded or sent to someone.
+  const [params, setParams] = useSearchParams()
+  const armchair = readArmchair(params.get('armchair'))
+  const chooseArmchair = (next: ArmchairMode) =>
+    setParams(
+      (current) => {
+        if (next === DEFAULT_ARMCHAIR) current.delete('armchair')
+        else current.set('armchair', next)
+        return current
+      },
+      { replace: true },
+    )
 
   const reduced = useReducedMotion()
   const wide = useMediaQuery('(min-width: 1024px)')
@@ -104,8 +133,23 @@ export function RoomHero() {
             reduced={reduced}
             layout={layout}
             coarsePointer={coarse}
+            armchair={armchair}
           />
         </Suspense>
+
+        <div className="room3d-compare" role="group" aria-label="Armchair source (development comparison)">
+          <span className="room3d-compare-label">Armchair</span>
+          {ARMCHAIR_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={armchair === option.id}
+              onClick={() => chooseArmchair(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
 
         {/* Bottom LEFT, Replay first. The site's floating chat button is fixed
             to the bottom right of every page, and on the first layout it sat

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
@@ -22,6 +22,7 @@ import {
   WallArt,
 } from './furniture'
 import { PALETTE } from './palette'
+import { PolyHavenArmchair } from './polyhaven'
 import { Room } from './room'
 
 /**
@@ -67,6 +68,13 @@ const POLAR = Math.acos(CAMERA_DIR.y)
 /** How the canvas sits on the page — changes the framing, see <Framing>. */
 export type StageLayout = 'overlay' | 'stacked'
 
+/**
+ * Which armchair to show — see polyhaven.tsx. The Poly Haven model, dressed
+ * in the palette, is the default; the procedural chair and the model as
+ * downloaded remain for comparison. The sofa is always procedural.
+ */
+export type ArmchairMode = 'polyhaven' | 'procedural' | 'polyhaven-raw'
+
 type Quality = 'high' | 'low'
 
 /* -------------------------------------------------------------------------- */
@@ -82,7 +90,7 @@ type Quality = 'high' | 'low'
  * whole. The rug, print and table-top pieces barely turn at all: a rug that
  * spins on the way down reads as thrown, not placed.
  */
-function Furnishings() {
+function Furnishings({ armchair }: { armchair: ArmchairMode }) {
   return (
     <>
       <DropIn index={0} position={[0.1, 0, 0.25]} height={0.9} spin={0.08}>
@@ -97,9 +105,18 @@ function Furnishings() {
         <CoffeeTable />
       </DropIn>
 
-      {/* Turned to face the coffee table. */}
-      <DropIn index={3} position={[1.85, 0, 0.6]} rotationY={-1.84} spin={-0.36}>
-        <Armchair />
+      {/*
+       * Turned to face the coffee table. Keyed by the mode so a switch
+       * REMOUNTS the DropIn: it marks its meshes for shadows once, on mount,
+       * and the procedural chair swapped in later would otherwise arrive
+       * without them.
+       */}
+      <DropIn key={`armchair-${armchair}`} index={3} position={[1.85, 0, 0.6]} rotationY={-1.84} spin={-0.36}>
+        {armchair === 'procedural' ? (
+          <Armchair />
+        ) : (
+          <PolyHavenArmchair look={armchair === 'polyhaven-raw' ? 'raw' : 'brand'} />
+        )}
       </DropIn>
 
       <DropIn index={4} position={[-1.45, 0, -1.7]} spin={0.22}>
@@ -353,12 +370,14 @@ export function RoomScene({
   reduced,
   layout,
   coarsePointer,
+  armchair,
 }: {
   /** Change it to restart the sequence. */
   replayToken: number
   reduced: boolean
   layout: StageLayout
   coarsePointer: boolean
+  armchair: ArmchairMode
 }) {
   /*
    * Infinity until <Starter> sets it, so every piece is "not yet" and waits
@@ -392,12 +411,21 @@ export function RoomScene({
 
       <PerformanceMonitor onDecline={() => setQuality('low')} />
 
-      <FurnishProvider start={start} reduced={reduced}>
-        <Starter schedule={schedule} reduced={reduced} replayToken={replayToken} />
-        <Studio quality={quality} />
-        <Room />
-        <Furnishings />
-      </FurnishProvider>
+      {/*
+       * One boundary around the whole room, Starter included. The glTF
+       * armchair suspends while it loads; with Starter inside the same
+       * boundary it only mounts — and only starts counting frames towards the
+       * first drop — once the model has arrived, so a slow load cannot make a
+       * piece land unseen.
+       */}
+      <Suspense fallback={null}>
+        <FurnishProvider start={start} reduced={reduced}>
+          <Starter schedule={schedule} reduced={reduced} replayToken={replayToken} />
+          <Studio quality={quality} />
+          <Room />
+          <Furnishings armchair={armchair} />
+        </FurnishProvider>
+      </Suspense>
 
       <OrbitControls
         makeDefault

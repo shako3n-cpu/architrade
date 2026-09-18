@@ -23,13 +23,18 @@ import { LAMP_WARMUP, useDropProgress } from './furnish-clock'
  * layout in room-scene.tsx relies on the second (it turns each piece to face
  * where it should).
  *
- * MODELLED HERE, NOT DOWNLOADED — FOR NOW
- *   These are procedural stand-ins, kept deliberately in the minimal modern
- *   idiom the brief asks for: rounded upholstery, slim brass, honed stone.
- *   Each one is a self-contained component with a real-world footprint, so any
- *   of them can be swapped for a CC0 glTF (Poly Haven) without touching the
- *   layout, the animation or the lighting — replace the component body, keep
- *   the origin and the facing.
+ * MODELLED HERE — EXCEPT THE ARMCHAIR
+ *   These are procedural, kept deliberately in the minimal modern idiom the
+ *   brief asks for: rounded upholstery, slim brass, honed stone. Each one is a
+ *   self-contained component with a real-world footprint, so any of them can
+ *   be swapped for a CC0 glTF without touching the layout, the animation or
+ *   the lighting — replace the component body, keep the origin and the
+ *   facing.
+ *
+ *   The armchair has been: the default is now Poly Haven's
+ *   modern_arm_chair_01 (see polyhaven.tsx). <Armchair> below stays as the
+ *   comparison it lost to — the dev route's switch still shows it. The sofa
+ *   was tried the same way and stayed procedural; polyhaven.tsx says why.
  *
  * Units are metres. Dimensions follow real furniture, because a sofa that is
  * the right size is most of what makes a room read as a room.
