@@ -1,3 +1,6 @@
+import { useMemo } from 'react'
+import { useTexture } from '@react-three/drei'
+import { MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Vector2 } from 'three'
 import { M } from './materials'
 
 /**
@@ -13,6 +16,8 @@ import { M } from './materials'
  *   floor     x -3 .. 3,  z -2.5 .. 2.5, top face at y = 0
  *   back wall inner face at z = -2.5
  *   left wall inner face at x = -3
+ *
+ * The same shell serves every room preset; only what is put in it changes.
  *
  * The walls receive shadow but do not cast it: the key light comes from the
  * front right, so a wall's own shadow would only fall outside the room — or,
@@ -31,13 +36,70 @@ const ROOM = {
 const SKIRTING_H = 0.09
 const SKIRTING_T = 0.016
 
+/*
+ * THE FLOOR — Poly Haven "wood_floor" (CC0), 1k: colour, OpenGL normal, and
+ * the packed AO/roughness/metal map. Local files, fetched only by this dev
+ * module; see polyhaven.tsx for why they live in src/dev and not in public/.
+ */
+const FLOOR_MAPS = [
+  new URL('./textures/wood_floor/wood_floor_diff_1k.jpg', import.meta.url).href,
+  new URL('./textures/wood_floor/wood_floor_nor_gl_1k.jpg', import.meta.url).href,
+  new URL('./textures/wood_floor/wood_floor_arm_1k.jpg', import.meta.url).href,
+]
+
+/** One repeat of the texture covers this many metres — Poly Haven's own figure. */
+const FLOOR_REPEAT_M = 1.7
+
+/**
+ * The timber floor, sized so a plank is a real plank's width. Loaded through
+ * Suspense, so the room is never seen with a flat floor that then changes.
+ */
+function useWoodFloor(width: number, depth: number) {
+  const loaded = useTexture(FLOOR_MAPS)
+
+  return useMemo(() => {
+    // Clones, configured here: the loader's cached originals are left as
+    // they came. A clone shares its image, so nothing is decoded twice.
+    const [map, normalMap, arm] = loaded.map((original) => {
+      const texture = original.clone()
+      texture.wrapS = texture.wrapT = RepeatWrapping
+      texture.repeat.set(width / FLOOR_REPEAT_M, depth / FLOOR_REPEAT_M)
+      // The floor is seen at a raking angle; without anisotropic filtering the
+      // planks blur to a smear a metre into the room.
+      texture.anisotropy = 8
+      return texture
+    })
+    map.colorSpace = SRGBColorSpace
+
+    return new MeshStandardMaterial({
+      map,
+      normalMap,
+      normalScale: new Vector2(0.7, 0.7),
+      // The packed map: R is ambient occlusion, G is roughness. The factor
+      // sits under 1 so the finish is a satin oil, not a bare board — enough
+      // for the key light to lay a soft sheen across the room.
+      roughnessMap: arm,
+      roughness: 0.85,
+      aoMap: arm,
+      aoMapIntensity: 0.6,
+      metalness: 0,
+    })
+  }, [loaded, width, depth])
+}
+
 export function Room() {
   const { halfWidth: X, halfDepth: Z, wallHeight: H, wallThickness: T, slabThickness: S } = ROOM
+  const wood = useWoodFloor(2 * X + T, 2 * Z + T)
+
+  // Box faces in three's order: +x, -x, +y, -y, +z, -z. Timber on top only;
+  // the cut edges stay the slab's greige, which is what makes the timber read
+  // as a finish laid on a structure rather than as a solid block of wood.
+  const slabFaces = useMemo(() => [M.slab, M.slab, wood, M.slab, M.slab, M.slab], [wood])
 
   return (
     <group>
       {/* Slab, extended under both walls so the corner is solid all the way down. */}
-      <mesh position={[-T / 2, -S / 2, -T / 2]} material={M.floor} receiveShadow>
+      <mesh position={[-T / 2, -S / 2, -T / 2]} material={slabFaces} receiveShadow>
         <boxGeometry args={[2 * X + T, S, 2 * Z + T]} />
       </mesh>
 

@@ -6,7 +6,9 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/hooks/use-language'
 import { useMediaQuery } from '@/hooks/use-media-query'
-import { RoomScene, type ArmchairMode, type StageLayout } from './room-scene'
+import { cn } from '@/lib/utils'
+import { RoomScene, type StageLayout } from './room-scene'
+import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { useReducedMotion } from './use-reduced-motion'
 import './room-3d.css'
 
@@ -30,12 +32,19 @@ import './room-3d.css'
  * The overlay copy is `pointer-events-none` so a drag that starts on the
  * headline still turns the room; the buttons opt back in.
  *
+ * FOUR ROOMS
+ *   Living room, kitchen, bedroom, office — the same shell furnished four
+ *   ways (rooms.tsx). The switch sits under the calls to action, where on a
+ *   phone it is also directly above the room it changes. It is the site's own
+ *   filter chip (the brand directory's), so it reads as part of the page and
+ *   every class it uses is one production already generates.
+ *
  * STRINGS
- *   The three strings that belong to this experiment — Replay, the drag
- *   hint, the canvas label — live here, not in src/locales. Adding them there
- *   would ship them in the production bundle for a feature that does not
- *   exist in production. The Georgian is a first draft: have it checked
- *   before this ever leaves the preview branch.
+ *   The strings that belong to this experiment — Replay, the drag hint, the
+ *   room names, the canvas labels — live here, not in src/locales. Adding
+ *   them there would ship them in the production bundle for a feature that
+ *   does not exist in production. The Georgian is a first draft: have it
+ *   checked before this ever leaves the preview branch.
  * ============================================================================
  */
 
@@ -44,44 +53,61 @@ const COPY = {
     replay: 'Replay',
     hint: 'Drag to look around',
     hintTouch: 'Swipe sideways to turn the room',
-    label: 'An empty room furnishing itself, piece by piece.',
+    rooms: 'Choose a room',
+    room: { living: 'Living room', kitchen: 'Kitchen', bedroom: 'Bedroom', office: 'Office' },
+    label: {
+      living: 'An empty room furnishing itself as a living room, piece by piece.',
+      kitchen: 'An empty room furnishing itself as a kitchen, piece by piece.',
+      bedroom: 'An empty room furnishing itself as a bedroom, piece by piece.',
+      office: 'An empty room furnishing itself as an office, piece by piece.',
+    },
   },
   ka: {
     replay: 'ხელახლა',
     hint: 'გადაათრიეთ, რომ ოთახი დაათვალიეროთ',
     hintTouch: 'გადაუსვით გვერდზე, რომ ოთახი შემოატრიალოთ',
-    label: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით.',
+    rooms: 'აირჩიეთ ოთახი',
+    room: { living: 'მისაღები', kitchen: 'სამზარეულო', bedroom: 'საძინებელი', office: 'ოფისი' },
+    label: {
+      living: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: მისაღები ოთახი.',
+      kitchen: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: სამზარეულო.',
+      bedroom: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: საძინებელი.',
+      office: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: სამუშაო ოთახი.',
+    },
   },
 } as const
 
+const DEFAULT_ROOM = ROOM_IDS[0]
+
+function readRoom(value: string | null): RoomId {
+  return ROOM_IDS.find((id) => id === value) ?? DEFAULT_ROOM
+}
+
 /**
- * The armchair comparison. A developer's switch, not part of the design being
- * evaluated, so it is English on both routes and says so. The first option
- * is the default and has no parameter in the address.
+ * The armchair comparison that settled the living room's chair. Its switch
+ * is gone from the stage — the room switch needed the space, and the Poly
+ * Haven chair won — but the comparison is still one parameter away:
+ * `?armchair=procedural` or `?armchair=polyhaven-raw`.
  */
-const ARMCHAIR_OPTIONS: { id: ArmchairMode; label: string }[] = [
-  { id: 'polyhaven', label: 'Poly Haven · brand' },
-  { id: 'procedural', label: 'Procedural' },
-  { id: 'polyhaven-raw', label: 'Poly Haven · original' },
-]
-const DEFAULT_ARMCHAIR = ARMCHAIR_OPTIONS[0].id
+const ARMCHAIR_MODES: ArmchairMode[] = ['polyhaven', 'procedural', 'polyhaven-raw']
 
 function readArmchair(value: string | null): ArmchairMode {
-  return ARMCHAIR_OPTIONS.find((option) => option.id === value)?.id ?? DEFAULT_ARMCHAIR
+  return ARMCHAIR_MODES.find((mode) => mode === value) ?? ARMCHAIR_MODES[0]
 }
 
 export function RoomHero() {
   const { t, lang, localePath } = useLanguage()
   const copy = COPY[lang]
 
-  // In the address, so a comparison can be reloaded or sent to someone.
+  // Both in the address, so a room can be reloaded or sent to someone.
   const [params, setParams] = useSearchParams()
+  const room = readRoom(params.get('room'))
   const armchair = readArmchair(params.get('armchair'))
-  const chooseArmchair = (next: ArmchairMode) =>
+  const chooseRoom = (next: RoomId) =>
     setParams(
       (current) => {
-        if (next === DEFAULT_ARMCHAIR) current.delete('armchair')
-        else current.set('armchair', next)
+        if (next === DEFAULT_ROOM) current.delete('room')
+        else current.set('room', next)
         return current
       },
       { replace: true },
@@ -118,6 +144,38 @@ export function RoomHero() {
               <Link to={localePath('/contact')}>{t('b2b.hero.ctaConsult')}</Link>
             </Button>
           </div>
+
+          {/*
+           * The room switch — the brand directory's filter chips, classes and
+           * all. A row that scrolls sideways on a phone, as that one does,
+           * rather than wrapping to two rows and pushing the room down.
+           */}
+          <div className="room3d-rooms mt-6" role="group" aria-label={copy.rooms}>
+            <p className="at-label mb-3 hidden text-muted sm:block" aria-hidden="true">
+              {copy.rooms}
+            </p>
+            <div className="at-scroll-row -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:gap-x-2 sm:gap-y-3 sm:overflow-visible sm:px-0">
+              {ROOM_IDS.map((id) => {
+                const active = room === id
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => chooseRoom(id)}
+                    aria-pressed={active}
+                    className={cn(
+                      'at-label min-h-11 shrink-0 border px-4 whitespace-nowrap transition-colors duration-300 sm:min-h-10',
+                      active
+                        ? 'border-brass bg-brass text-background'
+                        : 'border-hairline text-muted hover:border-brass hover:text-brass',
+                    )}
+                  >
+                    {copy.room[id]}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </Container>
 
@@ -126,9 +184,10 @@ export function RoomHero() {
        * the portrait frame is predictable, with a floor for short phones held
        * in landscape; the full hero from lg up.
        */}
-      <div role="img" aria-label={copy.label} className="room3d-stage relative w-full">
+      <div role="img" aria-label={copy.label[room]} className="room3d-stage relative w-full">
         <Suspense fallback={null}>
           <RoomScene
+            room={room}
             replayToken={replayToken}
             reduced={reduced}
             layout={layout}
@@ -136,20 +195,6 @@ export function RoomHero() {
             armchair={armchair}
           />
         </Suspense>
-
-        <div className="room3d-compare" role="group" aria-label="Armchair source (development comparison)">
-          <span className="room3d-compare-label">Armchair</span>
-          {ARMCHAIR_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              aria-pressed={armchair === option.id}
-              onClick={() => chooseArmchair(option.id)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
 
         {/* Bottom LEFT, Replay first. The site's floating chat button is fixed
             to the bottom right of every page, and on the first layout it sat

@@ -1,29 +1,16 @@
-import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { Vector3, type PerspectiveCamera } from 'three'
-import { DropIn, FurnishProvider } from './drop-in'
-import { LEAD_IN } from './furnish-clock'
-import {
-  Armchair,
-  Bookshelf,
-  CoffeeTable,
-  COFFEE_TABLE_TOP,
-  FloorLamp,
-  Plant,
-  Rug,
-  SIDE_TABLE_TOP,
-  SideTable,
-  Sofa,
-  TableStyling,
-  Vase,
-  WallArt,
-} from './furniture'
+import { HalfFloatType, Vector3, WebGLRenderTarget, type Group, type PerspectiveCamera, type PointLight } from 'three'
+import { FurnishProvider } from './drop-in'
+import { LEAD_IN, leaveSpan, SWITCH_LEAD_IN } from './furnish-clock'
+import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { PALETTE } from './palette'
-import { PolyHavenArmchair } from './polyhaven'
 import { Room } from './room'
+import type { ArmchairMode, RoomId } from './room-types'
+import { ROOMS } from './room-registry'
 
 /**
  * ============================================================================
@@ -68,88 +55,7 @@ const POLAR = Math.acos(CAMERA_DIR.y)
 /** How the canvas sits on the page — changes the framing, see <Framing>. */
 export type StageLayout = 'overlay' | 'stacked'
 
-/**
- * Which armchair to show — see polyhaven.tsx. The Poly Haven model, dressed
- * in the palette, is the default; the procedural chair and the model as
- * downloaded remain for comparison. The sofa is always procedural.
- */
-export type ArmchairMode = 'polyhaven' | 'procedural' | 'polyhaven-raw'
-
 type Quality = 'high' | 'low'
-
-/* -------------------------------------------------------------------------- */
-/* The furnished room, in drop order                                          */
-/* -------------------------------------------------------------------------- */
-
-/**
- * The layout, in the order the pieces arrive. Rug first so everything else
- * lands on it; the small things that sit ON other pieces last, so their
- * surface is already there when they drop.
- *
- * Spin alternates in sign so the room does not appear to be turning as a
- * whole. The rug, print and table-top pieces barely turn at all: a rug that
- * spins on the way down reads as thrown, not placed.
- */
-function Furnishings({ armchair }: { armchair: ArmchairMode }) {
-  return (
-    <>
-      <DropIn index={0} position={[0.1, 0, 0.25]} height={0.9} spin={0.08}>
-        <Rug />
-      </DropIn>
-
-      <DropIn index={1} position={[0.2, 0, -1.97]} spin={-0.28}>
-        <Sofa />
-      </DropIn>
-
-      <DropIn index={2} position={[0.2, 0, 0.15]} spin={0.34}>
-        <CoffeeTable />
-      </DropIn>
-
-      {/*
-       * Turned to face the coffee table. Keyed by the mode so a switch
-       * REMOUNTS the DropIn: it marks its meshes for shadows once, on mount,
-       * and the procedural chair swapped in later would otherwise arrive
-       * without them.
-       */}
-      <DropIn key={`armchair-${armchair}`} index={3} position={[1.85, 0, 0.6]} rotationY={-1.84} spin={-0.36}>
-        {armchair === 'procedural' ? (
-          <Armchair />
-        ) : (
-          <PolyHavenArmchair look={armchair === 'polyhaven-raw' ? 'raw' : 'brand'} />
-        )}
-      </DropIn>
-
-      <DropIn index={4} position={[-1.45, 0, -1.7]} spin={0.22}>
-        <FloorLamp index={4} />
-      </DropIn>
-
-      {/* Against the left wall, facing into the room. */}
-      <DropIn index={5} position={[-2.8, 0, -0.35]} rotationY={Math.PI / 2} spin={-0.2}>
-        <Bookshelf />
-      </DropIn>
-
-      <DropIn index={6} position={[2.1, 0, -0.45]} spin={0.3}>
-        <SideTable />
-      </DropIn>
-
-      <DropIn index={7} position={[-2.42, 0, -2.05]} spin={-0.4}>
-        <Plant />
-      </DropIn>
-
-      <DropIn index={8} position={[0.2, 1.22, -2.5]} height={1.1} spin={0}>
-        <WallArt />
-      </DropIn>
-
-      <DropIn index={9} position={[2.1, SIDE_TABLE_TOP, -0.45]} height={0.9} spin={0.5}>
-        <Vase />
-      </DropIn>
-
-      <DropIn index={10} position={[0.2, COFFEE_TABLE_TOP, 0.15]} height={0.8} spin={-0.12}>
-        <TableStyling />
-      </DropIn>
-    </>
-  )
-}
 
 /* -------------------------------------------------------------------------- */
 /* Lighting                                                                   */
@@ -324,41 +230,227 @@ function TouchScroll() {
   return null
 }
 
+/** A 1x1 off-screen target to compile against — see <Arrival>. Made once, on first use. */
+let offscreen: WebGLRenderTarget | null = null
+const compileTarget = () => (offscreen ??= new WebGLRenderTarget(1, 1, { type: HalfFloatType }))
+
 /**
- * Starts the sequence once the canvas has actually drawn a few frames.
+ * Holds a newly mounted room out of sight while its shaders compile, then
+ * starts its sequence `lead` seconds out.
  *
- * The first frame is where every shader compiles, and on a slow machine that
- * can take longer than the whole lead-in. Starting the clock from mount would
- * mean the first two pieces had already landed, unseen, by the time anything
- * appeared. Counting frames starts it from the first frame someone can see.
+ * three compiles a material's shader the first time something wearing it is
+ * drawn — synchronously, on that frame. Every room brings materials the one
+ * before it never drew (the Poly Haven models' re-dressed surfaces, the
+ * linen, the stone, the black glass), and drawn straight away the bedroom
+ * froze the page for 420ms on its first frame. So the room is handed to
+ * `compileAsync` first, which queues every shader it needs on the driver's
+ * own threads (KHR_parallel_shader_compile) and lets the render loop run on.
+ * Only once they are all ready does the room become visible and its clock
+ * start. The first piece then lands on a warm pipeline.
+ *
+ * Mounted inside the room's own Suspense boundary, so it only runs once every
+ * model the room needs has loaded — a slow load cannot make a piece land
+ * unseen.
  */
-function Starter({
+function Arrival({
   schedule,
+  lead,
+  reduced,
+  children,
+}: {
+  /** Sets the clock time piece 0 starts at. Owned by <Rooms>. */
+  schedule: (at: number) => void
+  /** Seconds of empty room between the shaders being ready and the first piece. */
+  lead: number
+  reduced: boolean
+  children: ReactNode
+}) {
+  const group = useRef<Group>(null)
+  const get = useThree((state) => state.get)
+  const [ready, setReady] = useState(false)
+
+  useLayoutEffect(() => {
+    const root = group.current
+    if (!root) return
+    let live = true
+    const { gl, camera, scene } = get()
+    const begin = () => {
+      if (!live) return
+      setReady(true)
+      if (!reduced) schedule(get().clock.elapsedTime + lead)
+    }
+    /*
+     * Compiled as if into an off-screen target, because that is where the
+     * room is drawn: the effect chain renders the scene into its own linear
+     * buffer, and three builds the output colour space into every shader.
+     * Compiled against the screen, the shaders came out as the sRGB variants —
+     * right in every other way, never used — and the real ones still compiled
+     * on the first frame. Rejected or not, the room is shown in the end: a
+     * failed pre-compile only means compiling on first draw, as before.
+     */
+    const previous = gl.getRenderTarget()
+    gl.setRenderTarget(compileTarget())
+    const compiling = gl.compileAsync(root, camera, scene)
+    gl.setRenderTarget(previous)
+    compiling.then(begin, begin)
+    return () => {
+      live = false
+    }
+  }, [get, schedule, lead, reduced])
+
+  return (
+    <group ref={group} visible={ready}>
+      {children}
+    </group>
+  )
+}
+
+/**
+ * The room that is furnished, and the handover from one room to the next.
+ *
+ * A change of room is three beats, all on the render loop's clock:
+ *
+ *   1. CLEAR    `leave` is set to now. Every piece of the current room runs
+ *               its drop backwards, last in first out (furnish-clock.ts), and
+ *               the last is gone leaveSpan(pieces) seconds later.
+ *   2. EMPTY    The next room is mounted — a new generation, so every piece
+ *               starts shrunk and waiting — out of sight while its shaders
+ *               compile in the background (<Arrival>), and the bare shell is
+ *               held SWITCH_LEAD_IN beyond that.
+ *   3. FURNISH  <Arrival> sets `start`, and the room drops in exactly as the
+ *               first one did.
+ *
+ * Asking for another room while one is clearing only changes where it is
+ * going; asking for the room already there does nothing. Under reduced
+ * motion the whole thing is a cut: the next room is mounted at once, and
+ * mounts finished.
+ */
+function Rooms({
+  room,
+  armchair,
   reduced,
   replayToken,
 }: {
-  /** Sets the clock time piece 0 starts at. Owned by RoomScene. */
-  schedule: (at: number) => void
+  room: RoomId
+  armchair: ArmchairMode
   reduced: boolean
   replayToken: number
 }) {
-  const frames = useRef(0)
+  /*
+   * Infinity until set, so every piece is "not yet" — waiting shrunk to
+   * nothing — and "not leaving". Reduced motion never sets `start`: it is
+   * pinned "finished" inside furnish-clock.ts instead.
+   */
+  const start = useRef(Number.POSITIVE_INFINITY)
+  const leave = useRef(Number.POSITIVE_INFINITY)
+  const schedule = useCallback((at: number) => {
+    start.current = at
+  }, [])
+
   const get = useThree((state) => state.get)
+  const [shown, setShown] = useState<{ room: RoomId; generation: number }>({ room, generation: 0 })
+
+  /** The room to change to once the current one has cleared; null when none is. */
+  const pending = useRef<RoomId | null>(null)
+  const clearedAt = useRef(Number.POSITIVE_INFINITY)
+
+  // Reduced motion: a cut, made during render — the documented way to keep
+  // state in step with a prop — so the next room is on the very next frame.
+  if (reduced && room !== shown.room) {
+    setShown({ room, generation: shown.generation + 1 })
+  }
+
+  useEffect(() => {
+    if (reduced || (pending.current === null && room === shown.room)) return
+
+    if (pending.current === null) {
+      const now = get().clock.elapsedTime
+      leave.current = now
+      clearedAt.current = now + leaveSpan(ROOMS[shown.room].pieces)
+    }
+    pending.current = room
+  }, [room, shown.room, reduced, get])
 
   useFrame(({ clock }) => {
-    frames.current += 1
-    if (frames.current === 3 && !reduced) schedule(clock.elapsedTime + LEAD_IN)
+    if (pending.current === null || clock.elapsedTime < clearedAt.current) return
+    const next = pending.current
+    pending.current = null
+    clearedAt.current = Number.POSITIVE_INFINITY
+    start.current = Number.POSITIVE_INFINITY
+    leave.current = Number.POSITIVE_INFINITY
+    setShown((current) => ({ room: next, generation: current.generation + 1 }))
   })
 
   // Replay: everything measures itself from the start time, so moving it to
-  // now is the whole restart. Skipped for the token's initial value.
+  // now is the whole restart. Skipped for the token's initial value, and
+  // while a room is clearing — the next one is about to arrive anyway.
   const firstToken = useRef(replayToken)
   useEffect(() => {
-    if (replayToken === firstToken.current) return
-    schedule(get().clock.elapsedTime + 0.15)
-  }, [replayToken, get, schedule])
+    if (replayToken === firstToken.current || pending.current !== null) return
+    start.current = get().clock.elapsedTime + 0.15
+  }, [replayToken, get])
 
-  return null
+  const { Layout, pieces } = ROOMS[shown.room]
+
+  return (
+    // Keyed by generation: each arrival is a fresh mount, so a room shown
+    // twice in a row still starts from empty. Its own boundary, so a room
+    // whose models are still loading suspends only itself — the shell and
+    // the lights stay up.
+    <Suspense key={shown.generation} fallback={null}>
+      <FurnishProvider start={start} leave={leave} count={pieces} reduced={reduced}>
+        <Arrival schedule={schedule} lead={shown.generation === 0 ? LEAD_IN : SWITCH_LEAD_IN} reduced={reduced}>
+          <Layout armchair={armchair} />
+        </Arrival>
+      </FurnishProvider>
+    </Suspense>
+  )
+}
+
+/**
+ * The scene's fixed pool of lamp lights, and the context the lamps borrow
+ * them through — see lamp-light-pool.ts. Outside every Suspense boundary, so
+ * the lights are in the scene before the first material is ever compiled,
+ * and the count those shaders are built for is the count for good.
+ */
+function LampLights({ children }: { children: ReactNode }) {
+  const lights = useRef<(PointLight | null)[]>([])
+  const taken = useRef<boolean[]>(Array.from({ length: LAMP_LIGHT_SLOTS }, () => false))
+
+  const pool = useMemo<LampLightPool>(
+    () => ({
+      light: (slot) => lights.current[slot] ?? null,
+      claim: () => {
+        const slot = taken.current.indexOf(false)
+        if (slot < 0) return null
+        taken.current[slot] = true
+        return slot
+      },
+      release: (slot) => {
+        taken.current[slot] = false
+        const light = lights.current[slot]
+        if (light) light.intensity = 0
+      },
+    }),
+    [],
+  )
+
+  return (
+    <LampLightContext.Provider value={pool}>
+      {Array.from({ length: LAMP_LIGHT_SLOTS }, (_, slot) => (
+        <pointLight
+          key={slot}
+          ref={(light) => {
+            lights.current[slot] = light
+          }}
+          color={PALETTE.lampLight}
+          intensity={0}
+          decay={2}
+        />
+      ))}
+      {children}
+    </LampLightContext.Provider>
+  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -366,12 +458,15 @@ function Starter({
 /* -------------------------------------------------------------------------- */
 
 export function RoomScene({
+  room,
   replayToken,
   reduced,
   layout,
   coarsePointer,
   armchair,
 }: {
+  /** Change it to clear the room and furnish it as another. */
+  room: RoomId
   /** Change it to restart the sequence. */
   replayToken: number
   reduced: boolean
@@ -379,16 +474,6 @@ export function RoomScene({
   coarsePointer: boolean
   armchair: ArmchairMode
 }) {
-  /*
-   * Infinity until <Starter> sets it, so every piece is "not yet" and waits
-   * shrunk to nothing. Reduced motion never sets it: it is pinned "finished"
-   * inside furnish-clock.ts instead, so `start` is simply unused.
-   */
-  const start = useRef(Number.POSITIVE_INFINITY)
-  const schedule = useCallback((at: number) => {
-    start.current = at
-  }, [])
-
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
   // between the two is worse than staying on the cheaper one.
@@ -412,20 +497,18 @@ export function RoomScene({
       <PerformanceMonitor onDecline={() => setQuality('low')} />
 
       {/*
-       * One boundary around the whole room, Starter included. The glTF
-       * armchair suspends while it loads; with Starter inside the same
-       * boundary it only mounts — and only starts counting frames towards the
-       * first drop — once the model has arrived, so a slow load cannot make a
-       * piece land unseen.
+       * The shell suspends on its floor texture, so the room is never seen
+       * with a flat floor that then changes. The furnishings have their own
+       * boundary inside <Rooms>: a glTF model still loading suspends only
+       * the room it belongs to.
        */}
-      <Suspense fallback={null}>
-        <FurnishProvider start={start} reduced={reduced}>
-          <Starter schedule={schedule} reduced={reduced} replayToken={replayToken} />
+      <LampLights>
+        <Suspense fallback={null}>
           <Studio quality={quality} />
           <Room />
-          <Furnishings armchair={armchair} />
-        </FurnishProvider>
-      </Suspense>
+          <Rooms room={room} armchair={armchair} reduced={reduced} replayToken={replayToken} />
+        </Suspense>
+      </LampLights>
 
       <OrbitControls
         makeDefault

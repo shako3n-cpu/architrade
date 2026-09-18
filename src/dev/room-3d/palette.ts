@@ -6,10 +6,12 @@
  * stage reads as part of the page it sits on rather than as an embedded demo.
  *
  * Two families only, as the brief asks: graphite and off-white for every
- * surface, brass for anything metal. The one exception is the plant, which is
- * a muted sage — a plant recoloured graphite stops reading as a plant and
- * starts reading as sculpture, and that is a stranger thing to put in a
- * living room than a single natural green.
+ * surface, brass for anything metal. Two exceptions. The plant is a muted
+ * sage — a plant recoloured graphite stops reading as a plant and starts
+ * reading as sculpture, and that is a stranger thing to put in a living room
+ * than a single natural green. And the floor is timber: with an off-white
+ * floor under off-white walls the corner read as one folded sheet, not as a
+ * floor meeting a wall.
  *
  * WHY SOME VALUES ARE NOT THE TOKEN EXACTLY
  *   A swatch on a page is seen flat. The same colour on a lit, shaded surface
@@ -36,8 +38,15 @@ export const PALETTE = {
    * lamp — and the surfaces stay the off-white and greige they are on the page.
    */
   wall: '#ebe8e3',
-  floor: '#cdc7be',
   skirting: '#f1eee9',
+
+  /**
+   * The floor is Poly Haven's wood_floor texture (see room.tsx), a warm
+   * smoked oak — the one warm, mid-tone surface in the room, there so the
+   * floor and the walls read as two planes rather than one off-white fold.
+   * This is the SLAB under it: the cut edge of the architect's model.
+   */
+  slab: '#cdc7be',
 
   /** Upholstery. Slightly lighter than --at-background so it lands on it. */
   fabricLight: '#e9e6e0',
@@ -55,13 +64,28 @@ export const PALETTE = {
 
   ceramic: '#efece6',
   sand: '#cfc6b8',
+  /**
+   * Sand for cloth lying in full light — the throw across the bed. Plain sand
+   * there rendered as one more white on white linen.
+   */
+  sandDeep: '#b4a893',
 
   /** Reflectance, not swatch — see above. Sits between --at-brass-bright and polished brass. */
   brass: '#c9a266',
 
-  /** Lighter than the floor, so the rug reads as a rug and not as a stain. */
-  rug: '#d6d0c5',
-  rugField: '#dfdad0',
+  /**
+   * The rug's ground: ivory-greige. At #e4dfd6 it rendered as flat white on
+   * the timber and the lattice on it all but vanished; a step down, the
+   * ground reads as wool and the line as a line.
+   */
+  rugField: '#dcd5c9',
+  /** The rug's knotted lattice — the second of its two tones. */
+  rugLine: '#968d7f',
+  /** The office rug's ground: graphite, a step lifted, as wool is. */
+  rugGraphite: '#3f4247',
+
+  /** Bed linen: the brightest fabric in the palette, a step above the upholstery. */
+  linen: '#f1eee8',
 
   leaf: '#4c5b46',
   trunk: '#3b342c',

@@ -1,5 +1,6 @@
-import { BackSide, DoubleSide, MeshPhysicalMaterial, MeshStandardMaterial } from 'three'
+import { BackSide, DoubleSide, MeshPhysicalMaterial, MeshStandardMaterial, type Texture } from 'three'
 import { PALETTE } from './palette'
+import { rugTexture } from './rug-pattern'
 
 /**
  * ============================================================================
@@ -32,15 +33,36 @@ const fabric = (color: string, sheenColor: string) =>
     sheenColor,
   })
 
+/**
+ * Wool pile: fully rough, with a soft sheen. A texture, when given, is its
+ * colour and its bump. The sheen is tinted to the wool: a white sheen on the
+ * graphite rug, seen at the camera's shallow angle, washed it out to a pale
+ * grey — the same reason the graphite upholstery's sheen is grey.
+ */
+const rugWool = (color: string, sheenColor: string, texture?: Texture) =>
+  new MeshPhysicalMaterial({
+    color,
+    map: texture ?? null,
+    bumpMap: texture ?? null,
+    bumpScale: 1.5,
+    roughness: 1,
+    sheen: 0.6,
+    sheenRoughness: 1,
+    sheenColor,
+  })
+
 export const M = {
   wall: new MeshStandardMaterial({ color: PALETTE.wall, roughness: 0.96 }),
-  floor: new MeshStandardMaterial({ color: PALETTE.floor, roughness: 0.82 }),
+  /** The floor slab's cut edge. The floor's top face is timber — see room.tsx. */
+  slab: new MeshStandardMaterial({ color: PALETTE.slab, roughness: 0.82 }),
   skirting: new MeshStandardMaterial({ color: PALETTE.skirting, roughness: 0.7 }),
 
   fabricLight: fabric(PALETTE.fabricLight, '#ffffff'),
   fabricGraphite: fabric(PALETTE.fabricGraphite, '#8e8f95'),
 
   graphiteMatte: new MeshStandardMaterial({ color: PALETTE.graphite, roughness: 0.72 }),
+  /** Recessed plinths and castors — the parts meant to disappear into shadow. */
+  graphiteDeep: new MeshStandardMaterial({ color: PALETTE.graphiteDeep, roughness: 0.8 }),
 
   /**
    * Off-white lacquer, for joinery. The bookcase was graphite first and was
@@ -77,19 +99,43 @@ export const M = {
   /** Brushed — legs and rods, where a mirror finish would look cheap. */
   brassBrushed: new MeshStandardMaterial({ color: PALETTE.brass, metalness: 1, roughness: 0.4 }),
 
-  rug: new MeshPhysicalMaterial({
-    color: PALETTE.rug,
-    roughness: 1,
-    sheen: 0.6,
-    sheenRoughness: 1,
-    sheenColor: '#ffffff',
+  /** The ivory rug's cut edge: its ground colour, plain. */
+  rug: rugWool(PALETTE.rugField, '#ffffff'),
+  /**
+   * The ivory rug's face: the knotted lattice from rug-pattern.ts, which is
+   * also its bump map, so the lines sit a hair below the pile. White base
+   * colour — the texture carries both tones.
+   */
+  rugFace: rugWool('#ffffff', '#ffffff', rugTexture('lattice')),
+
+  /** The office rug: graphite with a sand line — edge, then face. */
+  rugGraphite: rugWool(PALETTE.rugGraphite, '#5c5e63'),
+  rugGraphiteFace: rugWool('#ffffff', '#5c5e63', rugTexture('border')),
+
+  /** Bed linen — fabric with sheen, the brightest one. */
+  linen: fabric(PALETTE.linen, '#ffffff'),
+  /** A cushion, a notebook: the palette's one warm neutral, as cloth. */
+  fabricSand: fabric(PALETTE.sand, '#ffffff'),
+  /** The bed's throw: the same sand, a step deeper for full light. */
+  fabricSandDeep: fabric(PALETTE.sandDeep, '#ffffff'),
+
+  /** Pale honed stone — the kitchen island's top. */
+  paleStone: new MeshPhysicalMaterial({
+    color: '#ebe7e0',
+    roughness: 0.38,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.3,
   }),
-  rugField: new MeshPhysicalMaterial({
-    color: PALETTE.rugField,
-    roughness: 1,
-    sheen: 0.6,
-    sheenRoughness: 1,
-    sheenColor: '#ffffff',
+
+  /** The sink's basin, read as a recess: matte and near-black. */
+  basin: new MeshStandardMaterial({ color: '#1a1b1e', roughness: 0.6 }),
+
+  /** Black glass: the hob, the laptop's screen. */
+  blackGlass: new MeshPhysicalMaterial({
+    color: '#16181b',
+    roughness: 0.12,
+    clearcoat: 1,
+    clearcoatRoughness: 0.08,
   }),
 
   leaf: new MeshStandardMaterial({ color: PALETTE.leaf, roughness: 0.55 }),
@@ -137,3 +183,4 @@ export const BOOK_MATERIALS = [
   new MeshStandardMaterial({ color: '#b9ad9a', roughness: 0.8 }),
   new MeshStandardMaterial({ color: '#4a4d52', roughness: 0.7 }),
 ]
+

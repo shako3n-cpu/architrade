@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 
@@ -22,9 +22,17 @@ import { useFrame } from '@react-three/fiber'
  *   the whole sequence — nothing is unmounted or rebuilt, so replay costs
  *   nothing and cannot leak.
  *
+ * CHANGING ROOMS IS THE SAME DROP, BACKWARDS
+ *   Setting `leave` sends the furnished room back the way it came: each piece
+ *   runs its own drop in reverse — a small squash, a lift, a turn — at about
+ *   twice the speed, last in first out, and shrinks as it rises so it is gone
+ *   before it reaches the top of the frame. There is no second animation:
+ *   leaving is `dropPose` fed a progress that runs from 1 back to 0.
+ *
  * REDUCED MOTION IS "ALREADY FINISHED"
  *   Not a slower or shorter animation: progress is pinned past the end, so the
- *   first frame the visitor sees is the furnished room with the lamp on.
+ *   first frame the visitor sees is the furnished room with the lamp on, and
+ *   a change of room is a plain cut.
  * ============================================================================
  */
 
@@ -43,9 +51,32 @@ export const LEAD_IN = 0.7
 /** How long past landing a light takes to come fully up, in progress units. */
 export const LAMP_WARMUP = 0.6
 
+/** Seconds one piece takes to clear, when the room changes. */
+export const LEAVE_DURATION = 0.5
+
+/** Seconds between one piece starting to clear and the next — last in, first out. */
+export const LEAVE_STAGGER = 0.06
+
+/**
+ * How long the EMPTY room is held between one room clearing and the next
+ * one arriving. Long enough to register as a beat — the room is bare, then it
+ * becomes something else — and to absorb the shader compile of pieces that
+ * have never been drawn; short enough not to read as a pause.
+ */
+export const SWITCH_LEAD_IN = 0.45
+
+/** Seconds from the first piece of a room starting to clear to the last one gone. */
+export function leaveSpan(count: number): number {
+  return (count - 1) * LEAVE_STAGGER + LEAVE_DURATION
+}
+
 export type FurnishClock = {
   /** Clock time, in seconds, at which piece 0 starts. */
   start: MutableRefObject<number>
+  /** Clock time at which the room starts to clear. Infinity while it stays. */
+  leave: MutableRefObject<number>
+  /** Pieces in the room, so they can clear in reverse order. */
+  count: number
   reduced: boolean
 }
 
@@ -58,21 +89,82 @@ export function useFurnishClock(): FurnishClock {
 }
 
 /**
- * Where piece `index` is in its drop: below 0 not yet started, 0..1 moving,
- * 1 and above at rest. Returned as a getter rather than a value because it is
- * read inside other useFrame callbacks, where a value captured at render time
- * would be frozen.
+ * One piece's two clocks, as getters rather than values because they are read
+ * inside other useFrame callbacks, where a value captured at render time would
+ * be frozen.
+ *
+ *   drop()    below 0 not yet started, 0..1 falling, 1 and above at rest
+ *   leave()   0 or below while the room stays; 0..1 clearing; 1 and above gone
  */
-export function useDropProgress(index: number): () => number {
-  const { start, reduced } = useFurnishClock()
+export type PieceClock = {
+  drop: () => number
+  leave: () => number
+}
+
+/**
+ * The clock of the DropIn a component is inside — so a lamp can read its own
+ * landing without being told its place in the sequence a second time.
+ */
+export const PieceContext = createContext<PieceClock | null>(null)
+
+/** How far on the lamp this is called from is, 0..1 — see lampWarmth. */
+export function useLampWarmth(): () => number {
+  const clock = useContext(PieceContext)
+  if (!clock) throw new Error('A lamp must be rendered inside a <DropIn>.')
+  return useCallback(() => lampWarmth(clock), [clock])
+}
+
+export function usePieceClock(index: number): PieceClock {
+  const { start, leave, count, reduced } = useFurnishClock()
   const elapsed = useRef(0)
 
   useFrame(({ clock }) => {
     elapsed.current = clock.elapsedTime
   })
 
-  return () =>
-    reduced ? 1 + LAMP_WARMUP : (elapsed.current - start.current - index * STAGGER) / DURATION
+  return useMemo(
+    () => ({
+      drop: () => (reduced ? 1 + LAMP_WARMUP : (elapsed.current - start.current - index * STAGGER) / DURATION),
+      leave: () =>
+        reduced ? 0 : (elapsed.current - leave.current - (count - 1 - index) * LEAVE_STAGGER) / LEAVE_DURATION,
+    }),
+    [start, leave, count, reduced, index],
+  )
+}
+
+/**
+ * The progress a piece's pose is drawn from: its drop, or — once it is
+ * leaving — the same drop running backwards, whichever is less far along. The
+ * minimum is what makes a change of room mid-drop continuous: a piece still
+ * falling carries on until the reversed clock catches it, then turns round.
+ */
+export function poseProgress(clock: PieceClock): number {
+  const leaving = clock.leave()
+  const drop = clock.drop()
+  return leaving > 0 ? Math.min(drop, 1 - leaving) : drop
+}
+
+const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
+const smoothstep = (x: number) => x * x * (3 - 2 * x)
+
+/**
+ * Scale while leaving: full size through the lift-off, then shrinking to
+ * nothing over the rest of the rise.
+ */
+export function leaveScale(leaving: number): number {
+  return 1 - smoothstep(clamp01((leaving - 0.3) / 0.7))
+}
+
+/**
+ * How far on a lamp is, 0..1: off while it falls, warming up over
+ * LAMP_WARMUP once it has landed — so it lights the room rather than
+ * arriving lit — and off again quickly once it starts to leave: a lamp is
+ * switched off before it is carried out.
+ */
+export function lampWarmth(clock: PieceClock): number {
+  const up = smoothstep(clamp01((clock.drop() - 1) / LAMP_WARMUP))
+  const out = 1 - smoothstep(clamp01(clock.leave() / 0.3))
+  return up * out
 }
 
 /**

@@ -52,53 +52,7 @@
     background-color: color-mix(in oklab, var(--at-surface) 70%, transparent);
   }
 
-  /* The dev-only furniture-source switch, top right of the stage. */
-  .room3d-compare {
-    position: absolute;
-    top: 0.75rem;
-    right: 1.25rem;
-    z-index: 10;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.25rem;
-    max-width: calc(100% - 2.5rem);
-    padding: 0.25rem;
-    border: 1px solid var(--at-hairline);
-    background-color: color-mix(in oklab, var(--at-background) 80%, transparent);
-    backdrop-filter: blur(6px);
-    font-size: 0.6875rem;
-    line-height: 1;
-  }
-
-  .room3d-compare-label {
-    padding: 0 0.5rem;
-    color: var(--at-muted);
-  }
-
-  .room3d-compare button {
-    padding: 0.5rem 0.625rem;
-    color: var(--at-ink);
-    cursor: pointer;
-    transition: background-color 200ms;
-  }
-
-  .room3d-compare button:hover {
-    background-color: var(--at-surface);
-  }
-
-  .room3d-compare button[aria-pressed='true'] {
-    background-color: var(--at-ink);
-    color: var(--at-background);
-  }
-
   @media (min-width: 1024px) {
-    .room3d-compare {
-      top: 1.25rem;
-      right: 3rem;
-    }
-
     .room3d-hero {
       display: block;
       min-height: calc(100dvh - var(--at-header-height));
@@ -113,8 +67,9 @@
       pointer-events: none;
     }
 
-    /* ...but the buttons are buttons. */
-    .room3d-actions {
+    /* ...but the buttons are buttons, and so is the room switch. */
+    .room3d-actions,
+    .room3d-rooms {
       pointer-events: auto;
     }
 

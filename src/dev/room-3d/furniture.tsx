@@ -1,18 +1,10 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useMemo } from 'react'
 import { RoundedBox } from '@react-three/drei'
-import {
-  CubicBezierCurve3,
-  LatheGeometry,
-  SphereGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-  type PointLight,
-} from 'three'
+import { CubicBezierCurve3, LatheGeometry, SphereGeometry, TubeGeometry, Vector2, Vector3, type Material } from 'three'
+import { useLampGlow } from './lamp-glow'
 import { BOOK_MATERIALS, M } from './materials'
-import { PALETTE } from './palette'
-import { LAMP_WARMUP, useDropProgress } from './furnish-clock'
+import { RUG_SIZES, type RugStyle } from './rug-pattern'
+import { seeded } from './util'
 
 /**
  * ============================================================================
@@ -20,8 +12,8 @@ import { LAMP_WARMUP, useDropProgress } from './furnish-clock'
  * ----------------------------------------------------------------------------
  * Every piece is built with its ORIGIN AT ITS BASE and its FRONT FACING +Z.
  * DropIn relies on the first (it squashes about the origin), and the room
- * layout in room-scene.tsx relies on the second (it turns each piece to face
- * where it should).
+ * layouts in rooms.tsx rely on the second (they turn each piece to face
+ * where it should). The kitchen, bedroom and office have their own files.
  *
  * MODELLED HERE — EXCEPT THE ARMCHAIR
  *   These are procedural, kept deliberately in the minimal modern idiom the
@@ -33,8 +25,8 @@ import { LAMP_WARMUP, useDropProgress } from './furnish-clock'
  *
  *   The armchair has been: the default is now Poly Haven's
  *   modern_arm_chair_01 (see polyhaven.tsx). <Armchair> below stays as the
- *   comparison it lost to — the dev route's switch still shows it. The sofa
- *   was tried the same way and stayed procedural; polyhaven.tsx says why.
+ *   comparison it lost to, one parameter away: ?armchair=procedural. The
+ *   sofa was tried the same way and stayed procedural; polyhaven.tsx says why.
  *
  * Units are metres. Dimensions follow real furniture, because a sofa that is
  * the right size is most of what makes a room read as a room.
@@ -48,14 +40,23 @@ const SMOOTH = 5
 /* Rug                                                                        */
 /* -------------------------------------------------------------------------- */
 
-export function Rug() {
+/** Box faces in three's order: +x, -x, +y, -y, +z, -z. The pattern on top only. */
+const RUG_FACES: Record<RugStyle, Material[]> = {
+  lattice: [M.rug, M.rug, M.rugFace, M.rug, M.rug, M.rug],
+  border: [M.rugGraphite, M.rugGraphite, M.rugGraphiteFace, M.rugGraphite, M.rugGraphite, M.rugGraphite],
+}
+
+/**
+ * A wool rug — see rug-pattern.ts for the two designs. A plain box, not a
+ * RoundedBox: the pattern needs the top face's UVs to run edge to edge, and
+ * at 12mm thick a rounded corner is not visible anyway.
+ */
+export function Rug({ style = 'lattice' }: { style?: RugStyle }) {
+  const { width, depth } = RUG_SIZES[style]
   return (
-    <group>
-      <RoundedBox args={[3, 0.012, 2.1]} radius={0.005} smoothness={2} position={[0, 0.006, 0]} material={M.rug} />
-      {/* A lighter inner field, 12cm in from the edge — the border is what makes
-          a flat rectangle read as a woven rug rather than a floor tile. */}
-      <RoundedBox args={[2.76, 0.013, 1.86]} radius={0.005} smoothness={2} position={[0, 0.0068, 0]} material={M.rugField} />
-    </group>
+    <mesh position={[0, 0.006, 0]} material={RUG_FACES[style]}>
+      <boxGeometry args={[width, 0.012, depth]} />
+    </mesh>
   )
 }
 
@@ -238,8 +239,8 @@ export function CoffeeTable() {
   )
 }
 
-/** Two books and a brass bowl, placed on the coffee table after it lands. */
-export function TableStyling() {
+/** A shallow polished-brass bowl, 26cm across. */
+export function BrassBowl() {
   const bowl = useMemo(
     () =>
       new LatheGeometry(
@@ -258,6 +259,11 @@ export function TableStyling() {
     [],
   )
 
+  return <mesh geometry={bowl} material={M.brass} />
+}
+
+/** Two books and a brass bowl, placed on the coffee table after it lands. */
+export function TableStyling() {
   return (
     <group>
       <mesh position={[-0.13, 0.016, 0.02]} rotation={[0, 0.22, 0]} material={BOOK_MATERIALS[0]}>
@@ -266,7 +272,9 @@ export function TableStyling() {
       <mesh position={[-0.12, 0.046, 0.03]} rotation={[0, 0.06, 0]} material={BOOK_MATERIALS[2]}>
         <boxGeometry args={[0.27, 0.028, 0.2]} />
       </mesh>
-      <mesh geometry={bowl} position={[0.2, 0, -0.08]} material={M.brass} />
+      <group position={[0.2, 0, -0.08]}>
+        <BrassBowl />
+      </group>
     </group>
   )
 }
@@ -345,14 +353,12 @@ export function Vase() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The lamp is the one piece that changes the LIGHTING when it lands: its bulb
- * and a warm point light come up over a moment once it is standing, rather
- * than being on while it falls. `index` is its place in the sequence, so it
- * can read its own landing.
+ * The lamp is the piece that changes the LIGHTING when it lands: its bulb and
+ * a warm point light come up over a moment once it is standing, rather than
+ * being on while it falls — see lamp-glow.ts, shared by every lamp.
  */
-export function FloorLamp({ index }: { index: number }) {
-  const progress = useDropProgress(index)
-  const light = useRef<PointLight>(null)
+export function FloorLamp() {
+  const { glow, anchor } = useLampGlow({ bulb: 7, shade: 0.9, light: 2.2, distance: 5 })
 
   // The arc: up from the base, over, and down to where the shade hangs.
   const end = useMemo(() => new Vector3(0.95, 1.98, 0.86), [])
@@ -389,17 +395,6 @@ export function FloorLamp({ index }: { index: number }) {
     [],
   )
 
-  useFrame(() => {
-    // 0 until the lamp has landed, then up to 1 over LAMP_WARMUP, eased so it
-    // warms up rather than switching on.
-    const raw = Math.min(Math.max((progress() - 1) / LAMP_WARMUP, 0), 1)
-    const on = raw * raw * (3 - 2 * raw)
-
-    M.bulb.emissiveIntensity = 7 * on
-    M.shadeInner.emissiveIntensity = 0.9 * on
-    if (light.current) light.current.intensity = 2.2 * on
-  })
-
   const shadeTop = end.y - 0.2
 
   return (
@@ -412,20 +407,14 @@ export function FloorLamp({ index }: { index: number }) {
 
       <group position={[end.x, shadeTop, end.z]}>
         <mesh geometry={shade} material={M.shadeOuter} />
-        <mesh geometry={shade} material={M.shadeInner} scale={0.985} />
+        <mesh geometry={shade} material={glow.shadeInner} scale={0.985} />
 
-        <mesh position={[0, 0.07, 0]} material={M.bulb}>
+        <mesh position={[0, 0.07, 0]} material={glow.bulb}>
           <sphereGeometry args={[0.042, 24, 16]} />
         </mesh>
 
-        <pointLight
-          ref={light}
-          position={[0, 0.03, 0]}
-          color={PALETTE.lampLight}
-          intensity={0}
-          distance={5}
-          decay={2}
-        />
+        {/* Where the lamp's borrowed light sits — see lamp-light-pool.ts. */}
+        <group ref={anchor} position={[0, 0.03, 0]} />
       </group>
     </group>
   )
@@ -434,18 +423,6 @@ export function FloorLamp({ index }: { index: number }) {
 /* -------------------------------------------------------------------------- */
 /* Bookshelf                                                                  */
 /* -------------------------------------------------------------------------- */
-
-/** Deterministic, so the shelf is styled the same way on every load and replay. */
-function seeded(seed: number) {
-  let a = seed
-  return () => {
-    a |= 0
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 type Book = { x: number; w: number; h: number; lean: number; material: number }
 
