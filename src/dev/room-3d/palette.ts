@@ -39,6 +39,25 @@ export const PALETTE = {
    */
   wall: '#ebe8e3',
   skirting: '#f1eee9',
+  /** The cut-back ceiling: the wall's tone, a shade lighter, as a ceiling reads. */
+  ceiling: '#f3f0eb',
+
+  /*
+   * Each room's wall treatment — see walls.tsx. The living room keeps the
+   * plain wall and its framed print.
+   */
+  /**
+   * Office: a graphite accent wall. Lighter and warmer than the ink — at
+   * #4a4e54 the wall rendered as near-black navy, heavier than anything in it.
+   */
+  paintGraphite: '#595c61',
+  /** Bedroom: warm limewash — the base, and the lighter and darker clouds in it. */
+  limewash: '#d6c5ad',
+  limewashLight: '#e2d5c2',
+  limewashDark: '#c6b398',
+  /** Kitchen: glazed tile, and the grout between. */
+  tile: '#e3dbcd',
+  grout: '#b4ab9d',
 
   /**
    * The floor is Poly Haven's wood_floor texture (see room.tsx), a warm
@@ -83,6 +102,15 @@ export const PALETTE = {
   rugLine: '#968d7f',
   /** The office rug's ground: graphite, a step lifted, as wool is. */
   rugGraphite: '#3f4247',
+  /** The bedroom rug: an ivory ground with a sand band set in from the edge. */
+  rugIvory: '#e2dbcf',
+  rugBand: '#bcab92',
+
+  /** Oiled oak, for the few small wooden things: a board, spoon handles. */
+  oak: '#a88a66',
+  /** Fruit, muted: an olive-green pear and a russet one. Nothing bright. */
+  pear: '#9d9a62',
+  pearRusset: '#9a7c58',
 
   /** Bed linen: the brightest fabric in the palette, a step above the upholstery. */
   linen: '#f1eee8',

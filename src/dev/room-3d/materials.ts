@@ -1,6 +1,5 @@
 import { BackSide, DoubleSide, MeshPhysicalMaterial, MeshStandardMaterial, type Texture } from 'three'
 import { PALETTE } from './palette'
-import { rugTexture } from './rug-pattern'
 
 /**
  * ============================================================================
@@ -39,7 +38,7 @@ const fabric = (color: string, sheenColor: string) =>
  * graphite rug, seen at the camera's shallow angle, washed it out to a pale
  * grey — the same reason the graphite upholstery's sheen is grey.
  */
-const rugWool = (color: string, sheenColor: string, texture?: Texture) =>
+export const rugWool = (color: string, sheenColor: string, texture?: Texture) =>
   new MeshPhysicalMaterial({
     color,
     map: texture ?? null,
@@ -56,6 +55,7 @@ export const M = {
   /** The floor slab's cut edge. The floor's top face is timber — see room.tsx. */
   slab: new MeshStandardMaterial({ color: PALETTE.slab, roughness: 0.82 }),
   skirting: new MeshStandardMaterial({ color: PALETTE.skirting, roughness: 0.7 }),
+  ceiling: new MeshStandardMaterial({ color: PALETTE.ceiling, roughness: 0.96 }),
 
   fabricLight: fabric(PALETTE.fabricLight, '#ffffff'),
   fabricGraphite: fabric(PALETTE.fabricGraphite, '#8e8f95'),
@@ -99,25 +99,16 @@ export const M = {
   /** Brushed — legs and rods, where a mirror finish would look cheap. */
   brassBrushed: new MeshStandardMaterial({ color: PALETTE.brass, metalness: 1, roughness: 0.4 }),
 
-  /** The ivory rug's cut edge: its ground colour, plain. */
-  rug: rugWool(PALETTE.rugField, '#ffffff'),
-  /**
-   * The ivory rug's face: the knotted lattice from rug-pattern.ts, which is
-   * also its bump map, so the lines sit a hair below the pile. White base
-   * colour — the texture carries both tones.
-   */
-  rugFace: rugWool('#ffffff', '#ffffff', rugTexture('lattice')),
-
-  /** The office rug: graphite with a sand line — edge, then face. */
-  rugGraphite: rugWool(PALETTE.rugGraphite, '#5c5e63'),
-  rugGraphiteFace: rugWool('#ffffff', '#5c5e63', rugTexture('border')),
-
   /** Bed linen — fabric with sheen, the brightest one. */
   linen: fabric(PALETTE.linen, '#ffffff'),
   /** A cushion, a notebook: the palette's one warm neutral, as cloth. */
   fabricSand: fabric(PALETTE.sand, '#ffffff'),
   /** The bed's throw: the same sand, a step deeper for full light. */
   fabricSandDeep: fabric(PALETTE.sandDeep, '#ffffff'),
+
+  oak: new MeshStandardMaterial({ color: PALETTE.oak, roughness: 0.7 }),
+  pear: new MeshStandardMaterial({ color: PALETTE.pear, roughness: 0.55 }),
+  pearRusset: new MeshStandardMaterial({ color: PALETTE.pearRusset, roughness: 0.75 }),
 
   /** Pale honed stone — the kitchen island's top. */
   paleStone: new MeshPhysicalMaterial({

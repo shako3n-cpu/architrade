@@ -356,6 +356,9 @@ export function PolyHavenSideTable() {
 /** Height of the side table's top surface — the bedside lamp stands on it. */
 export const SIDE_TABLE_01_TOP = 0.551
 
+/** Height of its shelf's top surface — read off the model's vertices. */
+export const SIDE_TABLE_01_SHELF = 0.35
+
 /**
  * The sideboard's body: black legs and walnut, both to graphite, the walnut a
  * step lighter so the carcass still reads against its legs.

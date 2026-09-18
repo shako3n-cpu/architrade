@@ -168,6 +168,22 @@ export function lampWarmth(clock: PieceClock): number {
 }
 
 /**
+ * How far a room's wall treatment is in, 0..1, read from its FIRST piece's
+ * clock: it comes in while that piece falls — the room changing colour as it
+ * starts to furnish — and, since the first piece in is the last out, goes as
+ * that last piece rises. Between two rooms the walls are plain again, so the
+ * empty beat is the same empty room every time.
+ */
+export function useWallReveal(): () => number {
+  const clock = usePieceClock(0)
+  return useCallback(() => {
+    const arriving = smoothstep(clamp01(clock.drop() / 0.8))
+    const leaving = 1 - smoothstep(clamp01(clock.leave()))
+    return arriving * leaving
+  }, [clock])
+}
+
+/**
  * Overshoots its target by about ten percent before settling. Used for the
  * TURN only — an overshoot in position would push furniture through the floor.
  */

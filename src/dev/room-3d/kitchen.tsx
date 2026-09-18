@@ -1,11 +1,10 @@
 import { useMemo } from 'react'
 import { RoundedBox } from '@react-three/drei'
 import { CubicBezierCurve3, CylinderGeometry, TubeGeometry, Vector3 } from 'three'
-import { BrassBowl, Vase } from './furniture'
+import { BrassBowl, CuttingBoards, FruitBowl, Jar, UtensilCrock, Vase } from './styling'
 import { M } from './materials'
 import { PendantLamp } from './polyhaven'
 import { Rod } from './shapes'
-import { useLathe } from './util'
 
 /**
  * ============================================================================
@@ -37,14 +36,71 @@ export const COUNTER_TOP = 0.92
 
 const SMOOTH = 5
 const GAP = 0.006
+/** The fridge-freezer's gaps: wide enough to read as panel lines at a distance. */
+const FRIDGE_GAP = 0.014
 const PLINTH = 0.1
 
 /** A lacquered front — a door or a drawer — with its gap already taken off. */
-function Front({ x0, x1, y0, y1, z }: { x0: number; x1: number; y0: number; y1: number; z: number }) {
+function Front({
+  x0,
+  x1,
+  y0,
+  y1,
+  z,
+  gap = GAP,
+}: {
+  x0: number
+  x1: number
+  y0: number
+  y1: number
+  z: number
+  gap?: number
+}) {
   return (
     <mesh position={[(x0 + x1) / 2, (y0 + y1) / 2, z + 0.01]} material={M.lacquer}>
-      <boxGeometry args={[x1 - x0 - GAP, y1 - y0 - GAP, 0.02]} />
+      <boxGeometry args={[x1 - x0 - gap, y1 - y0 - gap, 0.02]} />
     </mesh>
+  )
+}
+
+/**
+ * An appliance handle: a thicker brushed-brass bar held off the door on two
+ * posts, so it throws its own shadow — the thing that tells a fridge door
+ * from a cupboard door at a glance. `at` is the bar's centre; the posts run
+ * back from it to the door's face.
+ */
+function BarHandle({
+  at,
+  length,
+  vertical = false,
+}: {
+  at: [number, number, number]
+  length: number
+  vertical?: boolean
+}) {
+  const [x, y, z] = at
+  const stand = 0.035
+  const inset = length / 2 - 0.04
+  const posts: [number, number][] = vertical
+    ? [
+        [x, y - inset],
+        [x, y + inset],
+      ]
+    : [
+        [x - inset, y],
+        [x + inset, y],
+      ]
+  return (
+    <group>
+      <mesh position={at} rotation={vertical ? [0, 0, 0] : [0, 0, Math.PI / 2]} material={M.brassBrushed}>
+        <cylinderGeometry args={[0.009, 0.009, length, 16]} />
+      </mesh>
+      {posts.map(([px, py]) => (
+        <mesh key={`${px}:${py}`} position={[px, py, z - stand / 2]} rotation={[Math.PI / 2, 0, 0]} material={M.brassBrushed}>
+          <cylinderGeometry args={[0.006, 0.006, stand, 10]} />
+        </mesh>
+      ))}
+    </group>
   )
 }
 
@@ -78,16 +134,6 @@ const BASE_UNITS = (() => {
 const SINK_X = (BASE_UNITS[2][0] + BASE_UNITS[2][1]) / 2
 const HOB_X = (BASE_UNITS[4][0] + BASE_UNITS[4][1]) / 2
 
-const JAR = [
-  [0, 0],
-  [0.055, 0],
-  [0.06, 0.012],
-  [0.06, 0.17],
-  [0.05, 0.18],
-  [0.05, 0.19],
-  [0.036, 0.2],
-  [0, 0.2],
-] as const
 
 /**
  * Four metres of kitchen: a tall larder at the left end, then six base units
@@ -97,7 +143,6 @@ const JAR = [
  */
 export function KitchenRun() {
   const zFront = RUN_D / 2 - 0.02
-  const jar = useLathe(JAR)
 
   const tap = useMemo(
     () =>
@@ -137,17 +182,26 @@ export function KitchenRun() {
         <boxGeometry args={[TALL_W - 0.02, TALL_H - 0.02 - PLINTH, RUN_D - 0.03]} />
       </mesh>
 
-      {/* Tall larder: lacquer side and top where they show, two doors, long pulls. */}
+      {/*
+       * The tall unit is the fridge-freezer, integrated: a tall fridge door
+       * over two freezer drawers. Its gaps are twice the cupboards' — 14mm,
+       * the graphite core dark behind them — so the three fronts read as
+       * three even from across the room, and its handles are bars on posts,
+       * a long one down the fridge door and one across each drawer. As first
+       * built — two fronts, 6mm gaps, flush pulls — it read as a white slab.
+       */}
       <mesh position={[tallX1 - 0.01, TALL_H / 2, 0]} material={M.lacquer}>
         <boxGeometry args={[0.02, TALL_H, RUN_D]} />
       </mesh>
       <mesh position={[(tallX0 + tallX1) / 2, TALL_H - 0.01, 0]} material={M.lacquer}>
         <boxGeometry args={[TALL_W, 0.02, RUN_D]} />
       </mesh>
-      <Front x0={tallX0} x1={tallX1 - 0.02} y0={PLINTH} y1={1.42} z={zFront} />
-      <Front x0={tallX0} x1={tallX1 - 0.02} y0={1.42} y1={TALL_H - 0.02} z={zFront} />
-      <Pull at={[tallX1 - 0.07, 1.12, zFront + 0.035]} length={0.42} vertical />
-      <Pull at={[tallX1 - 0.07, 1.72, zFront + 0.035]} length={0.42} vertical />
+      <Front x0={tallX0} x1={tallX1 - 0.02} y0={PLINTH} y1={0.48} z={zFront} gap={FRIDGE_GAP} />
+      <Front x0={tallX0} x1={tallX1 - 0.02} y0={0.48} y1={0.86} z={zFront} gap={FRIDGE_GAP} />
+      <Front x0={tallX0} x1={tallX1 - 0.02} y0={0.86} y1={TALL_H - 0.02} z={zFront} gap={FRIDGE_GAP} />
+      <BarHandle at={[tallX1 - 0.1, 1.45, zFront + 0.055]} length={0.62} vertical />
+      <BarHandle at={[(tallX0 + tallX1 - 0.02) / 2, 0.43, zFront + 0.055]} length={0.34} />
+      <BarHandle at={[(tallX0 + tallX1 - 0.02) / 2, 0.81, zFront + 0.055]} length={0.34} />
 
       {/* The six base units. */}
       {BASE_UNITS.map(([x0, x1], i) => {
@@ -190,13 +244,27 @@ export function KitchenRun() {
         <boxGeometry args={[0.58, 0.006, 0.5]} />
       </mesh>
 
+      {/* On the worktop: chopping boards against the tiles left of the sink,
+          a crock of spoons right of the hob — two things, at the two ends of
+          the working stretch. */}
+      <group position={[SINK_X - 0.6, COUNTER_TOP, -RUN_D / 2 + 0.075]}>
+        <CuttingBoards />
+      </group>
+      <group position={[HOB_X + 0.44, COUNTER_TOP, -RUN_D / 2 + 0.1]}>
+        <UtensilCrock />
+      </group>
+
       {/* The floating shelf, and what is on it. */}
       <group position={[SINK_X + 0.25, 1.56, -RUN_D / 2 + 0.13]}>
         <mesh position={[0, -0.0175, 0]} material={M.graphiteMatte}>
           <boxGeometry args={[1.5, 0.035, 0.26]} />
         </mesh>
-        <mesh geometry={jar} position={[-0.52, 0, 0]} material={M.ceramic} />
-        <mesh geometry={jar} position={[-0.38, 0, 0.01]} scale={[0.85, 0.72, 0.85]} material={M.ceramic} />
+        <group position={[-0.52, 0, 0]}>
+          <Jar />
+        </group>
+        <group position={[-0.38, 0, 0.01]}>
+          <Jar scale={0.78} />
+        </group>
         {[0, 1, 2, 3].map((j) => (
           <mesh key={j} position={[-0.02, 0.008 + j * 0.016, 0]} material={j === 3 ? M.sand : M.ceramic}>
             <cylinderGeometry args={[0.115 - j * 0.004, 0.105 - j * 0.004, 0.014, 48]} />
@@ -221,7 +289,8 @@ const REED_R = 0.018
 /**
  * A graphite island with a reeded front on the seating side, under a pale
  * honed stone top that overhangs that side by 26cm for knees. A brass bowl
- * and a vase of dry stems on top, part of the piece: they arrive with it.
+ * of pears and a vase of dry stems on top, part of the piece: they arrive
+ * with it.
  */
 export function Island() {
   const reeds = useMemo(() => {
@@ -257,7 +326,7 @@ export function Island() {
       />
 
       <group position={[0.45, COUNTER_TOP, 0.12]}>
-        <BrassBowl />
+        <FruitBowl />
       </group>
       <group position={[-0.52, COUNTER_TOP, 0.02]}>
         <Vase />

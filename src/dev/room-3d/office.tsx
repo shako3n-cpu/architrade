@@ -4,6 +4,7 @@ import { useLampGlow } from './lamp-glow'
 import { BOOK_MATERIALS, M } from './materials'
 import { PolyHavenShelving } from './polyhaven'
 import { Rod } from './shapes'
+import { Mug, Papers, SmallPlant } from './styling'
 import { seeded, useLathe } from './util'
 
 /**
@@ -21,8 +22,9 @@ import { seeded, useLathe } from './util'
  *
  * THE LOOK
  *   Off-white lacquer top on a graphite frame, as the kitchen's run is
- *   lacquer on graphite; a graphite chair on a polished brass star base; the
- *   lamp brass, with a graphite shade that glows inside once it has landed.
+ *   lacquer on graphite, against the graphite accent wall (walls.tsx); an
+ *   off-white chair on a polished brass star base; the lamp brass, with a
+ *   graphite shade that glows inside once it has landed.
  * ============================================================================
  */
 
@@ -37,22 +39,16 @@ export const DESK_TOP = 0.75
 
 const DESK_W = 1.6
 const DESK_D = 0.75
+/** The desk mat's thickness — what the laptop and the papers sit on. */
+const MAT = 0.004
 
 /**
  * A writing desk, 1.6 x 0.75 m: a lacquer top over a slim graphite apron with a
- * drawer, on four tapered graphite legs shod in brass. An open laptop, a
- * notebook, two books and a cup arrive on it.
+ * drawer, on four tapered graphite legs shod in brass. An open laptop, a few
+ * loose papers with a pen, a mug and a small plant arrive on it — the lamp
+ * is its own piece, and lands after.
  */
 export function Desk() {
-  const cup = useLathe([
-    [0, 0],
-    [0.034, 0],
-    [0.04, 0.01],
-    [0.042, 0.085],
-    [0.037, 0.085],
-    [0.035, 0.012],
-    [0, 0.012],
-  ])
 
   const legs: [number, number][] = [
     [-1, -1],
@@ -97,8 +93,14 @@ export function Desk() {
 
       {/* On it. */}
       <group position={[0, DESK_TOP, 0]}>
+        {/* A graphite leather desk mat under the laptop and the papers: white
+            paper on the off-white lacquer simply disappeared. */}
+        <mesh position={[0.06, MAT / 2, 0.07]} material={M.graphiteMatte}>
+          <boxGeometry args={[0.82, MAT, 0.4]} />
+        </mesh>
+
         {/* The laptop, open to about 105 degrees, facing the chair. */}
-        <group position={[-0.12, 0, 0.04]} rotation={[0, 0.08, 0]}>
+        <group position={[-0.12, MAT, 0.04]} rotation={[0, 0.08, 0]}>
           <mesh position={[0, 0.007, 0]} material={M.graphiteMatte}>
             <boxGeometry args={[0.32, 0.014, 0.22]} />
           </mesh>
@@ -112,20 +114,17 @@ export function Desk() {
           </group>
         </group>
 
-        {/* A notebook, a pen on it. */}
-        <mesh position={[0.26, 0.006, 0.12]} rotation={[0, -0.22, 0]} material={M.fabricSand}>
-          <boxGeometry args={[0.15, 0.012, 0.21]} />
-        </mesh>
-        <Rod from={[0.21, 0.015, 0.08]} to={[0.3, 0.015, 0.19]} radius={0.004} material={M.brass} />
-
-        {/* Two books at the far left, and a cup. */}
-        <mesh position={[-0.56, 0.016, -0.1]} rotation={[0, 0.1, 0]} material={BOOK_MATERIALS[0]}>
-          <boxGeometry args={[0.24, 0.032, 0.3]} />
-        </mesh>
-        <mesh position={[-0.55, 0.045, -0.1]} rotation={[0, -0.06, 0]} material={BOOK_MATERIALS[5]}>
-          <boxGeometry args={[0.2, 0.026, 0.26]} />
-        </mesh>
-        <mesh geometry={cup} position={[0.16, 0, -0.18]} material={M.ceramic} />
+        {/* Papers to the laptop's right, a mug beyond them, and a pilea in the
+            back corner the lamp does not take. */}
+        <group position={[0.28, MAT, 0.1]} rotation={[0, -0.18, 0]}>
+          <Papers />
+        </group>
+        <group position={[0.36, 0, -0.17]} rotation={[0, 2.2, 0]}>
+          <Mug />
+        </group>
+        <group position={[0.64, 0, -0.24]}>
+          <SmallPlant />
+        </group>
       </group>
     </group>
   )
@@ -138,8 +137,10 @@ export function Desk() {
 const SEAT_Y = 0.49
 
 /**
- * A swivel chair: graphite upholstery, graphite column, a five-star base in
- * polished brass on graphite castors. Front at +Z.
+ * A swivel chair: off-white upholstery, graphite column, a five-star base in
+ * polished brass on graphite castors. Front at +Z. Upholstered graphite at
+ * first, it vanished — graphite on the graphite rug, in front of what is now
+ * a graphite wall.
  */
 export function DeskChair() {
   const arms = useMemo(() => Array.from({ length: 5 }, (_, i) => (i / 5) * Math.PI * 2 + Math.PI / 10), [])
@@ -170,7 +171,7 @@ export function DeskChair() {
         radius={0.04}
         smoothness={SMOOTH}
         position={[0, SEAT_Y, 0.01]}
-        material={M.fabricGraphite}
+        material={M.fabricLight}
       />
 
       {/* The back, on a brass spine, leaning back a few degrees. */}
@@ -183,7 +184,7 @@ export function DeskChair() {
         smoothness={SMOOTH}
         position={[0, SEAT_Y + 0.37, -0.25]}
         rotation={[-0.12, 0, 0]}
-        material={M.fabricGraphite}
+        material={M.fabricLight}
       />
 
       {/* Arms: a graphite stem each, a padded rest on top. */}
@@ -195,7 +196,7 @@ export function DeskChair() {
             radius={0.012}
             smoothness={SMOOTH}
             position={[side * 0.255, SEAT_Y + 0.185, -0.03]}
-            material={M.fabricGraphite}
+            material={M.fabricLight}
           />
         </group>
       ))}

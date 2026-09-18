@@ -2,8 +2,10 @@ import { useMemo } from 'react'
 import { RoundedBox } from '@react-three/drei'
 import { CubicBezierCurve3, LatheGeometry, SphereGeometry, TubeGeometry, Vector2, Vector3, type Material } from 'three'
 import { useLampGlow } from './lamp-glow'
-import { BOOK_MATERIALS, M } from './materials'
-import { RUG_SIZES, type RugStyle } from './rug-pattern'
+import { BOOK_MATERIALS, M, rugWool } from './materials'
+import { PALETTE } from './palette'
+import { RUG_SIZES, rugTexture, type RugStyle } from './rug-pattern'
+import { BookRun, BookStack, BrassBowl, BrassSphere, BudVase, Jar, RingSculpture, STACKED_BOOK } from './styling'
 import { seeded } from './util'
 
 /**
@@ -40,21 +42,53 @@ const SMOOTH = 5
 /* Rug                                                                        */
 /* -------------------------------------------------------------------------- */
 
-/** Box faces in three's order: +x, -x, +y, -y, +z, -z. The pattern on top only. */
-const RUG_FACES: Record<RugStyle, Material[]> = {
-  lattice: [M.rug, M.rug, M.rugFace, M.rug, M.rug, M.rug],
-  border: [M.rugGraphite, M.rugGraphite, M.rugGraphiteFace, M.rugGraphite, M.rugGraphite, M.rugGraphite],
+/**
+ * Each design's wool: its ground, for the cut edge, and its sheen — tinted
+ * to the wool, because a white sheen on the graphite rug, at the camera's
+ * shallow angle, washed it out to a pale grey.
+ */
+const RUG_WOOL: Record<RugStyle, { ground: string; sheen: string }> = {
+  lattice: { ground: PALETTE.rugField, sheen: '#ffffff' },
+  banded: { ground: PALETTE.rugIvory, sheen: '#ffffff' },
+  border: { ground: PALETTE.rugGraphite, sheen: '#5c5e63' },
+}
+
+const rugFaces = new Map<string, Material[]>()
+
+/**
+ * Box faces in three's order: +x, -x, +y, -y, +z, -z — the pattern on top,
+ * which is also its bump map, and the plain ground on the cut edges. One set
+ * per design and size, made on first use and shared from then on.
+ */
+function rugMaterials(style: RugStyle, width: number, depth: number): Material[] {
+  const key = `${style}:${width}x${depth}`
+  const hit = rugFaces.get(key)
+  if (hit) return hit
+  const { ground, sheen } = RUG_WOOL[style]
+  const edge = rugWool(ground, sheen)
+  const face = rugWool('#ffffff', sheen, rugTexture(style, width, depth))
+  const faces = [edge, edge, face, edge, edge, edge]
+  rugFaces.set(key, faces)
+  return faces
 }
 
 /**
- * A wool rug — see rug-pattern.ts for the two designs. A plain box, not a
+ * A wool rug — see rug-pattern.ts for the three designs. A plain box, not a
  * RoundedBox: the pattern needs the top face's UVs to run edge to edge, and
  * at 12mm thick a rounded corner is not visible anyway.
  */
-export function Rug({ style = 'lattice' }: { style?: RugStyle }) {
-  const { width, depth } = RUG_SIZES[style]
+export function Rug({
+  style = 'lattice',
+  width = RUG_SIZES[style].width,
+  depth = RUG_SIZES[style].depth,
+}: {
+  style?: RugStyle
+  width?: number
+  depth?: number
+}) {
+  const faces = useMemo(() => rugMaterials(style, width, depth), [style, width, depth])
   return (
-    <mesh position={[0, 0.006, 0]} material={RUG_FACES[style]}>
+    <mesh position={[0, 0.006, 0]} material={faces}>
       <boxGeometry args={[width, 0.012, depth]} />
     </mesh>
   )
@@ -239,29 +273,6 @@ export function CoffeeTable() {
   )
 }
 
-/** A shallow polished-brass bowl, 26cm across. */
-export function BrassBowl() {
-  const bowl = useMemo(
-    () =>
-      new LatheGeometry(
-        [
-          [0, 0],
-          [0.06, 0.004],
-          [0.11, 0.03],
-          [0.13, 0.058],
-          [0.124, 0.06],
-          [0.104, 0.036],
-          [0.058, 0.012],
-          [0, 0.01],
-        ].map(([x, y]) => new Vector2(x, y)),
-        64,
-      ),
-    [],
-  )
-
-  return <mesh geometry={bowl} material={M.brass} />
-}
-
 /** Two books and a brass bowl, placed on the coffee table after it lands. */
 export function TableStyling() {
   return (
@@ -280,7 +291,7 @@ export function TableStyling() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Side table, and the vase on it                                             */
+/* Side table (the vase on it is in styling.tsx)                              */
 /* -------------------------------------------------------------------------- */
 
 /** Height of the side table's top surface — the vase sits here. */
@@ -298,52 +309,6 @@ export function SideTable() {
       <mesh position={[0, SIDE_TABLE_TOP - 0.015, 0]} material={M.graphiteStone}>
         <cylinderGeometry args={[0.25, 0.25, 0.03, 64]} />
       </mesh>
-    </group>
-  )
-}
-
-const VASE_STEMS: { lean: [number, number, number]; h: number }[] = [
-  { lean: [0.18, 0, 0.1], h: 0.46 },
-  { lean: [-0.14, 0, 0.16], h: 0.38 },
-  { lean: [0.05, 0, -0.2], h: 0.42 },
-]
-
-export function Vase() {
-  const body = useMemo(
-    () =>
-      new LatheGeometry(
-        [
-          [0, 0],
-          [0.065, 0],
-          [0.09, 0.05],
-          [0.1, 0.12],
-          [0.085, 0.2],
-          [0.05, 0.26],
-          [0.043, 0.3],
-          [0.05, 0.312],
-          [0.038, 0.312],
-          [0.034, 0.28],
-          [0, 0.27],
-        ].map(([x, y]) => new Vector2(x, y)),
-        64,
-      ),
-    [],
-  )
-
-  return (
-    <group>
-      <mesh geometry={body} material={M.ceramic} />
-
-      {/* Three dry stems, hinged at the neck: the group turns, and the stem
-          inside it is lifted by half its length because a cylinder is built
-          about its own middle. */}
-      {VASE_STEMS.map(({ lean, h }, i) => (
-        <group key={i} position={[0, 0.27, 0]} rotation={lean}>
-          <mesh position={[0, h / 2, 0]} material={M.trunk}>
-            <cylinderGeometry args={[0.003, 0.004, h, 6]} />
-          </mesh>
-        </group>
-      ))}
     </group>
   )
 }
@@ -424,90 +389,93 @@ export function FloorLamp() {
 /* Bookshelf                                                                  */
 /* -------------------------------------------------------------------------- */
 
-type Book = { x: number; w: number; h: number; lean: number; material: number }
-
 const SHELF_W = 1.3
 const SHELF_D = 0.34
 const SHELF_H = 1.95
 const SHELF_T = 0.025
 const SHELF_LEVELS = [SHELF_T / 2, 0.49, 0.96, 1.44, SHELF_H - SHELF_T / 2]
 
-/**
- * For each compartment: a run of books from the left, and an object on the
- * right — which is how a shelf is actually styled. Computed once, at module
- * load, from a fixed seed.
- */
-const SHELF_ROWS = (() => {
-  const rand = seeded(7)
-  return SHELF_LEVELS.slice(0, -1).map((floorY, level) => {
-    const clear = SHELF_LEVELS[level + 1] - floorY - SHELF_T
-    const books: Book[] = []
-    let x = -SHELF_W / 2 + SHELF_T + 0.04
-    const runEnd = level % 2 === 0 ? 0.12 : -0.05
-    while (x < runEnd) {
-      const w = 0.022 + rand() * 0.03
-      const h = Math.min(clear - 0.04, 0.2 + rand() * 0.13)
-      books.push({ x: x + w / 2, w, h, lean: 0, material: Math.floor(rand() * BOOK_MATERIALS.length) })
-      x += w + 0.003
-    }
-    // The last book leans on its neighbours.
-    if (books.length) books[books.length - 1].lean = -0.18
-    return { floorY: floorY + SHELF_T / 2, books }
-  })
-})()
+/** The top face of each shelf a compartment stands on, bottom first. */
+const SHELF_FLOORS = SHELF_LEVELS.slice(0, -1).map((y) => y + SHELF_T / 2)
 
+/**
+ * The bookcase, styled. Every compartment is composed on its own, the way a
+ * shelf is actually dressed: a run of books, and one thing that is not a
+ * book — a stack with a sphere on it, a jar, a vase on a stack, a sculpture —
+ * alternating sides so the eye zigzags up the case. Two more things on top.
+ * Every book is inside the palette: off-white, sand, taupe, graphite, one
+ * muted tan. The first version had short runs and a single object per shelf,
+ * and from across the room its upper shelves read as empty.
+ *
+ * Open back, so the wall shows through; off-white lacquer — see M.lacquer.
+ */
 export function Bookshelf() {
   const W = SHELF_W
   const D = SHELF_D
   const H = SHELF_H
   const T = SHELF_T
-  const shelves = SHELF_LEVELS
-  const rows = SHELF_ROWS
+  const [floor0, floor1, floor2, floor3] = SHELF_FLOORS
 
   return (
     <group>
-      {/* Frame: two sides, the shelves, in off-white lacquer — see M.lacquer.
-          Open back, so the wall shows through. */}
       {[-1, 1].map((side) => (
         <mesh key={side} position={[side * (W / 2 - T / 2), H / 2, 0]} material={M.lacquer}>
           <boxGeometry args={[T, H, D]} />
         </mesh>
       ))}
-      {shelves.map((y) => (
+      {SHELF_LEVELS.map((y) => (
         <mesh key={y} position={[0, y, 0]} material={M.lacquer}>
           <boxGeometry args={[W - 2 * T, T, D]} />
         </mesh>
       ))}
 
-      {rows.map(({ floorY, books }, level) => (
-        <group key={level} position={[0, floorY, 0.02]}>
-          {books.map((book, i) => (
-            <mesh
-              key={i}
-              position={[book.x, book.h / 2, 0]}
-              rotation={[0, 0, book.lean]}
-              material={BOOK_MATERIALS[book.material]}
-            >
-              <boxGeometry args={[book.w, book.h, 0.22]} />
-            </mesh>
-          ))}
-
-          {/* One object per compartment, alternating, on the empty side. */}
-          {level % 2 === 0 ? (
-            <mesh position={[0.4, 0.075, 0]} material={M.brass}>
-              <sphereGeometry args={[0.075, 48, 32]} />
-            </mesh>
-          ) : (
-            <group position={[0.3, 0, 0]}>
-              {[0, 1, 2].map((j) => (
-                <mesh key={j} position={[0, 0.015 + j * 0.03, 0]} rotation={[0, j * 0.12, 0]} material={BOOK_MATERIALS[(j + level) % 3]}>
-                  <boxGeometry args={[0.26 - j * 0.03, 0.028, 0.19]} />
-                </mesh>
-              ))}
-            </group>
-          )}
+      {/* Bottom: the tall books, and a low stack with a brass sphere on it. */}
+      <group position={[0, floor0, 0.02]}>
+        <BookRun from={-0.6} to={0.16} seed={7} minHeight={0.27} maxHeight={0.36} />
+        <group position={[0.42, 0, 0]}>
+          <BookStack count={3} seed={3} />
+          <group position={[0, 3 * STACKED_BOOK, 0]}>
+            <BrassSphere radius={0.055} />
+          </group>
         </group>
-      ))}
+      </group>
+
+      {/* Second: a lidded jar, then books leaning in towards it. */}
+      <group position={[0, floor1, 0.02]}>
+        <group position={[-0.47, 0, 0]}>
+          <Jar scale={0.9} />
+        </group>
+        <BookRun from={-0.3} to={0.58} seed={8} minHeight={0.22} maxHeight={0.33} lean="start" />
+      </group>
+
+      {/* Third: a graphite bud vase on a stack of four, and a short run. */}
+      <group position={[0, floor2, 0.02]}>
+        <group position={[-0.4, 0, 0]}>
+          <BookStack count={4} seed={5} width={0.26} />
+          <group position={[0, 4 * STACKED_BOOK, 0]}>
+            <BudVase tone="graphite" />
+          </group>
+        </group>
+        <BookRun from={-0.12} to={0.56} seed={9} minHeight={0.24} maxHeight={0.34} lean="start" />
+      </group>
+
+      {/* Top compartment: a run from the left, the ring sculpture on the right. */}
+      <group position={[0, floor3, 0.02]}>
+        <BookRun from={-0.6} to={0.04} seed={10} minHeight={0.24} maxHeight={0.35} />
+        <group position={[0.36, 0, 0]}>
+          <RingSculpture />
+        </group>
+      </group>
+
+      {/* On top of the case: two large books lying flat, and a ceramic bud vase. */}
+      <group position={[0, H, 0]}>
+        <group position={[-0.3, 0, 0]}>
+          <BookStack count={2} seed={12} width={0.32} depth={0.24} />
+        </group>
+        <group position={[0.34, 0, 0]}>
+          <BudVase />
+        </group>
+      </group>
     </group>
   )
 }

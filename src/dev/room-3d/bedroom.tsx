@@ -1,10 +1,10 @@
 import { RoundedBox } from '@react-three/drei'
 import { MeshStandardMaterial } from 'three'
-import { BrassBowl, Vase } from './furniture'
+import { BookStack, BrassBowl, Vase } from './styling'
 import { useLampGlow } from './lamp-glow'
 import { BOOK_MATERIALS, M } from './materials'
 import { PALETTE } from './palette'
-import { PolyHavenSideboard, SIDEBOARD_TOP } from './polyhaven'
+import { PolyHavenSideboard, PolyHavenSideTable, SIDE_TABLE_01_SHELF, SIDE_TABLE_01_TOP, SIDEBOARD_TOP } from './polyhaven'
 import { Rod } from './shapes'
 import { useLathe } from './util'
 
@@ -12,8 +12,9 @@ import { useLathe } from './util'
  * ============================================================================
  * THE BEDROOM
  * ----------------------------------------------------------------------------
- * Four pieces: the bed, a bedside table, the lamp on it, and a long low
- * sideboard on the left wall. The bedside table and the sideboard are Poly
+ * Four pieces: the bed (on its rug), a bedside table, the lamp on it, and a
+ * long low sideboard on the left wall, in front of warm limewash on the wall
+ * behind the headboard (walls.tsx). The bedside table and the sideboard are Poly
  * Haven's (see polyhaven.tsx); the bed and the lamp are modelled here —
  * Poly Haven's only beds are a gothic four-poster and a hospital frame.
  *
@@ -205,6 +206,28 @@ export function StyledSideboard() {
         <group position={[-0.55, 0.058, 0.01]} scale={0.6}>
           <BrassBowl />
         </group>
+      </group>
+    </group>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/* The bedside table, styled                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Poly Haven's bedside table with two books on its top — to the left of
+ * where the lamp lands — and three more lying on its shelf.
+ */
+export function StyledSideTable() {
+  return (
+    <group>
+      <PolyHavenSideTable />
+      <group position={[-0.15, SIDE_TABLE_01_TOP, 0.02]} rotation={[0, 0.22, 0]}>
+        <BookStack count={2} seed={31} width={0.17} depth={0.23} />
+      </group>
+      <group position={[0.02, SIDE_TABLE_01_SHELF, 0.01]}>
+        <BookStack count={3} seed={33} width={0.3} depth={0.22} />
       </group>
     </group>
   )

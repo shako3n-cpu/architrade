@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTexture } from '@react-three/drei'
 import { MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Vector2 } from 'three'
 import { M } from './materials'
+import { CEILING, CROWN, ROOM, SKIRTING } from './room-geometry'
 
 /**
  * ============================================================================
@@ -15,26 +16,25 @@ import { M } from './materials'
  *
  *   floor     x -3 .. 3,  z -2.5 .. 2.5, top face at y = 0
  *   back wall inner face at z = -2.5
- *   left wall inner face at x = -3
+ *   left wall inner face at x = -3       (all in room-geometry.ts)
  *
  * The same shell serves every room preset; only what is put in it changes.
+ * What each room does to its walls is in walls.tsx.
+ *
+ * THE CEILING IS CUT BACK, LIKE THE WALLS
+ *   The camera sits about six metres up, looking down into a room whose
+ *   ceiling is at 2.8 — a whole ceiling would be a lid over everything. So it
+ *   is drawn the way an architect's section model draws it: a slab along the
+ *   two walls, cut 34cm into the room, its cut edge showing its thickness as
+ *   the floor slab's does. With a crown moulding under it and the skirting at
+ *   the foot, each wall is finished top and bottom, and the model reads as a
+ *   room with its ceiling cut away rather than as an open-topped box.
  *
  * The walls receive shadow but do not cast it: the key light comes from the
  * front right, so a wall's own shadow would only fall outside the room — or,
  * at the corner, across the floor as a hard wedge that no real room has.
  * ============================================================================
  */
-
-const ROOM = {
-  halfWidth: 3,
-  halfDepth: 2.5,
-  wallHeight: 2.8,
-  wallThickness: 0.14,
-  slabThickness: 0.14,
-} as const
-
-const SKIRTING_H = 0.09
-const SKIRTING_T = 0.016
 
 /*
  * THE FLOOR — Poly Haven "wood_floor" (CC0), 1k: colour, OpenGL normal, and
@@ -89,6 +89,7 @@ function useWoodFloor(width: number, depth: number) {
 
 export function Room() {
   const { halfWidth: X, halfDepth: Z, wallHeight: H, wallThickness: T, slabThickness: S } = ROOM
+  const C = CEILING
   const wood = useWoodFloor(2 * X + T, 2 * Z + T)
 
   // Box faces in three's order: +x, -x, +y, -y, +z, -z. Timber on top only;
@@ -115,11 +116,44 @@ export function Room() {
 
       {/* Skirting on both walls. Off-white, a shade brighter than the wall: it
           is read by the shadow line along its top edge, not by its colour. */}
-      <mesh position={[0, SKIRTING_H / 2, -Z + SKIRTING_T / 2]} material={M.skirting} castShadow receiveShadow>
-        <boxGeometry args={[2 * X, SKIRTING_H, SKIRTING_T]} />
+      <mesh position={[0, SKIRTING.height / 2, -Z + SKIRTING.depth / 2]} material={M.skirting} castShadow receiveShadow>
+        <boxGeometry args={[2 * X, SKIRTING.height, SKIRTING.depth]} />
       </mesh>
-      <mesh position={[-X + SKIRTING_T / 2, SKIRTING_H / 2, 0]} material={M.skirting} castShadow receiveShadow>
-        <boxGeometry args={[SKIRTING_T, SKIRTING_H, 2 * Z]} />
+      <mesh position={[-X + SKIRTING.depth / 2, SKIRTING.height / 2, 0]} material={M.skirting} castShadow receiveShadow>
+        <boxGeometry args={[SKIRTING.depth, SKIRTING.height, 2 * Z]} />
+      </mesh>
+
+      {/* Crown moulding on both walls: a flat band, and a deeper step above
+          it tucked under the ceiling. Seen from above, most of it is behind
+          the ceiling's edge; what shows is its bottom line and the shadow it
+          throws, which is all a crown line needs to be. */}
+      {(
+        [
+          [CROWN.band, CROWN.bandDepth, H - CROWN.step - CROWN.band / 2],
+          [CROWN.step, CROWN.stepDepth, H - CROWN.step / 2],
+        ] as const
+      ).map(([height, depth, y]) => (
+        <group key={y}>
+          <mesh position={[0, y, -Z + depth / 2]} material={M.skirting} receiveShadow>
+            <boxGeometry args={[2 * X, height, depth]} />
+          </mesh>
+          <mesh position={[-X + depth / 2, y, 0]} material={M.skirting} receiveShadow>
+            <boxGeometry args={[depth, height, 2 * Z]} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* The ceiling, cut back: an L of slab over both walls, flush with their
+          outer faces, a shade lighter than the walls as a ceiling is. It
+          casts NO shadow: the key light is high, and the slab's shadow fell
+          as a hard grey band down the top forty centimetres of both walls —
+          a stain, not a ceiling. Ambient occlusion gives the corner under it
+          the soft shade a real ceiling line has. */}
+      <mesh position={[-T / 2, H + C.thickness / 2, -Z + (C.depth - T) / 2]} material={M.ceiling} receiveShadow>
+        <boxGeometry args={[2 * X + T, C.thickness, C.depth + T]} />
+      </mesh>
+      <mesh position={[-X + (C.depth - T) / 2, H + C.thickness / 2, C.depth / 2]} material={M.ceiling} receiveShadow>
+        <boxGeometry args={[C.depth + T, C.thickness, 2 * Z - C.depth]} />
       </mesh>
     </group>
   )

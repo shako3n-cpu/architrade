@@ -6,12 +6,17 @@ import { seeded } from './util'
  * ============================================================================
  * THE RUGS' PATTERNS, DRAWN RATHER THAN DOWNLOADED
  * ----------------------------------------------------------------------------
- * Two designs, both two-tone, both drawn here onto a canvas:
+ * Three designs, all two-tone, all drawn here onto a canvas at the size of
+ * the rug that wears them:
  *
  *   'lattice'  ivory ground, a hand-knotted greige diamond lattice — the Beni
  *              Ourain idiom that high-end modern interiors reach for when a
  *              room of plain upholstery needs one soft pattern. The living
- *              room's rug, and the bedroom's.
+ *              room's.
+ *   'banded'   ivory ground with a broad sand band set in from the edge and a
+ *              fine line inside it — the bedroom's. A border, because the
+ *              rug is mostly under the bed: a framed edge on three sides is
+ *              what makes the part that shows read as a whole rug.
  *   'border'   a graphite wool ground with a single sand line knotted in
  *              from the edge — the office's, under the desk. A darker rug
  *              there because the desk is off-white: on ivory it disappeared.
@@ -36,11 +41,12 @@ import { seeded } from './util'
  * ============================================================================
  */
 
-export type RugStyle = 'lattice' | 'border'
+export type RugStyle = 'lattice' | 'banded' | 'border'
 
-/** Real sizes, in metres. Each canvas is drawn to its rug's proportions. */
+/** Each design's usual size, in metres. A rug can be given another. */
 export const RUG_SIZES: Record<RugStyle, { width: number; depth: number }> = {
   lattice: { width: 3, depth: 2.1 },
+  banded: { width: 3.2, depth: 2.4 },
   border: { width: 2.6, depth: 1.9 },
 }
 
@@ -82,12 +88,8 @@ function drawLattice(ctx: CanvasRenderingContext2D, W: number, H: number, rand: 
   }
 }
 
-/** A single sand line knotted round the rug, 14cm in from its edge. */
-function drawBorder(ctx: CanvasRenderingContext2D, W: number, H: number, rand: () => number) {
-  const inset = 0.14 * PX_PER_M
-  const r = 0.012 * PX_PER_M
-  ctx.fillStyle = PALETTE.sandDeep
-
+/** A knotted rectangle `inset` pixels in from the rug's edge, of knot radius `r`. */
+function knotFrame(ctx: CanvasRenderingContext2D, rand: () => number, W: number, H: number, inset: number, r: number) {
   const run = (x0: number, y0: number, x1: number, y1: number) => {
     const length = Math.hypot(x1 - x0, y1 - y0)
     const phase = rand() * 10
@@ -105,22 +107,40 @@ function drawBorder(ctx: CanvasRenderingContext2D, W: number, H: number, rand: (
   run(inset, H - inset, inset, inset)
 }
 
+/** A single sand line knotted round the rug, 14cm in from its edge. */
+function drawBorder(ctx: CanvasRenderingContext2D, W: number, H: number, rand: () => number) {
+  ctx.fillStyle = PALETTE.sandDeep
+  knotFrame(ctx, rand, W, H, 0.14 * PX_PER_M, 0.012 * PX_PER_M)
+}
+
+/**
+ * A broad sand band, 16cm in from the edge — four close runs of knots, so
+ * its edges are as uneven as a hand-knotted band's — and a fine line 7cm
+ * inside it.
+ */
+function drawBanded(ctx: CanvasRenderingContext2D, W: number, H: number, rand: () => number) {
+  ctx.fillStyle = PALETTE.rugBand
+  for (const offset of [0.16, 0.18, 0.2, 0.22]) knotFrame(ctx, rand, W, H, offset * PX_PER_M, 0.016 * PX_PER_M)
+  knotFrame(ctx, rand, W, H, 0.3 * PX_PER_M, 0.008 * PX_PER_M)
+}
+
 const DESIGNS: Record<RugStyle, { ground: string; seed: number; draw: typeof drawLattice }> = {
   lattice: { ground: PALETTE.rugField, seed: 11, draw: drawLattice },
+  banded: { ground: PALETTE.rugIvory, seed: 17, draw: drawBanded },
   border: { ground: PALETTE.rugGraphite, seed: 5, draw: drawBorder },
 }
 
-const cache = new Map<RugStyle, CanvasTexture>()
+const cache = new Map<string, CanvasTexture>()
 
 /**
- * A rug's texture — drawn once per design, then shared by every rug of that
- * design and by the one material that wears it.
+ * A rug's texture — drawn once per design and size, then shared by every rug
+ * of that design and size, and by the one material that wears it.
  */
-export function rugTexture(style: RugStyle): CanvasTexture {
-  const hit = cache.get(style)
+export function rugTexture(style: RugStyle, width: number, depth: number): CanvasTexture {
+  const key = `${style}:${width}x${depth}`
+  const hit = cache.get(key)
   if (hit) return hit
 
-  const { width, depth } = RUG_SIZES[style]
   const design = DESIGNS[style]
   const W = Math.round(width * PX_PER_M)
   const H = Math.round(depth * PX_PER_M)
@@ -172,6 +192,6 @@ export function rugTexture(style: RugStyle): CanvasTexture {
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
   texture.anisotropy = 8
-  cache.set(style, texture)
+  cache.set(key, texture)
   return texture
 }

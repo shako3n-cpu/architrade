@@ -1,4 +1,4 @@
-import { Bed, StyledSideboard, TableLamp } from './bedroom'
+import { Bed, StyledSideboard, StyledSideTable, TableLamp } from './bedroom'
 import { DropIn } from './drop-in'
 import {
   Armchair,
@@ -12,13 +12,14 @@ import {
   SideTable,
   Sofa,
   TableStyling,
-  Vase,
   WallArt,
 } from './furniture'
-import { Island, KitchenRun, PendantPair, StoolPair } from './kitchen'
+import { COUNTER_TOP, Island, KitchenRun, PendantPair, StoolPair } from './kitchen'
+import { Vase } from './styling'
 import { DESK_TOP, Desk, DeskChair, DeskLamp, StyledShelving } from './office'
-import { PolyHavenArmchair, PolyHavenSideTable, SIDE_TABLE_01_TOP } from './polyhaven'
+import { PolyHavenArmchair, SIDE_TABLE_01_TOP } from './polyhaven'
 import type { ArmchairMode } from './room-types'
+import { WallTreatment } from './walls'
 
 /**
  * ============================================================================
@@ -35,6 +36,10 @@ import type { ArmchairMode } from './room-types'
  * The shell for reference:  floor x -3..3, z -2.5..2.5; back wall inner face
  * at z = -2.5; left wall inner face at x = -3; the camera looks in from the
  * front right.
+ *
+ * A room's wall treatment (walls.tsx) is listed with it but is not a piece:
+ * it washes in with the first piece and out with the last, and does not
+ * count towards `pieces`.
  *
  * Spin alternates in sign so a room does not appear to turn as a whole. The
  * biggest pieces — the kitchen run, the bed — barely turn at all: four metres
@@ -110,9 +115,19 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
 /** The island's centre. The stools and the pendants are placed from it. */
 const ISLAND: [number, number] = [0.25, -0.2]
 
+/**
+ * The backsplash runs the length of the base units — from the fridge's side
+ * (the run starts at the left wall, x = -3, and the fridge is 65cm wide) to
+ * the run's right end at 1.2 — and from the worktop to just under the
+ * floating shelf: six rows of 10cm tile.
+ */
+const BACKSPLASH: [number, number] = [-2.35, 1.2]
+
 export function Kitchen() {
   return (
     <>
+      <WallTreatment finish="tile" wall="back" span={BACKSPLASH} height={[COUNTER_TOP, COUNTER_TOP + 0.6]} />
+
       {/* Along the back wall, its left end against the left wall. */}
       <DropIn index={0} position={[-0.9, 0, -2.19]} spin={-0.1}>
         <KitchenRun />
@@ -147,22 +162,30 @@ const NIGHTSTAND: [number, number] = [1.46, -2.24]
 export function Bedroom() {
   return (
     <>
-      {/* Headboard to the back wall, in the middle of it — on the living
-          room's rug, which comes down with it: a bed on bare boards in a room
-          this size read as a mattress in an empty flat. The rug is laid
-          across the bed's lower two-thirds and half a metre past its foot. */}
+      <WallTreatment finish="limewash" wall="back" />
+
+      {/*
+       * Headboard to the back wall, in the middle of it — on its own rug,
+       * which comes down with it: a bed on bare boards in a room this size
+       * read as a mattress in an empty flat. The rug is 3.2 x 2.4m, laid from
+       * a third of the way down the bed to 70cm past its foot and 64cm past
+       * each side, and bordered, so the part that shows reads as a whole rug.
+       * The first one was the living room's 3 x 2.1 lattice, and from the
+       * camera it looked like a fragment poking out from under the bed.
+       */}
       <DropIn index={0} position={[0.1, 0, -1.39]} spin={-0.12}>
         <Bed />
-        <group position={[0, 0, 0.55]}>
-          <Rug />
+        <group position={[0, 0, 0.62]}>
+          <Rug style="banded" />
         </group>
       </DropIn>
 
       <DropIn index={1} position={[NIGHTSTAND[0], 0, NIGHTSTAND[1]]} spin={0.34}>
-        <PolyHavenSideTable />
+        <StyledSideTable />
       </DropIn>
 
-      <DropIn index={2} position={[NIGHTSTAND[0], SIDE_TABLE_01_TOP, NIGHTSTAND[1] + 0.02]} height={0.9} spin={-0.4}>
+      {/* A little right of centre, to leave the books beside it room. */}
+      <DropIn index={2} position={[NIGHTSTAND[0] + 0.08, SIDE_TABLE_01_TOP, NIGHTSTAND[1] + 0.02]} height={0.9} spin={-0.4}>
         <TableLamp />
       </DropIn>
 
@@ -177,36 +200,38 @@ export function Bedroom() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The desk's centre. It stands out in the room facing into it — the sitter
- * has their back to the wall — rather than against the wall: pushed back
- * there, a 1.6m desk left four-fifths of the floor empty and the room read
- * as unfurnished.
+ * The desk's centre. It stands out in the room, in front of the graphite
+ * wall, rather than against it: pushed back there, a 1.6m desk left
+ * four-fifths of the floor empty and the room read as unfurnished.
  */
 const DESK: [number, number] = [-0.1, -0.75]
 
 export function Office() {
   return (
     <>
-      {/* Turned round: its sitting side (+Z as built) faces the back wall.
-          On a graphite rug that runs under the chair too — it comes down
-          with the desk, as the bedroom's comes with the bed; the off-white
-          desk on bare boards in the middle of the room looked set down, not
-          placed. */}
-      <DropIn index={0} position={[DESK[0], 0, DESK[1]]} rotationY={Math.PI} spin={-0.2}>
+      <WallTreatment finish="graphite" wall="back" />
+
+      {/* Sitting side (+Z) towards the room. On a graphite rug that runs
+          under the chair too — it comes down with the desk, as the bedroom's
+          comes with the bed. */}
+      <DropIn index={0} position={[DESK[0], 0, DESK[1]]} spin={-0.2}>
         <Desk />
         <group position={[0, 0, 0.3]}>
           <Rug style="border" />
         </group>
       </DropIn>
 
-      {/* Behind the desk, facing the room, turned a little off square. */}
-      <DropIn index={1} position={[DESK[0] - 0.05, 0, DESK[1] - 0.78]} rotationY={0.3} spin={0.5}>
+      {/* Pulled out from the desk on the room side, turned a little towards
+          the camera. It stood behind the desk at first, facing out — and
+          from where the room is seen the desk hid it; with graphite
+          upholstery on the graphite rug, it read as missing. */}
+      <DropIn index={1} position={[DESK[0] + 0.08, 0, DESK[1] + 0.72]} rotationY={Math.PI - 0.35} spin={0.5}>
         <DeskChair />
       </DropIn>
 
-      {/* At the desk's far-left end, on the sitter's side, its shade turned
-          in over the desk — and so, from where the room is seen, open. */}
-      <DropIn index={2} position={[DESK[0] - 0.6, DESK_TOP, DESK[1] - 0.2]} rotationY={0.64} height={0.9} spin={-0.4}>
+      {/* At the desk's back-left corner, its shade turned in over the desk and
+          towards the sitter — and so, from where the room is seen, open. */}
+      <DropIn index={2} position={[DESK[0] - 0.62, DESK_TOP, DESK[1] - 0.2]} rotationY={0.6} height={0.9} spin={-0.4}>
         <DeskLamp />
       </DropIn>
 
