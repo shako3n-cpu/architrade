@@ -1,11 +1,20 @@
 import { cn } from '@/lib/utils'
-import type { ElementType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 type ContainerProps = {
   children: ReactNode
   className?: string
-  /** Render as a different tag when the semantics call for it. */
-  as?: ElementType
+  /**
+   * Render as a different tag when the semantics call for it.
+   *
+   * A named list, NOT React's `ElementType`. ElementType is every intrinsic
+   * element in the JSX namespace, and anything that adds to that namespace —
+   * @react-three/fiber adds three.js's whole scene graph — widens it, until
+   * TypeScript intersects every member's `children` type into `never` and
+   * this component stops accepting children at all. A container is a block
+   * of HTML; these are the blocks it can be.
+   */
+  as?: 'div' | 'section' | 'header' | 'footer' | 'nav' | 'article' | 'aside' | 'main'
   /**
    * "default" — standard reading width, used by most sections.
    * "wide"    — near-full width, for large photography grids.

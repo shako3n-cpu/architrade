@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
 import { Home } from '@/pages/home'
@@ -48,6 +49,22 @@ import '@/i18n'
  * in both languages like every other public page.
  * ============================================================================
  */
+
+/**
+ * THE 3D ROOM PREVIEW — DEVELOPMENT ONLY
+ *
+ * `import.meta.env.DEV` is replaced with a literal `false` in a production
+ * build, so this becomes `const DevRoomHome = null` and the dynamic import
+ * beneath it — with three.js and everything it pulls in — is removed as dead
+ * code. Not hidden, not unlinked: absent from dist/ entirely. That is the
+ * difference from the old /demo routes (fc16862), which were in the bundle
+ * and reachable on any host not on the public list.
+ *
+ * Keep the whole expression in this shape. Moving the import out from behind
+ * the condition, or reading the flag through a variable Vite cannot see
+ * through, would put the 3D stack back into the production bundle.
+ */
+const DevRoomHome = import.meta.env.DEV ? lazy(() => import('@/dev/room-3d/dev-room-home')) : null
 
 /** Sends the visitor to `path` under their remembered language. */
 function LanguageRedirect({ path = '' }: { path?: string }) {
@@ -135,6 +152,17 @@ const publicRoutes = (
     <Route path="contact" element={<Contact />} />
     <Route path="privacy" element={<Placeholder titleKey="footer.privacy" />} />
     <Route path="terms" element={<Placeholder titleKey="footer.terms" />} />
+
+    {DevRoomHome && (
+      <Route
+        path="dev/room"
+        element={
+          <Suspense fallback={null}>
+            <DevRoomHome />
+          </Suspense>
+        }
+      />
+    )}
 
     <Route path="*" element={<NotFound />} />
   </Route>

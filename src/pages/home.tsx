@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Container } from '@/components/ui/container'
 import { Section } from '@/components/ui/section'
 import { QueryState, SkeletonGrid } from '@/components/ui/query-state'
@@ -45,13 +46,23 @@ import { useLanguage } from '@/hooks/use-language'
  * Everything above the catalogue needs no data, so it renders immediately and
  * stays on screen while the products load underneath.
  */
-export function Home() {
+export function Home({
+  hero = <B2bHero />,
+}: {
+  /**
+   * The opening section. Always the photograph hero on the site; the only
+   * caller that passes anything else is the dev-only 3D room preview
+   * (src/dev/room-3d), which renders this same page with its own hero so the
+   * two can be compared like for like.
+   */
+  hero?: ReactNode
+} = {}) {
   const { t } = useLanguage()
   const catalogue = useCatalogue()
 
   return (
     <>
-      <B2bHero />
+      {hero}
       <ServicesTeaser />
 
       <QueryState
