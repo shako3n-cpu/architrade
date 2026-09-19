@@ -3,31 +3,17 @@ import type { ReactNode } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { PlaneGeometry, type Group, type Material, type Mesh } from 'three'
 import { BLUR, useContactShade, type Footprint } from './contact-shadow'
-import {
-  dropPose,
-  FurnishContext,
-  leaveScale,
-  PieceContext,
-  poseProgress,
-  usePieceClock,
-  type FurnishClock,
-  type PieceClock,
-} from './furnish-clock'
+import { FurnishContext, PieceContext, piecePose, usePieceClock, type FurnishClock, type PieceClock } from './furnish-clock'
 
-/** Hands the shared clock to every piece. See furnish-clock.ts for the timing. */
-export function FurnishProvider({
-  start,
-  leave,
-  count,
-  reduced,
-  children,
-}: FurnishClock & { children: ReactNode }) {
-  return <FurnishContext.Provider value={{ start, leave, count, reduced }}>{children}</FurnishContext.Provider>
+/** Hands a room's clock to every piece in it. See furnish-clock.ts for the timing. */
+export function FurnishProvider({ clock, count, reduced, children }: FurnishClock & { children: ReactNode }) {
+  const value = useMemo(() => ({ clock, count, reduced }), [clock, count, reduced])
+  return <FurnishContext.Provider value={value}>{children}</FurnishContext.Provider>
 }
 
 /**
- * One piece of furniture, animated into place — and, when the room changes,
- * back out of it along the same path.
+ * One piece of furniture, animated into place — dropped in the intro, eased
+ * in on a change of room — and, when its room is sent away, out again.
  *
  * `children` must be built with their origin at the piece's BASE — the point
  * that touches the floor (or the wall, for the print; the ceiling, for a
@@ -79,7 +65,7 @@ export function DropIn({
     const g = group.current
     if (!g) return
 
-    const pose = dropPose(poseProgress(clock), height, spin)
+    const pose = piecePose(clock, height, spin)
 
     /*
      * NOT `visible = false` WHILE WAITING.
@@ -90,7 +76,7 @@ export function DropIn({
      * is still drawn, so everything compiles during the lead-in on an empty
      * room.
      */
-    const s = pose.hidden ? 1e-4 : Math.max(leaveScale(clock.leave()), 1e-4)
+    const s = pose.hidden ? 1e-4 : Math.max(pose.scale, 1e-4)
 
     g.position.set(position[0], position[1] + pose.y, position[2])
     g.rotation.set(pose.tilt, rotationY + pose.yaw, pose.tilt * 0.6)

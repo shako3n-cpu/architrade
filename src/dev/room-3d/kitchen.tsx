@@ -411,7 +411,7 @@ function Stool() {
         radius={0.03}
         smoothness={SMOOTH}
         position={[0, SEAT_TOP - 0.0375, 0]}
-        material={M.upholstery}
+        material={M.upholsteryKitchen}
       />
 
       {/* A low back, on two brass stems. */}
@@ -423,7 +423,7 @@ function Stool() {
         smoothness={SMOOTH}
         position={[0, SEAT_TOP + 0.17, -0.195]}
         rotation={[-0.14, 0, 0]}
-        material={M.upholstery}
+        material={M.upholsteryKitchen}
       />
     </group>
   )

@@ -60,12 +60,18 @@ export const M = {
   fabricLight: fabric(PALETTE.fabricLight, '#ffffff'),
   fabricGraphite: fabric(PALETTE.fabricGraphite, '#8e8f95'),
   /**
-   * The upholstery of each room's MAIN piece — the sofa, the counter stools,
-   * the bed, the desk chair — shared, so the fabric switch recolours whichever
-   * room is showing. Its colour and sheen are set by <Finishes>
-   * (room-scene.tsx); this is only the starting value.
+   * The upholstery of each room's MAIN piece, one material per room — the
+   * sofa, the counter stools, the bed, the desk chair — which the fabric
+   * switch recolours. One per room rather than one shared: during a change
+   * of room two rooms are on stage at once, and a shared material showed the
+   * arriving bed in the office chair's ivory, fading to graphite as it came.
+   * Colour and sheen are set by <Finishes> (room-scene.tsx); these are only
+   * the starting values.
    */
-  upholstery: fabric(PALETTE.fabricLight, '#ffffff'),
+  upholsteryLiving: fabric(PALETTE.fabricLight, '#ffffff'),
+  upholsteryKitchen: fabric(PALETTE.fabricGraphite, '#8e8f95'),
+  upholsteryBedroom: fabric(PALETTE.fabricGraphite, '#8e8f95'),
+  upholsteryOffice: fabric(PALETTE.fabricLight, '#ffffff'),
 
   graphiteMatte: new MeshStandardMaterial({ color: PALETTE.graphite, roughness: 0.72 }),
   /** Recessed plinths and castors — the parts meant to disappear into shadow. */

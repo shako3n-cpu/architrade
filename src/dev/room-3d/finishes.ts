@@ -9,8 +9,8 @@ import type { RoomId } from './room-types'
  * inside the palette — off-whites, greiges, graphite, and the timber floor:
  *
  *   fabric   the upholstery of the room's main piece — the sofa, the counter
- *            stools, the bed, the desk chair — which share one material
- *            (M.upholstery). Remembered per room: each room has its own
+ *            stools, the bed, the desk chair — each room's its own material
+ *            (M.upholstery<Room>). Remembered per room: each room has its own
  *            default, and a choice made in one does not repaint the others.
  *   walls    the plain wall paint. The rooms' accent walls — tile, limewash,
  *            the graphite behind the desk — stay what they are.
@@ -68,7 +68,11 @@ export const DEFAULT_FABRIC: Record<RoomId, FabricId> = {
 export const DEFAULT_WALL: WallId = 'chalk'
 export const DEFAULT_FLOOR: FloorId = 'smoked'
 
+/** What the switcher shows: the showing room's fabric, and the walls and floor. */
 export type Finish = { fabric: FabricId; wall: WallId; floor: FloorId }
+
+/** What the scene is given: every room's fabric, and the walls and floor. */
+export type Finishes = { fabric: Record<RoomId, FabricId>; wall: WallId; floor: FloorId }
 
 /**
  * The floor grade's uniforms. One set, shared by the floor material's shader

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { CanvasTexture, MeshBasicMaterial, type Group } from 'three'
-import { dropPose, leaveScale, poseProgress, type PieceClock } from './furnish-clock'
+import { piecePose, type PieceClock } from './furnish-clock'
 
 /**
  * ============================================================================
@@ -125,15 +125,15 @@ export function useContactShade({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
-  useEffect(() => () => materials.forEach((m) => m.dispose()), [materials])
+  // Not disposed on unmount — see useLampGlow in lamp-glow.ts for why.
 
   useFrame(() => {
     const g = group.current
     if (!g) return
-    const pose = dropPose(poseProgress(clock), height, spin)
+    const pose = piecePose(clock, height, spin)
     // 0 at rest, 1 at the top of the fall.
-    const lift = Math.min(Math.max(pose.y / height, 0), 1)
-    const opacity = pose.hidden ? 0 : strength * (1 - lift) ** 2 * leaveScale(clock.leave())
+    const lift = pose.lift
+    const opacity = pose.hidden ? 0 : strength * (1 - lift) ** 2 * pose.presence
     for (const m of materials) m.opacity = opacity
     const spread = 1 + 0.9 * lift
     g.scale.set(spread, 1, spread)

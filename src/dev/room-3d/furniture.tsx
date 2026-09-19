@@ -125,7 +125,7 @@ export function Sofa() {
         <boxGeometry args={[W - 0.2, 0.06, D - 0.22]} />
       </mesh>
 
-      <RoundedBox args={[W, 0.26, D]} radius={0.05} smoothness={SMOOTH} position={[0, 0.19, 0]} material={M.upholstery} />
+      <RoundedBox args={[W, 0.26, D]} radius={0.05} smoothness={SMOOTH} position={[0, 0.19, 0]} material={M.upholsteryLiving} />
 
       {[-1, 1].map((side) => (
         <RoundedBox
@@ -134,7 +134,7 @@ export function Sofa() {
           radius={0.08}
           smoothness={SMOOTH}
           position={[side * (W / 2 - ARM / 2), 0.34, 0]}
-          material={M.upholstery}
+          material={M.upholsteryLiving}
         />
       ))}
 
@@ -143,7 +143,7 @@ export function Sofa() {
         radius={0.08}
         smoothness={SMOOTH}
         position={[0, 0.56, -D / 2 + BACK / 2]}
-        material={M.upholstery}
+        material={M.upholsteryLiving}
       />
 
       {/* Seat cushions — two, with a gap, because one long slab reads as a bench. */}
@@ -154,7 +154,7 @@ export function Sofa() {
           radius={0.065}
           smoothness={SMOOTH}
           position={[side * (cushionW / 2 + 0.01), 0.395, BACK / 2 + 0.01]}
-          material={M.upholstery}
+          material={M.upholsteryLiving}
         />
       ))}
 
@@ -167,7 +167,7 @@ export function Sofa() {
           smoothness={SMOOTH}
           position={[side * (cushionW / 2 + 0.01), 0.66, -D / 2 + BACK + 0.07]}
           rotation={[-0.14, 0, 0]}
-          material={M.upholstery}
+          material={M.upholsteryLiving}
         />
       ))}
 

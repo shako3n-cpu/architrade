@@ -9,7 +9,7 @@ import { useLanguage } from '@/hooks/use-language'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
 import { FinishControls } from './finish-controls'
-import { DEFAULT_FABRIC, DEFAULT_FLOOR, DEFAULT_WALL, type Finish } from './finishes'
+import { DEFAULT_FABRIC, DEFAULT_FLOOR, DEFAULT_WALL, type Finish, type Finishes } from './finishes'
 import { HotspotStore } from './hotspot-store'
 import { HotspotLayer } from './hotspot-layer'
 import { RoomScene, type StageLayout } from './room-scene'
@@ -122,6 +122,7 @@ export function RoomHero() {
   const [wall, setWall] = useState(DEFAULT_WALL)
   const [floor, setFloor] = useState(DEFAULT_FLOOR)
   const finish = useMemo<Finish>(() => ({ fabric: fabricByRoom[room], wall, floor }), [fabricByRoom, room, wall, floor])
+  const finishes = useMemo<Finishes>(() => ({ fabric: fabricByRoom, wall, floor }), [fabricByRoom, wall, floor])
   const changeFinish = (next: Partial<Finish>) => {
     if (next.fabric) setFabricByRoom((current) => ({ ...current, [room]: next.fabric }))
     if (next.wall) setWall(next.wall)
@@ -204,7 +205,7 @@ export function RoomHero() {
             coarsePointer={coarse}
             armchair={armchair}
             hotspots={hotspots}
-            finish={finish}
+            finishes={finishes}
           />
         </Suspense>
 

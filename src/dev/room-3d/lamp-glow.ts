@@ -58,28 +58,38 @@ export function useLampGlow(levels: GlowLevels) {
   )
   const at = useMemo(() => new Vector3(), [])
 
+  /*
+   * NOT DISPOSED ON UNMOUNT, on purpose. Disposing a material releases its
+   * compiled shader program once nothing else uses it — and the next time
+   * the room is shown, the program is compiled again, on the frame it first
+   * draws: a visible stall in the middle of a change of room. Undisposed, the
+   * program stays with the renderer, shared by key with every later lamp of
+   * the same kind; the material object itself is collected like any other
+   * JavaScript object. The same rule holds for every per-room material — the
+   * Poly Haven models' dressed surfaces, the contact shadows — and it is what
+   * lets <WarmUp> in room-scene.tsx prepare a room ahead of time at all.
+   */
+
+  // A light from the pool only while the lamp is lit: during a change of room
+  // two rooms' lamps are mounted at once, and one still waiting to land, or
+  // leaving, must not hold a light the other needs. Given back on unmount.
   useEffect(
     () => () => {
-      glow.bulb.dispose()
-      glow.shadeInner.dispose()
-      glow.skin?.dispose()
-    },
-    [glow],
-  )
-
-  // A light from the pool for as long as the lamp is mounted.
-  useEffect(() => {
-    if (!pool) return
-    const claimed = pool.claim()
-    slot.current = claimed
-    return () => {
-      if (claimed !== null) pool.release(claimed)
+      if (pool && slot.current !== null) pool.release(slot.current)
       slot.current = null
-    }
-  }, [pool])
+    },
+    [pool],
+  )
 
   useFrame(() => {
     const on = warmth()
+    if (pool) {
+      if (on > 0.001 && slot.current === null) slot.current = pool.claim()
+      else if (on <= 0.001 && slot.current !== null) {
+        pool.release(slot.current)
+        slot.current = null
+      }
+    }
     glow.bulb.emissiveIntensity = levels.bulb * on
     glow.shadeInner.emissiveIntensity = (levels.shade ?? 0) * on
     if (glow.skin && levels.skin) glow.skin.emissiveIntensity = levels.skin.peak * on

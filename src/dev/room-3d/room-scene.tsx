@@ -1,20 +1,20 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree, type RootState } from '@react-three/fiber'
 import { Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { Color, HalfFloatType, Vector3, WebGLRenderTarget, type Group, type PerspectiveCamera, type PointLight } from 'three'
 import { FurnishProvider } from './drop-in'
-import { DURATION, LEAD_IN, leaveSpan, STAGGER, SWITCH_LEAD_IN } from './furnish-clock'
+import { ENTER_DELAY, INTRO, LEAD_IN, RoomClock, switchTiming } from './furnish-clock'
 import type { HotspotStore } from './hotspot-store'
 import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
-import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finish } from './finishes'
+import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finishes } from './finishes'
 import { M } from './materials'
 import { PALETTE } from './palette'
 import { Room } from './room'
 import { CEILING, ROOM } from './room-geometry'
-import type { ArmchairMode, RoomId } from './room-types'
+import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { ROOMS } from './room-registry'
 
 /**
@@ -336,13 +336,13 @@ const compileTarget = () => (offscreen ??= new WebGLRenderTarget(1, 1, { type: H
  * unseen.
  */
 function Arrival({
-  schedule,
+  clock,
   lead,
   reduced,
   children,
 }: {
-  /** Sets the clock time piece 0 starts at. Owned by <Rooms>. */
-  schedule: (at: number) => void
+  /** The room's clock, scheduled once its shaders are ready. */
+  clock: RoomClock
   /** Seconds of empty room between the shaders being ready and the first piece. */
   lead: number
   reduced: boolean
@@ -356,30 +356,17 @@ function Arrival({
     const root = group.current
     if (!root) return
     let live = true
-    const { gl, camera, scene } = get()
     const begin = () => {
       if (!live) return
       setReady(true)
-      if (!reduced) schedule(get().clock.elapsedTime + lead)
+      clock.markReady()
+      if (!reduced) clock.schedule(get().clock.elapsedTime + lead)
     }
-    /*
-     * Compiled as if into an off-screen target, because that is where the
-     * room is drawn: the effect chain renders the scene into its own linear
-     * buffer, and three builds the output colour space into every shader.
-     * Compiled against the screen, the shaders came out as the sRGB variants —
-     * right in every other way, never used — and the real ones still compiled
-     * on the first frame. Rejected or not, the room is shown in the end: a
-     * failed pre-compile only means compiling on first draw, as before.
-     */
-    const previous = gl.getRenderTarget()
-    gl.setRenderTarget(compileTarget())
-    const compiling = gl.compileAsync(root, camera, scene)
-    gl.setRenderTarget(previous)
-    compiling.then(begin, begin)
+    compileOffscreen(get, root).then(begin, begin)
     return () => {
       live = false
     }
-  }, [get, schedule, lead, reduced])
+  }, [get, clock, lead, reduced])
 
   return (
     <group ref={group} visible={ready}>
@@ -389,24 +376,109 @@ function Arrival({
 }
 
 /**
- * The room that is furnished, and the handover from one room to the next.
+ * Compiled as if into an off-screen target, because that is where the room
+ * is drawn: the effect chain renders the scene into its own linear buffer,
+ * and three builds the output colour space into every shader. Compiled
+ * against the screen, the shaders came out as the sRGB variants — right in
+ * every other way, never used — and the real ones still compiled on the
+ * first frame. Rejected or not, the caller carries on: a failed pre-compile
+ * only means compiling on first draw.
+ */
+function compileOffscreen(get: () => RootState, root: Group) {
+  const { gl, camera, scene } = get()
+  const previous = gl.getRenderTarget()
+  gl.setRenderTarget(compileTarget())
+  const compiling = gl.compileAsync(root, camera, scene)
+  gl.setRenderTarget(previous)
+  return compiling
+}
+
+/**
+ * Prepares one room nobody has asked for yet, so that asking for it later is
+ * instant: mounts it hidden, compiles its shaders off the main thread, then
+ * lets it draw — every piece still shrunk to nothing, its clock never
+ * started — for a few frames, which uploads its textures and geometry. Then
+ * it reports done and is unmounted.
  *
- * A change of room is three beats, all on the render loop's clock:
+ * What it leaves behind is the GPU's copy: compiled programs and uploaded
+ * buffers stay with the renderer, keyed by what they are rather than by
+ * which object asked for them, so the room's real mount later finds them
+ * all ready. That only holds because no room's materials are disposed on
+ * unmount — see useLampGlow — since disposing releases the program.
+ */
+function WarmUp({ room, armchair, onDone }: { room: RoomId; armchair: ArmchairMode; onDone: (room: RoomId) => void }) {
+  const { Layout, pieces } = ROOMS[room]
+  const [clock] = useState(() => new RoomClock(INTRO))
+  const group = useRef<Group>(null)
+  const get = useThree((state) => state.get)
+  const [compiled, setCompiled] = useState(false)
+  const frames = useRef(0)
+
+  useLayoutEffect(() => {
+    const root = group.current
+    if (!root) return
+    let live = true
+    const done = () => {
+      if (live) setCompiled(true)
+    }
+    compileOffscreen(get, root).then(done, done)
+    return () => {
+      live = false
+    }
+  }, [get])
+
+  useFrame(() => {
+    if (!compiled) return
+    frames.current += 1
+    if (frames.current === 3) onDone(room)
+  })
+
+  return (
+    <FurnishProvider clock={clock} count={pieces} reduced={false}>
+      <group ref={group} visible={compiled}>
+        <Layout armchair={armchair} />
+      </group>
+    </FurnishProvider>
+  )
+}
+
+/** A room on stage: which, and its clock. Keyed, so a room shown twice mounts twice. */
+type Slot = { key: number; room: RoomId; clock: RoomClock }
+
+/**
+ * The rooms on stage, and the handover from one to the next.
  *
- *   1. CLEAR    `leave` is set to now. Every piece of the current room runs
- *               its drop backwards, last in first out (furnish-clock.ts), and
- *               the last is gone leaveSpan(pieces) seconds later.
- *   2. EMPTY    The next room is mounted — a new generation, so every piece
- *               starts shrunk and waiting — out of sight while its shaders
- *               compile in the background (<Arrival>), and the bare shell is
- *               held SWITCH_LEAD_IN beyond that.
- *   3. FURNISH  <Arrival> sets `start`, and the room drops in exactly as the
- *               first one did.
+ * THE INTRO
+ *   The page opens on one room, which drops in piece by piece — the slow
+ *   'drop' timing, half a second apart. Replay plays it again.
  *
- * Asking for another room while one is clearing only changes where it is
- * going; asking for the room already there does nothing. Under reduced
- * motion the whole thing is a cut: the next room is mounted at once, and
- * mounts finished.
+ * A CHANGE OF ROOM
+ *   Overlapped, not sequential, and done within ~0.9s of the click:
+ *
+ *     t = 0      every room on stage is sent away: its pieces drop out,
+ *                sinking and shrinking into the floor, last in first out, in
+ *                about 0.24s (0.36s for the living room's eleven)
+ *     t = 0.12   the new room — mounted at the click, alongside — starts to
+ *                arrive: pieces ~60ms apart, each easing into place
+ *     t ≤ 0.9    its last piece is at rest
+ *
+ *   The shell never moves. A room is unmounted once its last piece is gone.
+ *
+ * INTERRUPTING
+ *   Choose another room mid-change and whatever is on stage — the room going
+ *   and the half-arrived one coming — is sent away from where it is, and the
+ *   new choice starts its own arrival. A click never waits for an animation.
+ *
+ * FIRST VISITS ARE PREPARED IN THE BACKGROUND
+ *   A room mounted for the first time compiles its shaders before it can be
+ *   drawn — up to a second for the bedroom — which would blow the 0.9s. So
+ *   once the page has settled, the rooms not yet shown are prepared one at a
+ *   time out of sight (<WarmUp>), and a first visit is as quick as a return.
+ *   If a room is asked for before it has been prepared, it still arrives:
+ *   <Arrival> holds it until its shaders are ready, so it is late, not
+ *   broken.
+ *
+ * Under reduced motion a change is a cut, and every room mounts finished.
  */
 function Rooms({
   room,
@@ -421,83 +493,106 @@ function Rooms({
   replayToken: number
   hotspots: HotspotStore
 }) {
-  /*
-   * Infinity until set, so every piece is "not yet" — waiting shrunk to
-   * nothing — and "not leaving". Reduced motion never sets `start`: it is
-   * pinned "finished" inside furnish-clock.ts instead.
-   */
-  const start = useRef(Number.POSITIVE_INFINITY)
-  const leave = useRef(Number.POSITIVE_INFINITY)
-  const schedule = useCallback((at: number) => {
-    start.current = at
-  }, [])
-
   const get = useThree((state) => state.get)
-  const [shown, setShown] = useState<{ room: RoomId; generation: number }>({ room, generation: 0 })
+  const [slots, setSlots] = useState<Slot[]>(() => [{ key: 0, room, clock: new RoomClock(INTRO) }])
+  const nextKey = useRef(1)
+  /** The room last acted on — a change of `room` is picked up in the loop. */
+  const handled = useRef(room)
 
-  /** The room to change to once the current one has cleared; null when none is. */
-  const pending = useRef<RoomId | null>(null)
-  const clearedAt = useRef(Number.POSITIVE_INFINITY)
+  /** Rooms prepared, or shown, already. */
+  const [warmed, setWarmed] = useState<ReadonlySet<RoomId>>(() => new Set([room]))
+  /** True while one room is on stage, at rest, and has been for a moment — when preparing is safe. */
+  const [idle, setIdle] = useState(false)
+  const idleSince = useRef(Number.POSITIVE_INFINITY)
 
-  // Reduced motion: a cut, made during render — the documented way to keep
-  // state in step with a prop — so the next room is on the very next frame.
-  if (reduced && room !== shown.room) {
-    setShown({ room, generation: shown.generation + 1 })
-  }
-
-  useEffect(() => {
-    if (reduced || (pending.current === null && room === shown.room)) return
-
-    if (pending.current === null) {
-      const now = get().clock.elapsedTime
-      leave.current = now
-      clearedAt.current = now + leaveSpan(ROOMS[shown.room].pieces)
-    }
-    pending.current = room
-  }, [room, shown.room, reduced, get])
-
-  // The hotspots: live once the room's last piece has landed, fading in
-  // over a third of a second; gone the instant the room starts to leave.
   useFrame(({ clock }, delta) => {
     const now = clock.elapsedTime
-    const arrived = reduced || now >= start.current + (ROOMS[shown.room].pieces - 1) * STAGGER + DURATION
-    const leaving = pending.current !== null || now >= leave.current
-    hotspots.publish(shown.room, arrived && !leaving ? Math.min(1, hotspots.alpha + delta / 0.35) : 0)
+
+    // A new room asked for: send away everything on stage, bring it on.
+    if (room !== handled.current) {
+      handled.current = room
+      idleSince.current = Number.POSITIVE_INFINITY
+      if (idle) setIdle(false)
+      if (reduced) {
+        // A cut — but not to an empty room: the new room is mounted alongside,
+        // and the old one is only taken away once the new one is drawn (below).
+        const incoming: Slot = { key: nextKey.current++, room, clock: new RoomClock(INTRO) }
+        setSlots((current) => [...current, incoming])
+      } else {
+        for (const slot of slots) slot.clock.sendAway(now)
+        const incoming: Slot = {
+          key: nextKey.current++,
+          room,
+          clock: new RoomClock(switchTiming(ROOMS[room].pieces), now + ENTER_DELAY),
+        }
+        setSlots((current) => [...current, incoming])
+      }
+      hotspots.publish(room, 0)
+      return
+    }
+
+    const newest = slots[slots.length - 1]
+
+    // Rooms whose last piece has gone come off stage. Under reduced motion,
+    // everything but the newest goes the moment the newest is drawn: the cut.
+    if (reduced && slots.length > 1 && newest.clock.ready) {
+      setSlots([newest])
+    } else if (slots.some((s) => s.clock.gone(now, ROOMS[s.room].pieces))) {
+      setSlots((current) => current.filter((s) => !s.clock.gone(now, ROOMS[s.room].pieces)))
+    }
+
+    // The newest room's hotspots: live once it is drawn and at rest, fading
+    // in over a third of a second; gone the instant it starts to leave.
+    const arrived = newest.room === room && newest.clock.arrived(now, ROOMS[newest.room].pieces, reduced)
+    hotspots.publish(newest.room, arrived ? Math.min(1, hotspots.alpha + delta / 0.35) : 0)
+
+    // Idle — one room, at rest, for a second — is when rooms are prepared.
+    const settled = arrived && slots.length === 1
+    if (!settled) idleSince.current = Number.POSITIVE_INFINITY
+    else if (idleSince.current === Number.POSITIVE_INFINITY) idleSince.current = now
+    const nowIdle = settled && now - idleSince.current > 1
+    if (nowIdle !== idle) setIdle(nowIdle)
   })
 
-  useFrame(({ clock }) => {
-    if (pending.current === null || clock.elapsedTime < clearedAt.current) return
-    const next = pending.current
-    pending.current = null
-    clearedAt.current = Number.POSITIVE_INFINITY
-    start.current = Number.POSITIVE_INFINITY
-    leave.current = Number.POSITIVE_INFINITY
-    setShown((current) => ({ room: next, generation: current.generation + 1 }))
-  })
-
-  // Replay: everything measures itself from the start time, so moving it to
-  // now is the whole restart. Skipped for the token's initial value, and
-  // while a room is clearing — the next one is about to arrive anyway.
-  const firstToken = useRef(replayToken)
+  // Replay the newest room's intro. Handled once per click, not on every
+  // change of what is on stage.
+  const handledToken = useRef(replayToken)
   useEffect(() => {
-    if (replayToken === firstToken.current || pending.current !== null) return
-    start.current = get().clock.elapsedTime + 0.15
-  }, [replayToken, get])
+    if (replayToken === handledToken.current) return
+    handledToken.current = replayToken
+    const newest = slots[slots.length - 1]
+    if (!newest.clock.leaving) newest.clock.replay(get().clock.elapsedTime)
+  }, [replayToken, slots, get])
 
-  const { Layout, pieces } = ROOMS[shown.room]
+  const onWarmed = useCallback((done: RoomId) => setWarmed((current) => new Set(current).add(done)), [])
+  // Prepared under reduced motion too: it moves nothing, and a cut to a room
+  // whose shaders are not ready is a cut that waits.
+  const toWarm = ROOM_IDS.find((id) => !warmed.has(id) && id !== room)
 
   return (
-    // Keyed by generation: each arrival is a fresh mount, so a room shown
-    // twice in a row still starts from empty. Its own boundary, so a room
-    // whose models are still loading suspends only itself — the shell and
-    // the lights stay up.
-    <Suspense key={shown.generation} fallback={null}>
-      <FurnishProvider start={start} leave={leave} count={pieces} reduced={reduced}>
-        <Arrival schedule={schedule} lead={shown.generation === 0 ? LEAD_IN : SWITCH_LEAD_IN} reduced={reduced}>
-          <Layout armchair={armchair} />
-        </Arrival>
-      </FurnishProvider>
-    </Suspense>
+    <>
+      {slots.map(({ key, room: id, clock }) => (
+        // Each slot its own boundary: a room whose models are still loading
+        // suspends only itself — the shell, the lights and a leaving room
+        // stay up.
+        <Suspense key={key} fallback={null}>
+          <FurnishProvider clock={clock} count={ROOMS[id].pieces} reduced={reduced}>
+            <Arrival clock={clock} lead={key === 0 ? LEAD_IN : 0} reduced={reduced}>
+              {(() => {
+                const { Layout } = ROOMS[id]
+                return <Layout armchair={armchair} />
+              })()}
+            </Arrival>
+          </FurnishProvider>
+        </Suspense>
+      ))}
+
+      {idle && toWarm && (
+        <Suspense fallback={null}>
+          <WarmUp key={toWarm} room={toWarm} armchair={armchair} onDone={onWarmed} />
+        </Suspense>
+      )}
+    </>
   )
 }
 
@@ -576,60 +671,94 @@ function HotspotProjector({ store }: { store: HotspotStore }) {
 const FINISH_FADE = 0.4
 
 /**
- * The material and colour switcher's effect on the scene: fades the shared
- * upholstery, the wall paint and the floor's grade to the chosen finish
- * over FINISH_FADE, in the render loop — no remount, no reload.
- *
- * Each change fades from wherever the values ARE, not from the last target,
+ * One faded set of numbers — a colour and its sheen, or the floor's grade.
+ * Retargeting fades from wherever the values ARE, not from the last target,
  * so choosing again mid-fade simply bends the fade towards the new choice.
- * The very first finish is applied at once: there is nothing to fade from.
  */
-function Finishes({ finish }: { finish: Finish }) {
+class Fade {
+  from: number[]
+  to: number[]
+  t0 = Number.NEGATIVE_INFINITY
+
+  constructor(values: number[]) {
+    this.from = [...values]
+    this.to = [...values]
+  }
+
+  at(now: number) {
+    const k = Math.min(Math.max((now - this.t0) / FINISH_FADE, 0), 1)
+    const e = k * k * (3 - 2 * k)
+    return this.from.map((f, i) => f + (this.to[i] - f) * e)
+  }
+
+  retarget(values: number[], now: number) {
+    if (values.every((v, i) => v === this.to[i])) return
+    this.from = this.at(now)
+    this.to = [...values]
+    this.t0 = now
+  }
+}
+
+/** A colour's linear rgb — three stores colours linear, so fades pass through real greys. */
+const rgb = (hex: string) => new Color(hex).toArray()
+
+const UPHOLSTERY = {
+  living: M.upholsteryLiving,
+  kitchen: M.upholsteryKitchen,
+  bedroom: M.upholsteryBedroom,
+  office: M.upholsteryOffice,
+} as const
+
+/**
+ * The material and colour switcher's effect on the scene: fades each room's
+ * upholstery, the wall paint and the floor's grade to the chosen finishes
+ * over FINISH_FADE, in the render loop — no remount, no reload. The first
+ * finishes are applied at once: there is nothing to fade from.
+ */
+function FinishFades({ finishes }: { finishes: Finishes }) {
   const get = useThree((state) => state.get)
-  const tween = useRef({
-    first: true,
-    t0: Number.NEGATIVE_INFINITY,
-    from: { fabric: new Color(), sheen: new Color(), wall: new Color(), mul: new Vector3(), add: new Vector3(), sat: 1 },
-    to: { fabric: new Color(), sheen: new Color(), wall: new Color(), mul: new Vector3(), add: new Vector3(), sat: 1 },
-  })
+  const fades = useRef<Map<string, Fade> | null>(null)
+
+  const values = (f: Finishes) => {
+    const out = new Map<string, number[]>()
+    for (const id of ROOM_IDS) {
+      const fabric = FABRICS.find((o) => o.id === f.fabric[id]) ?? FABRICS[0]
+      out.set(`fabric:${id}`, [...rgb(fabric.color), ...rgb(fabric.sheen)])
+    }
+    out.set('wall', rgb((WALLS.find((o) => o.id === f.wall) ?? WALLS[0]).color))
+    const floor = FLOORS.find((o) => o.id === f.floor) ?? FLOORS[0]
+    out.set('floor', [...floor.mul.toArray(), ...floor.add.toArray(), floor.sat])
+    return out
+  }
 
   useLayoutEffect(() => {
-    const t = tween.current
-    const fabric = FABRICS.find((f) => f.id === finish.fabric) ?? FABRICS[0]
-    const wall = WALLS.find((w) => w.id === finish.wall) ?? WALLS[0]
-    const floor = FLOORS.find((f) => f.id === finish.floor) ?? FLOORS[0]
-
-    t.from.fabric.copy(M.upholstery.color)
-    t.from.sheen.copy(M.upholstery.sheenColor)
-    t.from.wall.copy(M.wall.color)
-    t.from.mul.copy(FLOOR_GRADE.uFloorMul.value)
-    t.from.add.copy(FLOOR_GRADE.uFloorAdd.value)
-    t.from.sat = FLOOR_GRADE.uFloorSat.value
-
-    t.to.fabric.set(fabric.color)
-    t.to.sheen.set(fabric.sheen)
-    t.to.wall.set(wall.color)
-    t.to.mul.copy(floor.mul)
-    t.to.add.copy(floor.add)
-    t.to.sat = floor.sat
-
-    // First time: straight to the finish. After: fade from now.
-    t.t0 = t.first ? Number.NEGATIVE_INFINITY : get().clock.elapsedTime
-    t.first = false
-  }, [finish.fabric, finish.wall, finish.floor, get])
+    const now = get().clock.elapsedTime
+    const next = values(finishes)
+    if (!fades.current) {
+      fades.current = new Map([...next].map(([key, v]) => [key, new Fade(v)]))
+      return
+    }
+    for (const [key, v] of next) fades.current.get(key)?.retarget(v, now)
+  }, [finishes, get])
 
   useFrame(({ clock }) => {
-    const t = tween.current
-    const k = Math.min(Math.max((clock.elapsedTime - t.t0) / FINISH_FADE, 0), 1)
-    const e = k * k * (3 - 2 * k)
-    // Lerped in linear space — three stores colours linear — so a fade from
-    // ivory to graphite passes through the greys a real dimmer would.
-    M.upholstery.color.lerpColors(t.from.fabric, t.to.fabric, e)
-    M.upholstery.sheenColor.lerpColors(t.from.sheen, t.to.sheen, e)
-    M.wall.color.lerpColors(t.from.wall, t.to.wall, e)
-    FLOOR_GRADE.uFloorMul.value.lerpVectors(t.from.mul, t.to.mul, e)
-    FLOOR_GRADE.uFloorAdd.value.lerpVectors(t.from.add, t.to.add, e)
-    FLOOR_GRADE.uFloorSat.value = t.from.sat + (t.to.sat - t.from.sat) * e
+    const all = fades.current
+    if (!all) return
+    const now = clock.elapsedTime
+    for (const id of ROOM_IDS) {
+      const v = all.get(`fabric:${id}`)?.at(now)
+      if (!v) continue
+      UPHOLSTERY[id].color.setRGB(v[0], v[1], v[2])
+      UPHOLSTERY[id].sheenColor.setRGB(v[3], v[4], v[5])
+    }
+    const wall = all.get('wall')?.at(now)
+    if (wall) M.wall.color.setRGB(wall[0], wall[1], wall[2])
+    const floor = all.get('floor')?.at(now)
+    if (floor) {
+      FLOOR_GRADE.uFloorMul.value.set(floor[0], floor[1], floor[2])
+      FLOOR_GRADE.uFloorAdd.value.set(floor[3], floor[4], floor[5])
+      FLOOR_GRADE.uFloorSat.value = floor[6]
+    }
   })
 
   return null
@@ -647,7 +776,7 @@ export function RoomScene({
   coarsePointer,
   armchair,
   hotspots,
-  finish,
+  finishes,
 }: {
   /** Change it to clear the room and furnish it as another. */
   room: RoomId
@@ -659,8 +788,8 @@ export function RoomScene({
   armchair: ArmchairMode
   /** Where the hotspot overlay's dots are told where, and whether, to show. */
   hotspots: HotspotStore
-  /** The fabric, wall and floor chosen with the switcher. */
-  finish: Finish
+  /** Every room's fabric, and the wall and floor, chosen with the switcher. */
+  finishes: Finishes
 }) {
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
@@ -717,7 +846,7 @@ export function RoomScene({
 
       <Framing layout={layout} />
       <HotspotProjector store={hotspots} />
-      <Finishes finish={finish} />
+      <FinishFades finishes={finishes} />
       {coarsePointer && <TouchScroll />}
 
       <Effects quality={quality} />

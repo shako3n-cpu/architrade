@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import {
   Box3,
@@ -120,25 +120,9 @@ function usePolyHavenModel(url: string, dress: ((mesh: Mesh) => void) | null, an
     return root
   }, [scene, dress, anchor])
 
-  // The materials dress() made belong to this instance; the loader's own stay
-  // cached with the model, and the shared ones in materials.ts belong to
-  // everything. Without this, every change of room would leave a set of
-  // materials behind in the renderer.
-  useEffect(
-    () => () => {
-      const keep = new Set<Material>(Object.values(M))
-      scene.traverse((object) => {
-        const material = (object as Mesh).material
-        if (material) for (const m of [material].flat()) keep.add(m)
-      })
-      clone.traverse((object) => {
-        const material = (object as Mesh).material
-        if (material) for (const m of [material].flat()) if (!keep.has(m)) m.dispose()
-      })
-    },
-    [scene, clone],
-  )
-
+  // The materials dress() made are NOT disposed on unmount: disposing would
+  // release their compiled shader programs, and the room's next visit would
+  // compile them again mid-transition. See useLampGlow in lamp-glow.ts.
   return clone
 }
 

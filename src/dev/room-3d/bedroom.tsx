@@ -61,7 +61,7 @@ export function Bed() {
         radius={0.05}
         smoothness={SMOOTH}
         position={[0, (0.07 + BASE_TOP) / 2, baseZ]}
-        material={M.upholstery}
+        material={M.upholsteryBedroom}
       />
 
       {/* The headboard: six upholstered channels, floor to 1.17m. */}
@@ -72,7 +72,7 @@ export function Bed() {
           radius={0.045}
           smoothness={SMOOTH}
           position={[-BED_W / 2 + channelW * (i + 0.5), 0.07 + 0.55, headZ]}
-          material={M.upholstery}
+          material={M.upholsteryBedroom}
         />
       ))}
 

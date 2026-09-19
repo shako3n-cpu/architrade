@@ -1,45 +1,47 @@
 import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
-import type { MutableRefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 
 /**
  * ============================================================================
  * THE ROOM FURNISHING ITSELF — TIMING
  * ----------------------------------------------------------------------------
- * Every piece drops in on its own clock: piece N starts STAGGER seconds after
- * piece N-1, falls under something like gravity, lands with a small squash,
- * rebounds a few centimetres and settles — turning slightly as it falls and
- * overshooting that turn before it comes to rest.
+ * Every piece arrives on its own clock: piece N starts `stagger` seconds
+ * after piece N-1. Two ways of arriving:
+ *
+ *   'drop'    the INTRO — the first time the page shows a room, and Replay.
+ *             Half a second apart, each piece falls under something like
+ *             gravity, lands with a small squash, rebounds a few centimetres
+ *             and settles, turning slightly as it falls. The showpiece.
+ *   'quick'   a CHANGE OF ROOM. About 60ms apart, each piece eases down the
+ *             last 45cm into place, ease-out, unwinding a little turn. The
+ *             whole room is in within ~0.9s of the click (switchTiming).
+ *
+ * And one way of leaving, whichever way a piece arrived: it drops out — sinks
+ * into the floor and shrinks away, ease-in, in LEAVE_DURATION, last in first
+ * out. A piece still arriving when its room is sent away leaves from where
+ * it is: the two motions compose, so nothing jumps.
  *
  * NOTHING HERE IS REACT STATE
- *   The timing is read from the render loop's own clock every frame and
- *   written straight onto each piece's transform (see drop-in.tsx). A React
- *   re-render per piece per frame would be sixty reconciliations a second for
- *   no benefit.
+ *   Every clock is read from the render loop each frame and written straight
+ *   onto the pieces' transforms (drop-in.tsx). A React re-render per piece
+ *   per frame would be sixty reconciliations a second for no benefit.
  *
- * REPLAY IS ONE NUMBER
- *   Every piece measures itself from `start`. Moving `start` to "now" restarts
- *   the whole sequence — nothing is unmounted or rebuilt, so replay costs
- *   nothing and cannot leak.
- *
- * CHANGING ROOMS IS THE SAME DROP, BACKWARDS
- *   Setting `leave` sends the furnished room back the way it came: each piece
- *   runs its own drop in reverse — a small squash, a lift, a turn — at about
- *   twice the speed, last in first out, and shrinks as it rises so it is gone
- *   before it reaches the top of the frame. There is no second animation:
- *   leaving is `dropPose` fed a progress that runs from 1 back to 0.
+ * REPLAY AND SWITCHING ARE A FEW NUMBERS
+ *   A room's pieces all measure themselves from its RoomClock: `start` (when
+ *   piece 0 begins), `leave` (when it starts to go) and its timing. Replay
+ *   moves `start`; a change of room sets the old room's `leave` and gives
+ *   the new one a clock of its own. Nothing is rebuilt to animate.
  *
  * REDUCED MOTION IS "ALREADY FINISHED"
- *   Not a slower or shorter animation: progress is pinned past the end, so the
- *   first frame the visitor sees is the furnished room with the lamp on, and
- *   a change of room is a plain cut.
+ *   Progress is pinned past the end, so the first frame the visitor sees is
+ *   the furnished room with the lamps on, and a change of room is a cut.
  * ============================================================================
  */
 
-/** Seconds between one piece starting and the next. */
+/** The intro: seconds between one piece starting and the next. */
 export const STAGGER = 0.5
 
-/** Seconds one piece takes from appearing to coming to rest. */
+/** The intro: seconds one piece takes from appearing to coming to rest. */
 export const DURATION = 0.95
 
 /** Share of DURATION spent falling; the rest is the landing. */
@@ -51,31 +53,103 @@ export const LEAD_IN = 0.7
 /** How long past landing a light takes to come fully up, in progress units. */
 export const LAMP_WARMUP = 0.6
 
-/** Seconds one piece takes to clear, when the room changes. */
-export const LEAVE_DURATION = 0.5
+/** A change of room: seconds from the click to the new room's first piece. */
+export const ENTER_DELAY = 0.12
 
-/** Seconds between one piece starting to clear and the next — last in, first out. */
-export const LEAVE_STAGGER = 0.06
+/** A change of room: seconds one piece takes to ease into place. */
+const QUICK_DURATION = 0.42
+
+/** A change of room: the whole switch, click to last piece at rest. */
+const SWITCH_BUDGET = 0.9
+
+/** How far above its place a piece starts, arriving quickly. Metres. */
+const QUICK_RISE = 0.45
+
+/** Seconds one piece takes to drop out when its room is sent away. */
+export const LEAVE_DURATION = 0.24
+
+/** Seconds between one piece starting to go and the next — last in, first out. */
+export const LEAVE_STAGGER = 0.012
+
+/** How far a leaving piece sinks as it shrinks away. Metres. */
+const QUICK_SINK = 0.28
+
+export type Timing = { style: 'drop' | 'quick'; stagger: number; duration: number }
+
+export const INTRO: Timing = { style: 'drop', stagger: STAGGER, duration: DURATION }
 
 /**
- * How long the EMPTY room is held between one room clearing and the next
- * one arriving. Long enough to register as a beat — the room is bare, then it
- * becomes something else — and to absorb the shader compile of pieces that
- * have never been drawn; short enough not to read as a pause.
+ * A change of room: ~60ms apart, but never so far apart that the room's last
+ * piece lands later than SWITCH_BUDGET after the click — so the living room's
+ * eleven pieces come in ~36ms apart, the others' four to six at 60.
  */
-export const SWITCH_LEAD_IN = 0.45
+export function switchTiming(count: number): Timing {
+  const room = SWITCH_BUDGET - ENTER_DELAY - QUICK_DURATION
+  return { style: 'quick', stagger: count > 1 ? Math.min(0.06, room / (count - 1)) : 0, duration: QUICK_DURATION }
+}
 
-/** Seconds from the first piece of a room starting to clear to the last one gone. */
+/** Seconds from a room's first piece starting to leave to its last one gone. */
 export function leaveSpan(count: number): number {
   return (count - 1) * LEAVE_STAGGER + LEAVE_DURATION
 }
 
+/**
+ * One room's clock. Its fields are read every frame by every piece in the
+ * room; they are only ever changed through its methods — by the room
+ * controller in room-scene.tsx, from the render loop or an effect.
+ */
+export class RoomClock {
+  /** Clock time at which piece 0 starts. Infinity until scheduled. */
+  start = Number.POSITIVE_INFINITY
+  /** Clock time at which the room starts to leave. Infinity while it stays. */
+  leave = Number.POSITIVE_INFINITY
+  /** Clock time of the click that brought this room — never start before ENTER_DELAY after it. */
+  earliest = Number.NEGATIVE_INFINITY
+  timing: Timing
+  /** Its shaders are compiled and it is being drawn — see <Arrival>. */
+  ready = false
+
+  constructor(timing: Timing, earliest = Number.NEGATIVE_INFINITY) {
+    this.timing = timing
+    this.earliest = earliest
+  }
+
+  markReady() {
+    this.ready = true
+  }
+
+  schedule(at: number) {
+    this.start = Math.max(at, this.earliest)
+  }
+
+  sendAway(now: number) {
+    if (this.leave === Number.POSITIVE_INFINITY) this.leave = now
+  }
+
+  replay(now: number) {
+    this.timing = INTRO
+    this.start = now + 0.15
+  }
+
+  get leaving() {
+    return this.leave !== Number.POSITIVE_INFINITY
+  }
+
+  /** Every piece at rest — so its hotspots may show. Under reduced motion: simply drawn. */
+  arrived(now: number, count: number, reduced = false) {
+    if (!this.ready || this.leaving) return false
+    return reduced || now >= this.start + (count - 1) * this.timing.stagger + this.timing.duration
+  }
+
+  /** Every piece gone — so the room can be unmounted. */
+  gone(now: number, count: number) {
+    return this.leaving && now >= this.leave + leaveSpan(count)
+  }
+}
+
 export type FurnishClock = {
-  /** Clock time, in seconds, at which piece 0 starts. */
-  start: MutableRefObject<number>
-  /** Clock time at which the room starts to clear. Infinity while it stays. */
-  leave: MutableRefObject<number>
-  /** Pieces in the room, so they can clear in reverse order. */
+  clock: RoomClock
+  /** Pieces in the room, so they can leave in reverse order. */
   count: number
   reduced: boolean
 }
@@ -89,16 +163,18 @@ export function useFurnishClock(): FurnishClock {
 }
 
 /**
- * One piece's two clocks, as getters rather than values because they are read
+ * One piece's clocks, as getters rather than values because they are read
  * inside other useFrame callbacks, where a value captured at render time would
  * be frozen.
  *
- *   drop()    below 0 not yet started, 0..1 falling, 1 and above at rest
- *   leave()   0 or below while the room stays; 0..1 clearing; 1 and above gone
+ *   drop()    below 0 not yet started, 0..1 arriving, 1 and above at rest
+ *   leave()   0 or below while the room stays; 0..1 leaving; 1 and above gone
+ *   style()   how it arrives: 'drop' or 'quick'
  */
 export type PieceClock = {
   drop: () => number
   leave: () => number
+  style: () => Timing['style']
 }
 
 /**
@@ -115,48 +191,30 @@ export function useLampWarmth(): () => number {
 }
 
 export function usePieceClock(index: number): PieceClock {
-  const { start, leave, count, reduced } = useFurnishClock()
+  const { clock, count, reduced } = useFurnishClock()
   const elapsed = useRef(0)
 
-  useFrame(({ clock }) => {
-    elapsed.current = clock.elapsedTime
+  useFrame(({ clock: time }) => {
+    elapsed.current = time.elapsedTime
   })
 
   return useMemo(
     () => ({
-      drop: () => (reduced ? 1 + LAMP_WARMUP : (elapsed.current - start.current - index * STAGGER) / DURATION),
+      drop: () =>
+        reduced ? 1 + LAMP_WARMUP : (elapsed.current - clock.start - index * clock.timing.stagger) / clock.timing.duration,
       leave: () =>
-        reduced ? 0 : (elapsed.current - leave.current - (count - 1 - index) * LEAVE_STAGGER) / LEAVE_DURATION,
+        reduced ? 0 : (elapsed.current - clock.leave - (count - 1 - index) * LEAVE_STAGGER) / LEAVE_DURATION,
+      style: () => clock.timing.style,
     }),
-    [start, leave, count, reduced, index],
+    [clock, count, reduced, index],
   )
-}
-
-/**
- * The progress a piece's pose is drawn from: its drop, or — once it is
- * leaving — the same drop running backwards, whichever is less far along. The
- * minimum is what makes a change of room mid-drop continuous: a piece still
- * falling carries on until the reversed clock catches it, then turns round.
- */
-export function poseProgress(clock: PieceClock): number {
-  const leaving = clock.leave()
-  const drop = clock.drop()
-  return leaving > 0 ? Math.min(drop, 1 - leaving) : drop
 }
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 const smoothstep = (x: number) => x * x * (3 - 2 * x)
 
 /**
- * Scale while leaving: full size through the lift-off, then shrinking to
- * nothing over the rest of the rise.
- */
-export function leaveScale(leaving: number): number {
-  return 1 - smoothstep(clamp01((leaving - 0.3) / 0.7))
-}
-
-/**
- * How far on a lamp is, 0..1: off while it falls, warming up over
+ * How far on a lamp is, 0..1: off while it arrives, warming up over
  * LAMP_WARMUP once it has landed — so it lights the room rather than
  * arriving lit — and off again quickly once it starts to leave: a lamp is
  * switched off before it is carried out.
@@ -169,15 +227,15 @@ export function lampWarmth(clock: PieceClock): number {
 
 /**
  * How far a room's wall treatment is in, 0..1, read from its FIRST piece's
- * clock: it comes in while that piece falls — the room changing colour as it
- * starts to furnish — and, since the first piece in is the last out, goes as
- * that last piece rises. Between two rooms the walls are plain again, so the
- * empty beat is the same empty room every time.
+ * clock: it comes in while that piece arrives — the room changing colour as
+ * it starts to furnish — and, since the first piece in is the last out, goes
+ * as that last piece leaves.
  */
 export function useWallReveal(): () => number {
   const clock = usePieceClock(0)
   return useCallback(() => {
-    const arriving = smoothstep(clamp01(clock.drop() / 0.8))
+    const quick = clock.style() === 'quick'
+    const arriving = smoothstep(clamp01(clock.drop() / (quick ? 1 : 0.8)))
     const leaving = 1 - smoothstep(clamp01(clock.leave()))
     return arriving * leaving
   }, [clock])
@@ -207,8 +265,8 @@ export type Pose = {
 }
 
 /**
- * The transform a piece should have at progress `t`, relative to where it
- * finally rests. Pure, so it can be reasoned about — and checked — on its own.
+ * The intro's transform at progress `t`, relative to where the piece finally
+ * rests. Pure, so it can be reasoned about — and checked — on its own.
  */
 export function dropPose(t: number, height: number, spin: number): Pose {
   if (t <= 0) return { y: height, yaw: spin, tilt: 0, squash: 0, hidden: true }
@@ -234,4 +292,55 @@ export function dropPose(t: number, height: number, spin: number): Pose {
   const hop = height * 0.032 * Math.sin(Math.PI * r) * (1 - 0.35 * r)
 
   return { y: hop, yaw: spin * (1 - easeOutBack(t)), tilt: 0, squash, hidden: false }
+}
+
+/** A piece's whole transform this frame, arriving and leaving composed. */
+export type PiecePose = Pose & {
+  /** Uniform scale, before the squash. */
+  scale: number
+  /** 0 at rest, 1 at its highest — how far its contact shadow has spread and faded. */
+  lift: number
+  /** 1 while staying, falling to 0 as it leaves — its contact shadow's strength. */
+  presence: number
+}
+
+/**
+ * Where a piece is this frame: its arrival — the intro's drop or a switch's
+ * ease — and, once its room is sent away, the drop-out on top of it.
+ */
+export function piecePose(clock: PieceClock, height: number, spin: number): PiecePose {
+  const t = clock.drop()
+  let pose: PiecePose
+
+  if (clock.style() === 'drop') {
+    const p = dropPose(t, height, spin)
+    pose = { ...p, scale: 1, lift: height > 0 ? Math.min(Math.max(p.y / height, 0), 1) : 0, presence: 1 }
+  } else if (t <= 0) {
+    pose = { y: QUICK_RISE, yaw: spin, tilt: 0, squash: 0, hidden: true, scale: 1, lift: 1, presence: 1 }
+  } else {
+    const e = t >= 1 ? 1 : 1 - (1 - t) ** 3 // ease-out cubic
+    pose = {
+      y: QUICK_RISE * (1 - e),
+      yaw: spin * 0.5 * (1 - e),
+      tilt: 0,
+      squash: 0,
+      hidden: false,
+      scale: 0.9 + 0.1 * e,
+      lift: 1 - e,
+      presence: 1,
+    }
+  }
+
+  const l = clock.leave()
+  if (!pose.hidden && l > 0) {
+    if (l >= 1) {
+      pose.hidden = true
+    } else {
+      const e = l * l // ease-in: it goes slowly, then all at once
+      pose.y -= QUICK_SINK * e
+      pose.scale *= 1 - 0.9 * e
+      pose.presence = 1 - e
+    }
+  }
+  return pose
 }
