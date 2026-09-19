@@ -55,23 +55,41 @@ import { WallTreatment } from './walls'
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The seating group, as a stylist lays one out: the rug under the sofa's
+ * front feet and the armchair's, the coffee table half a metre from the sofa's
+ * cushions, the side table at the sofa's arm. Laid out first with the rug
+ * and table out in the middle of the room, the sofa stood 70cm off the rug,
+ * over a metre from its table: three pieces near each other, not a group.
+ */
+const RUG = { x: 0.2, z: -0.32, width: 3.2, depth: 2.6 }
+const COFFEE_TABLE: [number, number] = [0.2, -0.45]
+const SIDE_TABLE: [number, number] = [1.72, -1.95]
+
 export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
   return (
     <>
-      <DropIn index={0} position={[0.1, 0, 0.25]} height={0.9} spin={0.08}>
-        <Rug />
+      <DropIn index={0} position={[RUG.x, 0, RUG.z]} height={0.9} spin={0.08}>
+        <Rug width={RUG.width} depth={RUG.depth} />
       </DropIn>
 
       <DropIn index={1} position={[0.2, 0, -1.97]} spin={-0.28} shade={[{ size: [2.3, 0.95] }]}>
         <Sofa />
       </DropIn>
 
-      <DropIn index={2} position={[0.2, 0, 0.15]} spin={0.34} shade={[{ size: [1.04, 1.04], round: true }]} ground={ON_RUG}>
+      <DropIn
+        index={2}
+        position={[COFFEE_TABLE[0], 0, COFFEE_TABLE[1]]}
+        spin={0.34}
+        shade={[{ size: [1.04, 1.04], round: true }]}
+        ground={ON_RUG}
+      >
         <CoffeeTable />
       </DropIn>
 
       {/*
-       * Turned to face the coffee table. Keyed by the mode so a switch
+       * Across the rug from the sofa's right end, turned to face the coffee
+       * table, its front feet on the rug. Keyed by the mode so a switch
        * REMOUNTS the DropIn: it marks its meshes for shadows once, on mount,
        * and the procedural chair swapped in later would otherwise arrive
        * without them.
@@ -79,8 +97,8 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
       <DropIn
         key={`armchair-${armchair}`}
         index={3}
-        position={[1.85, 0, 0.6]}
-        rotationY={-1.84}
+        position={[1.86, 0, 0.3]}
+        rotationY={-2}
         spin={-0.36}
         shade={[{ size: [0.82, 0.99] }]}
         ground={ON_RUG}
@@ -101,7 +119,8 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
         <Bookshelf />
       </DropIn>
 
-      <DropIn index={6} position={[2.1, 0, -0.45]} spin={0.3} shade={[{ size: [0.4, 0.4], round: true }]}>
+      {/* At the sofa's right arm, where a hand reaches it. */}
+      <DropIn index={6} position={[SIDE_TABLE[0], 0, SIDE_TABLE[1]]} spin={0.3} shade={[{ size: [0.4, 0.4], round: true }]}>
         <SideTable />
       </DropIn>
 
@@ -113,11 +132,11 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
         <WallArt />
       </DropIn>
 
-      <DropIn index={9} position={[2.1, SIDE_TABLE_TOP, -0.45]} height={0.9} spin={0.5}>
+      <DropIn index={9} position={[SIDE_TABLE[0], SIDE_TABLE_TOP, SIDE_TABLE[1]]} height={0.9} spin={0.5}>
         <Vase />
       </DropIn>
 
-      <DropIn index={10} position={[0.2, COFFEE_TABLE_TOP, 0.15]} height={0.8} spin={-0.12}>
+      <DropIn index={10} position={[COFFEE_TABLE[0], COFFEE_TABLE_TOP, COFFEE_TABLE[1]]} height={0.8} spin={-0.12}>
         <TableStyling />
       </DropIn>
     </>
