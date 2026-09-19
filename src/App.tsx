@@ -51,20 +51,39 @@ import '@/i18n'
  */
 
 /**
- * THE 3D ROOM PREVIEW — DEVELOPMENT ONLY
+ * THE 3D ROOM PREVIEW
  *
  * `import.meta.env.DEV` is replaced with a literal `false` in a production
- * build, so this becomes `const DevRoomHome = null` and the dynamic import
- * beneath it — with three.js and everything it pulls in — is removed as dead
- * code. Not hidden, not unlinked: absent from dist/ entirely. That is the
- * difference from the old /demo routes (fc16862), which were in the bundle
- * and reachable on any host not on the public list.
+ * build, so on `main` this is `const DevRoomHome = null` and the dynamic
+ * import beneath it — with three.js and everything it pulls in — is removed
+ * as dead code. Not hidden, not unlinked: absent from dist/ entirely. That is
+ * the difference from the old /demo routes (fc16862), which were in the
+ * bundle and reachable on any host not on the public list.
  *
  * Keep the whole expression in this shape. Moving the import out from behind
  * the condition, or reading the flag through a variable Vite cannot see
  * through, would put the 3D stack back into the production bundle.
+ *
+ * ---------------------------------------------------------------------------
+ * PREVIEW BRANCH ONLY — DO NOT MERGE THE NEXT LINE INTO main
+ *
+ * `preview/3d-room-demo` is deployed to a Vercel preview URL so the room can
+ * be shown to people who are not running the repo, so there the route is
+ * built as well: reachable at /:lang/dev/room by typing it, linked from no
+ * menu, no sitemap, no other page.
+ *
+ * It stays a DYNAMIC import, which is what keeps it honest: three, drei, the
+ * post-processing chain and every room are a chunk of their own that nothing
+ * but this route asks for, so the pages the site is actually made of — home,
+ * catalog, admin — load exactly what they loaded before. Checked after every
+ * build; see the preview checks in the branch's notes.
+ *
+ * To undo: delete the `|| PREVIEW_BUILD` and the constant, and move the
+ * models back from public/dev-room-models to src/dev/room-3d/models.
  */
-const DevRoomHome = import.meta.env.DEV ? lazy(() => import('@/dev/room-3d/dev-room-home')) : null
+const PREVIEW_BUILD = true
+
+const DevRoomHome = import.meta.env.DEV || PREVIEW_BUILD ? lazy(() => import('@/dev/room-3d/dev-room-home')) : null
 
 /** Sends the visitor to `path` under their remembered language. */
 function LanguageRedirect({ path = '' }: { path?: string }) {

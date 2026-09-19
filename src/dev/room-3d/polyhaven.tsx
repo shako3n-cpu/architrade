@@ -71,7 +71,16 @@ import { PALETTE } from './palette'
 const NO_DRACO = false
 const NO_MESHOPT = false
 
-const model = (id: string) => new URL(`./models/${id}/${id}_1k.gltf`, import.meta.url).href
+/*
+ * Served as static files from public/dev-room-models, not imported.
+ *
+ * A .gltf names its .bin and its textures by relative path, and the bundler
+ * only ever emits the one file it is pointed at: built, the model arrived
+ * under a hashed name with its geometry and maps left behind, 404 each. In
+ * public/ the folder is copied as it stands and the relative names still
+ * find each other. (This matters only in a built preview — see App.tsx.)
+ */
+const model = (id: string) => `/dev-room-models/${id}/${id}_1k.gltf`
 
 const URLS = {
   armchair: model('modern_arm_chair_01'),
