@@ -20,6 +20,9 @@ import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finishes } from './finishes'
 import { RIG, SCROLL_PUSH } from './camera-rig'
+import { fitBesideCopy, type Rect } from './framing-fit'
+import { Dust } from './dust'
+import { IDLE } from './idle'
 import { COVE, LIGHTING, MOODS, WASH, type TimeOfDay } from './lighting'
 import { M } from './materials'
 import { PALETTE } from './palette'
@@ -80,7 +83,7 @@ type Quality = 'high' | 'low'
 /** Seconds a change between day and evening takes. */
 const MOOD_FADE = 0.7
 
-function Studio({ quality, timeOfDay }: { quality: Quality; timeOfDay: TimeOfDay }) {
+function Studio({ quality, timeOfDay, reduced }: { quality: Quality; timeOfDay: TimeOfDay; reduced: boolean }) {
   const sun = useRef<DirectionalLight>(null)
   // Starts AT the first mood — the page opens in it, it does not fade into it.
   const mix = useRef(timeOfDay === 'evening' ? 1 : 0)
@@ -104,7 +107,13 @@ function Studio({ quality, timeOfDay }: { quality: Quality; timeOfDay: TimeOfDay
     if (light) {
       light.position.lerpVectors(day.sun.position, night.sun.position, e)
       light.color.lerpColors(day.sun.color, night.sun.color, e)
-      light.intensity = day.sun.intensity + (night.sun.intensity - day.sun.intensity) * e
+      // The breath — idle.ts: the light easing up and down by a few percent
+      // over some seconds, like cloud passing the window. The contact shadows
+      // read the same value, so the room seems to breathe as one.
+      IDLE.enabled = !reduced
+      const t = state.clock.elapsedTime
+      IDLE.breath = reduced ? 1 : 1 + 0.035 * Math.sin(t * 0.21) + 0.015 * Math.sin(t * 0.57 + 1.3)
+      light.intensity = (day.sun.intensity + (night.sun.intensity - day.sun.intensity) * e) * IDLE.breath
     }
     state.scene.environmentIntensity = day.ambient + (night.ambient - day.ambient) * e
     COVE.emissiveIntensity = 4 * (day.cove + (night.cove - day.cove) * e)
@@ -213,6 +222,23 @@ const MODEL_CORNERS = (() => {
   return xs.flatMap((x) => ys.flatMap((y) => zs.map((z) => new Vector3(x, y, z))))
 })()
 
+/** The floor slab's eight corners — what must stay clear of the copy. See framing-fit.ts. */
+const FLOOR_CORNERS = (() => {
+  const { halfWidth, halfDepth, wallThickness, slabThickness } = ROOM
+  const xs = [-halfWidth - wallThickness, halfWidth]
+  const ys = [-slabThickness, 0]
+  const zs = [-halfDepth - wallThickness, halfDepth]
+  return xs.flatMap((x) => ys.flatMap((y) => zs.map((z) => new Vector3(x, y, z))))
+})()
+
+/** The back-left quadrant, floor to 2.3m, where every room stands its tall pieces. See framing-fit.ts. */
+const TALL_CORNERS = (() => {
+  const xs = [-ROOM.halfWidth, -1.2]
+  const ys = [0, 2.3]
+  const zs = [-ROOM.halfDepth, 0.3]
+  return xs.flatMap((x) => ys.flatMap((y) => zs.map((z) => new Vector3(x, y, z))))
+})()
+
 /** Stacked view: air either side of the model, and above it, in pixels. */
 const FIT_SIDE = 0.035
 const FIT_TOP = 14
@@ -264,7 +290,7 @@ function modelBounds(cam: PerspectiveCamera, width: number, height: number) {
  * centring is recomputed on every resize; it moves the picture, not the
  * camera.
  */
-function Framing({ layout }: { layout: StageLayout }) {
+function Framing({ layout, copyRect }: { layout: StageLayout; copyRect: Rect | null }) {
   // The camera is read through `get()` inside the effect rather than taken
   // from the hook: it belongs to the render loop, not to React, and is
   // changed here on the loop's behalf.
@@ -317,11 +343,30 @@ function Framing({ layout }: { layout: StageLayout }) {
       RIG.baseDistance = distance
     }
 
-    // Overlay: enough that the left wall's top edge clears the end of the
-    // headline. Stacked: the model's own box, centred across the canvas and
-    // in the space between its top edge and the Replay row.
+    // Overlay: fitted beside the copy (framing-fit.ts) — the largest room,
+    // up to a fifth larger than the old tuned framing, whose outline clears
+    // the copy and the Replay row, as near the stage's middle as the copy
+    // allows. Worked out on the default line of sight, then applied along the
+    // visitor's own, so a resize never undoes their drag.
+    // Stacked: the model's own box, centred across the canvas and in the
+    // space between its top edge and the Replay row.
     let shiftX = layout === 'overlay' ? -W * 0.165 : 0
     let shiftY = 0
+    if (layout === 'overlay' && copyRect) {
+      const tuned = shape === 'portrait' ? 15.5 : shape === 'square' ? 19 : 17.5
+      const direction = cam.position.clone().sub(TARGET).normalize()
+      cam.aspect = aspect
+      cam.updateProjectionMatrix()
+      const fit = fitBesideCopy(cam, MODEL_CORNERS, [FLOOR_CORNERS, TALL_CORNERS], W, H, copyRect, tuned, placeAt)
+      const distance = fit ? fit.distance : tuned
+      cam.position.copy(TARGET).addScaledVector(direction, distance)
+      cam.lookAt(TARGET)
+      RIG.baseDistance = distance
+      if (fit) {
+        shiftX = fit.shiftX
+        shiftY = fit.shiftY
+      }
+    }
     if (layout === 'stacked') {
       const b = modelBounds(cam, W, H)
       shiftX = (b.minX + b.maxX) / 2 - W / 2
@@ -330,7 +375,7 @@ function Framing({ layout }: { layout: StageLayout }) {
     cam.setViewOffset(W, H, shiftX, shiftY, W, H)
     cam.updateProjectionMatrix()
     ;(controls as { update?: () => void } | null)?.update?.()
-  }, [get, layout, size.width, size.height])
+  }, [get, layout, size.width, size.height, copyRect])
 
   return null
 }
@@ -855,6 +900,8 @@ export function RoomScene({
   hotspots,
   finishes,
   timeOfDay,
+  copyRect,
+  active,
 }: {
   /** Change it to clear the room and furnish it as another. */
   room: RoomId
@@ -870,6 +917,10 @@ export function RoomScene({
   finishes: Finishes
   /** Day or evening — see lighting.ts. */
   timeOfDay: TimeOfDay
+  /** Where the copy block sits over the canvas, on the desktop layout — see framing-fit.ts. */
+  copyRect: Rect | null
+  /** False while the tab is hidden or the stage is off screen: nothing is drawn. */
+  active: boolean
 }) {
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
@@ -878,6 +929,9 @@ export function RoomScene({
 
   return (
     <Canvas
+      // Not drawn at all while the tab is hidden or the room is scrolled away
+      // — see use-render-active.ts.
+      frameloop={active ? 'always' : 'never'}
       // PCFShadowMap, explicitly. `shadows` alone asks for PCFSoftShadowMap,
       // which 0.186 has removed and falls back from with a console warning.
       shadows="percentage"
@@ -901,8 +955,10 @@ export function RoomScene({
        */}
       <LampLights>
         <Suspense fallback={null}>
-          <Studio quality={quality} timeOfDay={timeOfDay} />
+          <Studio quality={quality} timeOfDay={timeOfDay} reduced={reduced} />
           <Room />
+          {/* Dust in the light — not on phones, not on the cheaper setting. */}
+          {!coarsePointer && quality === 'high' && <Dust />}
           <Rooms room={room} armchair={armchair} reduced={reduced} replayToken={replayToken} hotspots={hotspots} />
         </Suspense>
       </LampLights>
@@ -924,7 +980,7 @@ export function RoomScene({
         maxPolarAngle={coarsePointer ? POLAR : POLAR + 0.12}
       />
 
-      <Framing layout={layout} />
+      <Framing layout={layout} copyRect={copyRect} />
       <ScrollDolly />
       <HotspotProjector store={hotspots} />
       <FinishFades finishes={finishes} />

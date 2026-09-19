@@ -79,6 +79,11 @@
       "label": "Light",
       "day": "Day",
       "evening": "Evening"
+    },
+    "brands": {
+      "count_one": "{{count}} manufacturer",
+      "count_other": "{{count}} manufacturers",
+      "all": "All brands"
     }
   }
 }

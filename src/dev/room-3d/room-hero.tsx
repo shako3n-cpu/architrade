@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import './i18n'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Moon, Move3d, RotateCcw, Sun } from 'lucide-react'
@@ -10,12 +10,14 @@ import { useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
 import { FinishControls } from './finish-controls'
 import { DEFAULT_FABRIC, DEFAULT_FLOOR, DEFAULT_WALL, type Finish, type Finishes } from './finishes'
+import type { Rect } from './framing-fit'
 import { HotspotStore } from './hotspot-store'
 import { timeOfDayNow, type TimeOfDay } from './lighting'
 import { HotspotLayer } from './hotspot-layer'
 import { RoomScene, type StageLayout } from './room-scene'
 import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { useReducedMotion } from './use-reduced-motion'
+import { useRenderActive } from './use-render-active'
 import { useScrollCamera } from './use-scroll-camera'
 import './room-3d.css'
 
@@ -74,7 +76,7 @@ function readArmchair(value: string | null): ArmchairMode {
 }
 
 export function RoomHero() {
-  const { t, localePath } = useLanguage()
+  const { t, lang, localePath } = useLanguage()
 
   // Both in the address, so a room can be reloaded or sent to someone.
   const [params, setParams] = useSearchParams()
@@ -132,6 +134,50 @@ export function RoomHero() {
   // camera-rig.ts for why not on phones.
   const hero = useRef<HTMLElement>(null)
   useScrollCamera(hero, !reduced && wide && !coarse)
+  const active = useRenderActive(stage)
+
+  // Where the copy block sits over the stage on the desktop layout, for the
+  // room to be fitted beside it (framing-fit.ts). Watched, because the copy
+  // grows when the web fonts arrive and changes with the language.
+  const measure = useRef<HTMLDivElement>(null)
+  const [copyRect, setCopyRect] = useState<Rect | null>(null)
+  useEffect(() => {
+    const copy = measure.current
+    const box = stage.current
+    if (!wide || !copy || !box) {
+      setCopyRect(null)
+      return
+    }
+    const read = () => {
+      // The text block — eyebrow to the two buttons. The room's floor is kept
+      // clear of it; its walls may pass behind, and so may the floor behind
+      // the controls panel below it, which has its own surface.
+      const whole = copy.getBoundingClientRect()
+      const actions = copy.querySelector('.room3d-actions')?.getBoundingClientRect()
+      const c = actions ? { left: whole.left, top: whole.top, right: whole.right, bottom: actions.bottom } : whole
+      const s = box.getBoundingClientRect()
+      const next = {
+        x0: Math.round(c.left - s.left),
+        y0: Math.round(c.top - s.top),
+        x1: Math.round(c.right - s.left),
+        y1: Math.round(c.bottom - s.top),
+      }
+      setCopyRect((current) =>
+        current &&
+        current.x0 === next.x0 &&
+        current.y0 === next.y0 &&
+        current.x1 === next.x1 &&
+        current.y1 === next.y1
+          ? current
+          : next,
+      )
+    }
+    read()
+    const observer = new ResizeObserver(read)
+    observer.observe(copy)
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [wide, lang])
 
   const [replayToken, setReplayToken] = useState(0)
 
@@ -156,7 +202,7 @@ export function RoomHero() {
     // `room3d-*` classes are plain CSS in room-3d.css — see the note there.
     <section ref={hero} className="room3d-hero relative isolate flex flex-col overflow-hidden bg-surface">
       <Container className="room3d-copy relative z-10 pb-2">
-        <div className="room3d-measure">
+        <div ref={measure} className="room3d-measure">
           <Eyebrow className="text-brass">{t('b2b.hero.eyebrow')}</Eyebrow>
 
           <h1 className="mt-5 text-3xl text-ink sm:text-4xl lg:text-5xl">{t('b2b.hero.title')}</h1>
@@ -182,8 +228,15 @@ export function RoomHero() {
            * all. A row that scrolls sideways on a phone, as that one does,
            * rather than wrapping to two rows and pushing the room down.
            */}
+          {/*
+           * The controls panel: the room switch, day / evening, the swatches.
+           * On the desktop layout it carries a translucent surface — the
+           * Replay button's own treatment — so the room's floor may pass
+           * behind it and the room can be framed larger (framing-fit.ts).
+           */}
+          <div className="room3d-panel mt-6">
           {/* The room switch's heading, with the day / evening toggle at its end. */}
-          <div className="room3d-rooms-head mt-6">
+          <div className="room3d-rooms-head">
             <p className="at-label text-muted" aria-hidden="true">
               {t('room3d.rooms')}
             </p>
@@ -227,6 +280,7 @@ export function RoomHero() {
           </div>
 
           <FinishControls room={room} finish={finish} onChange={changeFinish} />
+          </div>
         </div>
       </Container>
 
@@ -247,6 +301,8 @@ export function RoomHero() {
             hotspots={hotspots}
             finishes={finishes}
             timeOfDay={timeOfDay}
+            copyRect={copyRect}
+            active={active}
           />
         </Suspense>
 

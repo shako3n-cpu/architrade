@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { SphereGeometry } from 'three'
 import { BOOK_MATERIALS, M } from './materials'
 import { Rod } from './shapes'
+import { useSway } from './idle'
 import { seeded, useLathe } from './util'
 
 /**
@@ -312,6 +313,7 @@ const POT = [
  */
 export function SmallPlant() {
   const pot = useLathe(POT)
+  const sway = useSway(4.1, 1.6)
   const leaf = useMemo(() => new SphereGeometry(1, 16, 8), [])
   const leaves = useMemo(() => {
     const rand = seeded(29)
@@ -329,6 +331,8 @@ export function SmallPlant() {
       <mesh position={[0, 0.074, 0]} material={M.soil}>
         <cylinderGeometry args={[0.048, 0.048, 0.004, 24]} />
       </mesh>
+      <group ref={sway} position={[0, 0.075, 0]}>
+      <group position={[0, -0.075, 0]}>
       {leaves.map((l, i) => {
         const tip: [number, number, number] = [Math.cos(l.angle) * l.reach, l.top, Math.sin(l.angle) * l.reach]
         return (
@@ -344,6 +348,8 @@ export function SmallPlant() {
           </group>
         )
       })}
+      </group>
+      </group>
     </group>
   )
 }

@@ -417,26 +417,63 @@
   }
 
   @media (min-width: 1024px) {
+    /* Wrapped, not a sideways-scrolling row: at 1024-1280 the measure is
+       28rem and the third group was cut off at its edge. */
+    .room3d-finishes {
+      flex-wrap: wrap;
+      row-gap: 0.75rem;
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+
+    /* The copy, the panel included, over the hotspot layer (z 9). */
+    .room3d-copy {
+      z-index: 10;
+    }
+
     .room3d-hero {
       display: block;
       min-height: calc(100dvh - var(--at-header-height));
     }
 
+    /* In the flow, over the full-bleed stage, rather than absolutely placed:
+       on a short window the copy and its controls panel are taller than the
+       first screen, and absolutely placed they ran down into the Replay row.
+       In the flow, the hero grows to hold them and the stage grows with it.
+       The bottom padding is the Replay row's room. */
     .room3d-copy {
-      position: absolute;
-      inset-inline: 0;
-      top: 0;
+      position: relative;
       padding-top: 5rem;
+      padding-bottom: 7rem;
       /* A drag that starts on the headline still turns the room... */
       pointer-events: none;
     }
 
     /* ...but the buttons are buttons, and so is the room switch. */
     .room3d-actions,
-    .room3d-rooms,
-    .room3d-rooms-head,
-    .room3d-finishes {
+    .room3d-panel {
       pointer-events: auto;
+    }
+
+    /* The controls panel over the room: the Replay button's surface, a
+       hairline, and enough blur that whatever passes behind — the floor, a
+       piece of furniture — reads as texture, not as detail competing with
+       the labels. Fitted to its content, not the measure. */
+    .room3d-panel {
+      width: max-content;
+      max-width: 100%;
+      padding: 0.9rem 1rem 1rem;
+      margin-inline: -1rem;
+      background-color: color-mix(in oklab, var(--at-surface) 76%, transparent);
+      border: 1px solid color-mix(in oklab, var(--at-hairline) 80%, transparent);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Below the copy on the desktop layout, so a hotspot dot never sits on
+       top of the panel or the buttons. */
+    .room3d-hotspots {
+      z-index: 9;
     }
 
     .room3d-measure {
@@ -459,6 +496,147 @@
     .room3d-measure {
       max-width: 32rem;
     }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The brands strip (brands-strip.tsx). Outside @layer utilities with the
+   keyframes, but its selectors are its own and collide with nothing.
+   -------------------------------------------------------------------------- */
+.room3d-brands {
+  border-block: 1px solid var(--at-hairline);
+  background: var(--at-background);
+}
+
+.room3d-brands-inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding-block: 1.1rem;
+}
+
+.room3d-brands-lead {
+  display: flex;
+  flex-shrink: 0;
+  align-items: baseline;
+  gap: 1.25rem;
+}
+
+.room3d-brands-count {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--at-brass);
+  white-space: nowrap;
+}
+
+.room3d-brands-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--at-muted);
+  white-space: nowrap;
+  transition: color var(--at-duration) var(--at-ease);
+}
+
+.room3d-brands-all:hover {
+  color: var(--at-ink);
+}
+
+.room3d-brands-all svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  stroke-width: 1.5;
+}
+
+/* The drifting names, faded out at both ends so they arrive and leave rather
+   than being cut. */
+.room3d-marquee {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.room3d-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: room3d-marquee 60s linear infinite;
+}
+
+.room3d-marquee:hover .room3d-marquee-track,
+.room3d-marquee:focus-within .room3d-marquee-track {
+  animation-play-state: paused;
+}
+
+.room3d-marquee-list {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.room3d-marquee-list li {
+  display: flex;
+  align-items: center;
+}
+
+/* A small brass dot between names. */
+.room3d-marquee-list li::after {
+  content: '';
+  width: 3px;
+  height: 3px;
+  margin-inline: 1.4rem;
+  border-radius: 9999px;
+  background: var(--at-brass-bright);
+  opacity: 0.7;
+}
+
+.room3d-marquee-list a {
+  font-family: var(--at-font-heading);
+  font-size: 1rem;
+  white-space: nowrap;
+  color: var(--at-muted);
+  transition: color var(--at-duration) var(--at-ease);
+}
+
+.room3d-marquee-list a:hover,
+.room3d-marquee-list a:focus-visible {
+  color: var(--at-ink);
+}
+
+@keyframes room3d-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Still under reduced motion: a row that scrolls sideways like any other,
+   and only the first copy of the names. */
+@media (prefers-reduced-motion: reduce) {
+  .room3d-marquee {
+    overflow-x: auto;
+    scrollbar-width: none;
+    mask-image: none;
+  }
+
+  .room3d-marquee-track {
+    animation: none;
+  }
+
+  .room3d-marquee-list[aria-hidden='true'] {
+    display: none;
+  }
+}
+
+/* A phone: the count and link on one line, the names under them. */
+@media (max-width: 639px) {
+  .room3d-brands-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
   }
 }
 

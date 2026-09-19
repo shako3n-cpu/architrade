@@ -13,6 +13,7 @@ import {
   type InstancedMesh,
   type Material,
 } from 'three'
+import { useSway } from './idle'
 import { useLampGlow } from './lamp-glow'
 import { BOOK_MATERIALS, M, rugWool } from './materials'
 import { PALETTE } from './palette'
@@ -497,6 +498,7 @@ export function Bookshelf() {
 /* -------------------------------------------------------------------------- */
 
 export function Plant() {
+  const sway = useSway(0)
   const pot = useMemo(
     () =>
       new LatheGeometry(
@@ -562,17 +564,20 @@ export function Plant() {
       </mesh>
       <mesh geometry={trunk} material={M.trunk} />
 
-      {leaves.map((leaf, i) => (
-        <group key={i} position={[0, leaf.y, 0]} rotation={[0, leaf.angle, 0]}>
-          <mesh
-            geometry={leafGeometry}
-            position={[leaf.reach, 0, 0]}
-            rotation={[0, 0, leaf.tilt]}
-            scale={[0.14 * leaf.size, 0.011, 0.085 * leaf.size]}
-            material={M.leaf}
-          />
-        </group>
-      ))}
+      {/* The crown sways — see idle.ts — pivoting at the top of the pot. */}
+      <group ref={sway} position={[0, 0.4, 0]}>
+        {leaves.map((leaf, i) => (
+          <group key={i} position={[0, leaf.y - 0.4, 0]} rotation={[0, leaf.angle, 0]}>
+            <mesh
+              geometry={leafGeometry}
+              position={[leaf.reach, 0, 0]}
+              rotation={[0, 0, leaf.tilt]}
+              scale={[0.14 * leaf.size, 0.011, 0.085 * leaf.size]}
+              material={M.leaf}
+            />
+          </group>
+        ))}
+      </group>
     </group>
   )
 }
@@ -611,6 +616,7 @@ const OLIVE_POT = [
  * the room put together.
  */
 export function OliveTree() {
+  const sway = useSway(2.3, 1.3)
   const pot = useMemo(() => new LatheGeometry(OLIVE_POT.map(([x, y]) => new Vector2(x, y)), 64), [])
   const stems = useMemo(
     () =>
@@ -675,7 +681,12 @@ export function OliveTree() {
       {stems.map((geometry, i) => (
         <mesh key={i} geometry={geometry} material={M.trunk} />
       ))}
-      <instancedMesh ref={instanced} args={[leaf, M.oliveLeaf, leaves.length]} />
+      {/* The leaves sway about the top of the trunk. */}
+      <group ref={sway} position={[0, 0.5, 0]}>
+        <group position={[0, -0.5, 0]}>
+          <instancedMesh ref={instanced} args={[leaf, M.oliveLeaf, leaves.length]} />
+        </group>
+      </group>
     </group>
   )
 }

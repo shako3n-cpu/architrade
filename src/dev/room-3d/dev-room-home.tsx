@@ -1,4 +1,5 @@
 import { Home } from '@/pages/home'
+import { BrandsStrip } from './brands-strip'
 import { RoomHero } from './room-hero'
 
 /**
@@ -12,5 +13,14 @@ import { RoomHero } from './room-hero'
  * dist/ for "WebGLRenderer": there should be no match.
  */
 export default function DevRoomHome() {
-  return <Home hero={<RoomHero />} />
+  return (
+    <Home
+      hero={
+        <>
+          <RoomHero />
+          <BrandsStrip />
+        </>
+      }
+    />
+  )
 }
