@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/root-layout'
 import { Home } from '@/pages/home'
+// PREVIEW BRANCH ONLY — a few lines of React and a lazy import; see PREVIEW_BUILD below.
+import { PreviewRoomHero } from '@/dev/room-3d/preview-hero'
 import { Catalog } from '@/pages/catalog'
 import { Product } from '@/pages/product'
 import { CategoryPage } from '@/pages/category'
@@ -78,8 +80,19 @@ import '@/i18n'
  * catalog, admin — load exactly what they loaded before. Checked after every
  * build; see the preview checks in the branch's notes.
  *
- * To undo: delete the `|| PREVIEW_BUILD` and the constant, and move the
- * models back from public/dev-room-models to src/dev/room-3d/models.
+ * The same flag puts the room on the REAL home page, in place of the
+ * photograph, so the preview shows it to anyone who just opens the site. Only
+ * the hero changes: the header, the catalogue, the client wall and the footer
+ * are the home page's own, untouched. <PreviewRoomHero> is the guard around
+ * it — a browser without WebGL2, a very slow device, the moment before the
+ * chunk lands, or anything thrown on the way up, and the photograph is shown
+ * instead. /dev/room keeps the same hero WITHOUT that guard, so a failure
+ * there stays visible.
+ *
+ * To undo: delete the `|| PREVIEW_BUILD`, the constant, the home route's
+ * `hero` prop and the import of preview-hero.tsx above, that file itself,
+ * and move the models back from public/dev-room-models to
+ * src/dev/room-3d/models.
  */
 const PREVIEW_BUILD = true
 
@@ -153,7 +166,9 @@ const adminRoutes = (
 
 const publicRoutes = (
   <Route path="/:lang" element={<RootLayout />}>
-    <Route index element={<Home />} />
+    {/* PREVIEW BRANCH ONLY: the room in place of the photograph hero, with
+        the photograph itself as the fallback — see PREVIEW_BUILD above. */}
+    <Route index element={PREVIEW_BUILD ? <Home hero={<PreviewRoomHero />} /> : <Home />} />
 
     <Route path="catalog" element={<Catalog />} />
     <Route path="catalog/:categorySlug" element={<CategoryPage />} />
