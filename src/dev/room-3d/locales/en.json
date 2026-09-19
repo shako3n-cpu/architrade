@@ -1,0 +1,48 @@
+{
+  "room3d": {
+    "replay": "Replay",
+    "hint": "Drag to look around",
+    "hintTouch": "Swipe sideways to turn the room",
+    "rooms": "Choose a room",
+    "room": {
+      "living": "Living room",
+      "kitchen": "Kitchen",
+      "bedroom": "Bedroom",
+      "office": "Office"
+    },
+    "label": {
+      "living": "An empty room furnishing itself as a living room, piece by piece.",
+      "kitchen": "An empty room furnishing itself as a kitchen, piece by piece.",
+      "bedroom": "An empty room furnishing itself as a bedroom, piece by piece.",
+      "office": "An empty room furnishing itself as an office, piece by piece."
+    },
+    "item": {
+      "sofa": "Sofa",
+      "armchair": "Armchair",
+      "coffeeTable": "Coffee table",
+      "floorLamp": "Floor lamp",
+      "island": "Kitchen island",
+      "stool": "Counter stool",
+      "pendant": "Pendant light",
+      "bed": "Bed",
+      "nightstand": "Bedside table",
+      "sideboard": "Sideboard",
+      "tableLamp": "Table lamp",
+      "desk": "Writing desk",
+      "deskChair": "Desk chair",
+      "shelving": "Shelving",
+      "deskLamp": "Desk lamp"
+    },
+    "hotspot": {
+      "open": "{{item}} — show details",
+      "close": "Close",
+      "loading": "Loading…",
+      "viewInCatalog": "View in catalog",
+      "browseCatalog": "Browse the catalog",
+      "todo": "TODO",
+      "brandTodo": "Brand not recorded yet",
+      "productTodo": "Not in the catalog yet — placeholder",
+      "missingTodo": "Catalog entry not found — archived or removed"
+    }
+  }
+}

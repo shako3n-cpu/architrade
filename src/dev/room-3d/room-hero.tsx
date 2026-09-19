@@ -1,4 +1,5 @@
 import { Suspense, useRef, useState } from 'react'
+import './i18n'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Move3d, RotateCcw } from 'lucide-react'
 import { Container } from '@/components/ui/container'
@@ -7,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/hooks/use-language'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
+import { HotspotStore } from './hotspot-store'
+import { HotspotLayer } from './hotspot-layer'
 import { RoomScene, type StageLayout } from './room-scene'
 import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { useReducedMotion } from './use-reduced-motion'
@@ -40,42 +43,13 @@ import './room-3d.css'
  *   every class it uses is one production already generates.
  *
  * STRINGS
- *   The strings that belong to this experiment — Replay, the drag hint, the
- *   room names, the canvas labels — live here, not in src/locales. Adding
- *   them there would ship them in the production bundle for a feature that
- *   does not exist in production. The Georgian is a first draft: have it
- *   checked before this ever leaves the preview branch.
+ *   Every string is read with the site's t(), from `room3d.*` keys in
+ *   English and Georgian — see i18n.ts for why those two files live in this
+ *   folder rather than in src/locales. The Georgian is a first draft: have
+ *   it checked before this ever leaves the preview branch.
  * ============================================================================
  */
 
-const COPY = {
-  en: {
-    replay: 'Replay',
-    hint: 'Drag to look around',
-    hintTouch: 'Swipe sideways to turn the room',
-    rooms: 'Choose a room',
-    room: { living: 'Living room', kitchen: 'Kitchen', bedroom: 'Bedroom', office: 'Office' },
-    label: {
-      living: 'An empty room furnishing itself as a living room, piece by piece.',
-      kitchen: 'An empty room furnishing itself as a kitchen, piece by piece.',
-      bedroom: 'An empty room furnishing itself as a bedroom, piece by piece.',
-      office: 'An empty room furnishing itself as an office, piece by piece.',
-    },
-  },
-  ka: {
-    replay: 'ხელახლა',
-    hint: 'გადაათრიეთ, რომ ოთახი დაათვალიეროთ',
-    hintTouch: 'გადაუსვით გვერდზე, რომ ოთახი შემოატრიალოთ',
-    rooms: 'აირჩიეთ ოთახი',
-    room: { living: 'მისაღები', kitchen: 'სამზარეულო', bedroom: 'საძინებელი', office: 'ოფისი' },
-    label: {
-      living: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: მისაღები ოთახი.',
-      kitchen: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: სამზარეულო.',
-      bedroom: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: საძინებელი.',
-      office: 'ცარიელი ოთახი, რომელიც ნივთ-ნივთ ივსება ავეჯით: სამუშაო ოთახი.',
-    },
-  },
-} as const
 
 const DEFAULT_ROOM = ROOM_IDS[0]
 
@@ -96,8 +70,7 @@ function readArmchair(value: string | null): ArmchairMode {
 }
 
 export function RoomHero() {
-  const { t, lang, localePath } = useLanguage()
-  const copy = COPY[lang]
+  const { t, localePath } = useLanguage()
 
   // Both in the address, so a room can be reloaded or sent to someone.
   const [params, setParams] = useSearchParams()
@@ -137,6 +110,10 @@ export function RoomHero() {
 
   const [replayToken, setReplayToken] = useState(0)
 
+  // Shared by the scene, which writes where each hotspot dot is, and the
+  // overlay, which draws them. Made once; never replaced.
+  const [hotspots] = useState(() => new HotspotStore())
+
   return (
     // `room3d-*` classes are plain CSS in room-3d.css — see the note there.
     <section className="room3d-hero relative isolate flex flex-col overflow-hidden bg-surface">
@@ -167,9 +144,9 @@ export function RoomHero() {
            * all. A row that scrolls sideways on a phone, as that one does,
            * rather than wrapping to two rows and pushing the room down.
            */}
-          <div className="room3d-rooms mt-6" role="group" aria-label={copy.rooms}>
+          <div className="room3d-rooms mt-6" role="group" aria-label={t('room3d.rooms')}>
             <p className="at-label mb-3 hidden text-muted sm:block" aria-hidden="true">
-              {copy.rooms}
+              {t('room3d.rooms')}
             </p>
             <div className="at-scroll-row -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:gap-x-2 sm:gap-y-3 sm:overflow-visible sm:px-0">
               {ROOM_IDS.map((id) => {
@@ -187,7 +164,7 @@ export function RoomHero() {
                         : 'border-hairline text-muted hover:border-brass hover:text-brass',
                     )}
                   >
-                    {copy.room[id]}
+                    {t(`room3d.room.${id}`)}
                   </button>
                 )
               })}
@@ -201,7 +178,7 @@ export function RoomHero() {
        * the portrait frame is predictable, with a floor for short phones held
        * in landscape; the full hero from lg up.
        */}
-      <div ref={stage} role="img" aria-label={copy.label[room]} className="room3d-stage relative w-full">
+      <div ref={stage} role="img" aria-label={t(`room3d.label.${room}`)} className="room3d-stage relative w-full">
         <Suspense fallback={null}>
           <RoomScene
             room={room}
@@ -210,8 +187,11 @@ export function RoomHero() {
             layout={layout}
             coarsePointer={coarse}
             armchair={armchair}
+            hotspots={hotspots}
           />
         </Suspense>
+
+        <HotspotLayer room={room} store={hotspots} />
 
         {/* Bottom LEFT, Replay first. The site's floating chat button is fixed
             to the bottom right of every page, and on the first layout it sat
@@ -228,13 +208,13 @@ export function RoomHero() {
                 onClick={() => setReplayToken((token) => token + 1)}
               >
                 <RotateCcw aria-hidden="true" className="size-4 stroke-[1.25]" />
-                {copy.replay}
+                {t('room3d.replay')}
               </Button>
             )}
 
             <p className="flex items-center gap-2 text-xs text-muted">
               <Move3d aria-hidden="true" className="size-4 stroke-[1.25]" />
-              {coarse ? copy.hintTouch : copy.hint}
+              {coarse ? t('room3d.hintTouch') : t('room3d.hint')}
             </p>
           </Container>
         </div>

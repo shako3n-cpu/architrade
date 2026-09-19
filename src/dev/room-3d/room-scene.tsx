@@ -5,7 +5,9 @@ import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from
 import { ToneMappingMode } from 'postprocessing'
 import { HalfFloatType, Vector3, WebGLRenderTarget, type Group, type PerspectiveCamera, type PointLight } from 'three'
 import { FurnishProvider } from './drop-in'
-import { LEAD_IN, leaveSpan, SWITCH_LEAD_IN } from './furnish-clock'
+import { DURATION, LEAD_IN, leaveSpan, STAGGER, SWITCH_LEAD_IN } from './furnish-clock'
+import type { HotspotStore } from './hotspot-store'
+import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { PALETTE } from './palette'
 import { Room } from './room'
@@ -409,11 +411,13 @@ function Rooms({
   armchair,
   reduced,
   replayToken,
+  hotspots,
 }: {
   room: RoomId
   armchair: ArmchairMode
   reduced: boolean
   replayToken: number
+  hotspots: HotspotStore
 }) {
   /*
    * Infinity until set, so every piece is "not yet" — waiting shrunk to
@@ -449,6 +453,15 @@ function Rooms({
     }
     pending.current = room
   }, [room, shown.room, reduced, get])
+
+  // The hotspots: live once the room's last piece has landed, fading in
+  // over a third of a second; gone the instant the room starts to leave.
+  useFrame(({ clock }, delta) => {
+    const now = clock.elapsedTime
+    const arrived = reduced || now >= start.current + (ROOMS[shown.room].pieces - 1) * STAGGER + DURATION
+    const leaving = pending.current !== null || now >= leave.current
+    hotspots.publish(shown.room, arrived && !leaving ? Math.min(1, hotspots.alpha + delta / 0.35) : 0)
+  })
 
   useFrame(({ clock }) => {
     if (pending.current === null || clock.elapsedTime < clearedAt.current) return
@@ -532,6 +545,31 @@ function LampLights({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * Moves each hotspot dot to where its piece is on the canvas, every frame —
+ * after the camera has moved (OrbitControls updates at priority -1; this runs
+ * at the default 0, and must: a positive priority would take over rendering), so a dot stays pinned to its piece while the
+ * room is turned. The projection matrix carries the framing's view offset,
+ * so a projected point lands in canvas pixels as drawn. A dot whose anchor
+ * is behind the camera, or whose room is not the one showing, is hidden.
+ */
+function HotspotProjector({ store }: { store: HotspotStore }) {
+  const point = useMemo(() => new Vector3(), [])
+
+  useFrame(({ camera, size }) => {
+    const live = store.room ? HOTSPOTS[store.room] : []
+    for (const id of store.ids()) {
+      const hotspot = HOTSPOT_BY_ID.get(id)
+      if (!hotspot) continue
+      point.set(...hotspot.at).project(camera)
+      const shown = live.includes(hotspot) && point.z < 1
+      store.place(id, ((point.x + 1) / 2) * size.width, ((1 - point.y) / 2) * size.height, shown ? store.alpha : 0)
+    }
+  })
+
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
 /* The canvas                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -543,6 +581,7 @@ export function RoomScene({
   layout,
   coarsePointer,
   armchair,
+  hotspots,
 }: {
   /** Change it to clear the room and furnish it as another. */
   room: RoomId
@@ -552,6 +591,8 @@ export function RoomScene({
   layout: StageLayout
   coarsePointer: boolean
   armchair: ArmchairMode
+  /** Where the hotspot overlay's dots are told where, and whether, to show. */
+  hotspots: HotspotStore
 }) {
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
@@ -585,7 +626,7 @@ export function RoomScene({
         <Suspense fallback={null}>
           <Studio quality={quality} />
           <Room />
-          <Rooms room={room} armchair={armchair} reduced={reduced} replayToken={replayToken} />
+          <Rooms room={room} armchair={armchair} reduced={reduced} replayToken={replayToken} hotspots={hotspots} />
         </Suspense>
       </LampLights>
 
@@ -607,6 +648,7 @@ export function RoomScene({
       />
 
       <Framing layout={layout} />
+      <HotspotProjector store={hotspots} />
       {coarsePointer && <TouchScroll />}
 
       <Effects quality={quality} />
