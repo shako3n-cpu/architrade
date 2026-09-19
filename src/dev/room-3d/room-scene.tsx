@@ -9,6 +9,7 @@ import { LEAD_IN, leaveSpan, SWITCH_LEAD_IN } from './furnish-clock'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { PALETTE } from './palette'
 import { Room } from './room'
+import { CEILING, ROOM } from './room-geometry'
 import type { ArmchairMode, RoomId } from './room-types'
 import { ROOMS } from './room-registry'
 
@@ -151,21 +152,67 @@ function Effects({ quality }: { quality: Quality }) {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * The model's bounding box — slab, both walls, the cut ceiling — as its eight
+ * corners, for fitting the stacked view to it.
+ */
+const MODEL_CORNERS = (() => {
+  const { halfWidth, halfDepth, wallHeight, wallThickness, slabThickness } = ROOM
+  const xs = [-halfWidth - wallThickness, halfWidth]
+  const ys = [-slabThickness, wallHeight + CEILING.thickness]
+  const zs = [-halfDepth - wallThickness, halfDepth]
+  return xs.flatMap((x) => ys.flatMap((y) => zs.map((z) => new Vector3(x, y, z))))
+})()
+
+/** Stacked view: air either side of the model, and above it, in pixels. */
+const FIT_SIDE = 0.035
+const FIT_TOP = 14
+/** The Replay row along the stage's bottom edge — kept clear of the model. */
+const FIT_CONTROLS = 76
+
+/** Where the model's corners land on a canvas `width` x `height`, with no view offset. */
+function modelBounds(cam: PerspectiveCamera, width: number, height: number) {
+  cam.clearViewOffset()
+  cam.updateMatrixWorld()
+  const p = new Vector3()
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  for (const corner of MODEL_CORNERS) {
+    p.copy(corner).project(cam)
+    const x = ((p.x + 1) / 2) * width
+    const y = ((1 - p.y) / 2) * height
+    minX = Math.min(minX, x)
+    maxX = Math.max(maxX, x)
+    minY = Math.min(minY, y)
+    maxY = Math.max(maxY, y)
+  }
+  return { minX, maxX, minY, maxY }
+}
+
+/**
  * Frames the room for the shape of the canvas it is in.
  *
  *   overlay   (desktop) the canvas is the whole hero and the headline sits
  *             over its left side, so the projection is shifted to push the
  *             room right — setViewOffset, not a moved target, so orbiting
- *             still turns about the middle of the room.
- *   stacked   (phone) the canvas is its own portrait block under the text;
- *             the camera widens and backs off, because a portrait frame is
- *             narrow and the room is wide, and the room is lifted a little
- *             so more of it lands in the first screen.
+ *             still turns about the middle of the room. Distances tuned by
+ *             eye for each shape of window.
+ *   stacked   (phone, tablet, a narrow window) the canvas is its own block
+ *             under the text, and the view is FITTED rather than tuned: the
+ *             camera backs off until the whole model — slab corners, wall
+ *             ends, ceiling — lies inside the canvas with air either side,
+ *             then the model is centred in the space above the Replay row.
+ *             Tuned by eye, the phone view cut both corners of the slab off
+ *             and left a band of empty stage under the room; desktop shows
+ *             the model whole, and now every size does.
  *
  * The camera is only REPOSITIONED when the shape changes class — portrait,
  * square-ish, wide — not on every resize. A phone resizes the canvas every
  * time its address bar slides, and snapping the view back each time would
- * throw away whatever angle the visitor had turned it to.
+ * throw away whatever angle the visitor had turned it to. The stacked
+ * centring is recomputed on every resize; it moves the picture, not the
+ * camera.
  */
 function Framing({ layout }: { layout: StageLayout }) {
   // The camera is read through `get()` inside the effect rather than taken
@@ -178,26 +225,58 @@ function Framing({ layout }: { layout: StageLayout }) {
   useLayoutEffect(() => {
     const { camera, controls } = get()
     const cam = camera as PerspectiveCamera
-    const aspect = size.width / size.height
+    const W = size.width
+    const H = size.height
+    const aspect = W / H
     const shape = aspect < 0.9 ? 'portrait' : aspect < 1.45 ? 'square' : 'wide'
+    const placeAt = (distance: number) => {
+      cam.position.copy(TARGET).addScaledVector(CAMERA_DIR, distance)
+      cam.lookAt(TARGET)
+    }
 
-    if (shape !== lastClass.current) {
-      lastClass.current = shape
+    if (`${shape}:${layout}` !== lastClass.current) {
+      lastClass.current = `${shape}:${layout}`
       // Far enough back that the whole slab, cut edge included, sits inside
       // the frame with air around it. A model shown whole reads as a model;
       // one cropped by the viewport reads as a room seen through a doorway.
-      const distance = shape === 'portrait' ? 15.5 : shape === 'square' ? 19 : 17.5
+      const tuned = shape === 'portrait' ? 15.5 : shape === 'square' ? 19 : 17.5
       cam.fov = shape === 'portrait' ? 34 : 26
-      cam.position.copy(TARGET).addScaledVector(CAMERA_DIR, distance)
+      cam.aspect = aspect
+      cam.updateProjectionMatrix()
+
+      let distance = tuned
+      if (layout === 'stacked') {
+        const fits = (d: number) => {
+          placeAt(d)
+          const b = modelBounds(cam, W, H)
+          return b.minX >= W * FIT_SIDE && b.maxX <= W * (1 - FIT_SIDE) && b.maxY - b.minY <= H - FIT_TOP - FIT_CONTROLS
+        }
+        // Never closer than tuned; otherwise the nearest distance that fits.
+        if (!fits(tuned)) {
+          let lo = tuned
+          let hi = tuned * 3
+          for (let i = 0; i < 18; i++) {
+            const mid = (lo + hi) / 2
+            if (fits(mid)) hi = mid
+            else lo = mid
+          }
+          distance = hi
+        }
+      }
+      placeAt(distance)
     }
 
     // Overlay: enough that the left wall's top edge clears the end of the
-    // headline. Stacked: lifted, because the stage starts partway down a
-    // phone's first screen and the room was sitting in its lower half, below
-    // the fold, with empty stage above it.
-    const shiftX = layout === 'overlay' ? -size.width * 0.165 : 0
-    const shiftY = layout === 'stacked' ? size.height * 0.1 : 0
-    cam.setViewOffset(size.width, size.height, shiftX, shiftY, size.width, size.height)
+    // headline. Stacked: the model's own box, centred across the canvas and
+    // in the space between its top edge and the Replay row.
+    let shiftX = layout === 'overlay' ? -W * 0.165 : 0
+    let shiftY = 0
+    if (layout === 'stacked') {
+      const b = modelBounds(cam, W, H)
+      shiftX = (b.minX + b.maxX) / 2 - W / 2
+      shiftY = (b.minY + b.maxY) / 2 - (FIT_TOP + (H - FIT_TOP - FIT_CONTROLS) / 2)
+    }
+    cam.setViewOffset(W, H, shiftX, shiftY, W, H)
     cam.updateProjectionMatrix()
     ;(controls as { update?: () => void } | null)?.update?.()
   }, [get, layout, size.width, size.height])

@@ -37,14 +37,19 @@
   }
 
   /* A share of the SMALL viewport height, so the portrait frame does not jump
-     when a phone's address bar slides; a floor for phones held sideways. */
+     when a phone's address bar slides; a floor for phones held sideways.
+     45svh since the stacked view is fitted to the model (room-scene.tsx):
+     at 62, and at 52, the fitted room sat in a band of empty stage. */
   .room3d-stage {
-    height: 62svh;
-    min-height: 22rem;
+    height: 45svh;
+    min-height: 19rem;
   }
 
+  /* Clear of the site's floating chat button, fixed to the bottom right of
+     every page: the drag hint wrapped underneath it on a phone. */
   .room3d-controls {
     padding-bottom: 1.25rem;
+    padding-right: 5.5rem;
   }
 
   .room3d-replay {
