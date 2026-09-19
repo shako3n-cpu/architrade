@@ -136,10 +136,12 @@ const HOB_X = (BASE_UNITS[4][0] + BASE_UNITS[4][1]) / 2
 
 
 /**
- * Four metres of kitchen: a tall larder at the left end, then six base units
- * — a bank of drawers, a cupboard, the sink, the dishwasher, pan drawers under
- * the hob, a cupboard — under one graphite worktop, with a floating shelf of
- * ceramics above the sink. Front at +Z; the back sits on the wall.
+ * Nearly five metres of kitchen: the fridge-freezer at the left end, six base
+ * units — a bank of drawers, a cupboard, the sink, the dishwasher, pan
+ * drawers under the hob, a cupboard — under one graphite worktop, and a tall
+ * pantry at the right end, with a floating shelf of ceramics above the sink.
+ * Origin at the centre of the base units' original 4.2m, so the pantry sits
+ * beyond x = 2.1. Front at +Z; the back sits on the wall.
  */
 export function KitchenRun() {
   const zFront = RUN_D / 2 - 0.02
@@ -164,6 +166,9 @@ export function KitchenRun() {
   const tallX1 = -RUN_W / 2 + TALL_W
   /** Where the base carcass ends: the inside face of the end panel. */
   const baseX1 = RUN_W / 2 - 0.02
+  /** The pantry, beyond the base run's right end. */
+  const pantryX0 = RUN_W / 2
+  const pantryX1 = RUN_W / 2 + TALL_W
 
   return (
     <group>
@@ -222,6 +227,32 @@ export function KitchenRun() {
       <mesh position={[RUN_W / 2 - 0.01, BASE_TOP / 2, 0]} material={M.lacquer}>
         <boxGeometry args={[0.02, BASE_TOP, RUN_D]} />
       </mesh>
+
+      {/*
+       * A tall pantry at the right end, the fridge's twin: same height, same
+       * 14mm gaps, its bar handles on the inner edge so the pair face each
+       * other across the run. With the fridge alone the run stopped short on
+       * the right and the kitchen leaned left; tall units at both ends is how
+       * a run is framed.
+       */}
+      <mesh position={[(pantryX0 + pantryX1) / 2, PLINTH / 2, -0.03]} material={M.graphiteMatte}>
+        <boxGeometry args={[TALL_W - 0.02, PLINTH, RUN_D - 0.06]} />
+      </mesh>
+      <mesh position={[(pantryX0 + pantryX1) / 2, (PLINTH + TALL_H - 0.02) / 2, -0.015]} material={M.graphiteMatte}>
+        <boxGeometry args={[TALL_W - 0.04, TALL_H - 0.02 - PLINTH, RUN_D - 0.03]} />
+      </mesh>
+      {[pantryX0 + 0.01, pantryX1 - 0.01].map((x) => (
+        <mesh key={x} position={[x, TALL_H / 2, 0]} material={M.lacquer}>
+          <boxGeometry args={[0.02, TALL_H, RUN_D]} />
+        </mesh>
+      ))}
+      <mesh position={[(pantryX0 + pantryX1) / 2, TALL_H - 0.01, 0]} material={M.lacquer}>
+        <boxGeometry args={[TALL_W, 0.02, RUN_D]} />
+      </mesh>
+      <Front x0={pantryX0 + 0.02} x1={pantryX1 - 0.02} y0={PLINTH} y1={1.42} z={zFront} gap={FRIDGE_GAP} />
+      <Front x0={pantryX0 + 0.02} x1={pantryX1 - 0.02} y0={1.42} y1={TALL_H - 0.02} z={zFront} gap={FRIDGE_GAP} />
+      <BarHandle at={[pantryX0 + 0.1, 1.05, zFront + 0.055]} length={0.5} vertical />
+      <BarHandle at={[pantryX0 + 0.1, 1.72, zFront + 0.055]} length={0.5} vertical />
 
       {/* Worktop: honed graphite stone, 4cm, a 2cm overhang at the front. */}
       <mesh position={[(tallX1 + RUN_W / 2) / 2, BASE_TOP + 0.02, 0.01]} material={M.graphiteStone}>

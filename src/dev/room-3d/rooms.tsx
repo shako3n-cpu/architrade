@@ -141,8 +141,9 @@ export function Kitchen() {
     <>
       <WallTreatment finish="tile" wall="back" span={BACKSPLASH} height={[COUNTER_TOP, COUNTER_TOP + 0.6]} />
 
-      {/* Along the back wall, its left end against the left wall. */}
-      <DropIn index={0} position={[-0.9, 0, -2.19]} spin={-0.1} shade={[{ size: [4.2, 0.62] }]}>
+      {/* Along the back wall, its left end against the left wall; the pantry at
+          its right end stands at x = 1.2 to 1.85. */}
+      <DropIn index={0} position={[-0.9, 0, -2.19]} spin={-0.1} shade={[{ size: [4.85, 0.62], at: [0.325, 0] }]}>
         <KitchenRun />
       </DropIn>
 
