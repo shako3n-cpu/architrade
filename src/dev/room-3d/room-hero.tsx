@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Move3d, RotateCcw } from 'lucide-react'
 import { Container } from '@/components/ui/container'
@@ -103,7 +103,10 @@ export function RoomHero() {
   const [params, setParams] = useSearchParams()
   const room = readRoom(params.get('room'))
   const armchair = readArmchair(params.get('armchair'))
-  const chooseRoom = (next: RoomId) =>
+  const reduced = useReducedMotion()
+  const stage = useRef<HTMLDivElement>(null)
+
+  const chooseRoom = (next: RoomId) => {
     setParams(
       (current) => {
         if (next === DEFAULT_ROOM) current.delete('room')
@@ -113,7 +116,21 @@ export function RoomHero() {
       { replace: true },
     )
 
-  const reduced = useReducedMotion()
+    /*
+     * Bring the room fully into view if it is not, so the change is seen.
+     * Below lg the switch sits ABOVE the stage, and in a short window — a
+     * phone, a browser pane beside something else — the room was partly
+     * below the fold when the button was pressed: the whole clear-and-
+     * refurnish played out where nobody could see it, and read as nothing
+     * having happened. 'nearest' scrolls only as far as it must; the page's
+     * scroll-padding keeps the stage clear of the sticky header.
+     */
+    const box = stage.current?.getBoundingClientRect()
+    if (box && (box.bottom > window.innerHeight + 4 || box.top < 0)) {
+      stage.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' })
+    }
+  }
+
   const wide = useMediaQuery('(min-width: 1024px)')
   const coarse = useMediaQuery('(pointer: coarse)')
   const layout: StageLayout = wide ? 'overlay' : 'stacked'
@@ -184,7 +201,7 @@ export function RoomHero() {
        * the portrait frame is predictable, with a floor for short phones held
        * in landscape; the full hero from lg up.
        */}
-      <div role="img" aria-label={copy.label[room]} className="room3d-stage relative w-full">
+      <div ref={stage} role="img" aria-label={copy.label[room]} className="room3d-stage relative w-full">
         <Suspense fallback={null}>
           <RoomScene
             room={room}
