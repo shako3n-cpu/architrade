@@ -116,6 +116,8 @@ export const PALETTE = {
   linen: '#f1eee8',
 
   leaf: '#4c5b46',
+  /** An olive's leaf: silvery grey-green, the office's tree — not the living room's fig. */
+  oliveLeaf: '#7e8a71',
   trunk: '#3b342c',
   soil: '#29231e',
 

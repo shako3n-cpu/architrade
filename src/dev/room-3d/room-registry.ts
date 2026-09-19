@@ -13,5 +13,5 @@ export const ROOMS: Record<RoomId, { pieces: number; Layout: ComponentType<{ arm
   living: { pieces: 11, Layout: LivingRoom },
   kitchen: { pieces: 5, Layout: Kitchen },
   bedroom: { pieces: 5, Layout: Bedroom },
-  office: { pieces: 5, Layout: Office },
+  office: { pieces: 6, Layout: Office },
 }

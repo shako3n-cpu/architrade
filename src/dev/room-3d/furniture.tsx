@@ -1,6 +1,18 @@
-import { useMemo } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { RoundedBox } from '@react-three/drei'
-import { CubicBezierCurve3, LatheGeometry, SphereGeometry, TubeGeometry, Vector2, Vector3, type Material } from 'three'
+import {
+  CubicBezierCurve3,
+  Euler,
+  LatheGeometry,
+  Matrix4,
+  Quaternion,
+  SphereGeometry,
+  TubeGeometry,
+  Vector2,
+  Vector3,
+  type InstancedMesh,
+  type Material,
+} from 'three'
 import { useLampGlow } from './lamp-glow'
 import { BOOK_MATERIALS, M, rugWool } from './materials'
 import { PALETTE } from './palette'
@@ -561,6 +573,109 @@ export function Plant() {
           />
         </group>
       ))}
+    </group>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/* Olive tree                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/** Where the olive's three stems end, and so where its three clouds of leaves are. */
+const OLIVE_CROWNS: { tip: [number, number, number]; bend: [number, number, number]; radius: number }[] = [
+  { tip: [-0.15, 1.55, 0.05], bend: [-0.05, 1.0, 0.0], radius: 0.36 },
+  { tip: [0.17, 1.72, -0.06], bend: [0.06, 1.1, -0.02], radius: 0.38 },
+  { tip: [0.03, 1.32, 0.17], bend: [0.0, 0.9, 0.06], radius: 0.3 },
+]
+
+const OLIVE_POT = [
+  [0, 0],
+  [0.19, 0],
+  [0.2, 0.02],
+  [0.23, 0.5],
+  [0.24, 0.52],
+  [0.225, 0.52],
+  [0.215, 0.48],
+  [0, 0.48],
+] as const
+
+/**
+ * A slender olive tree in a tall off-white planter, 1.9m to the top of its
+ * crown: three thin stems rising out of one trunk, each ending in a loose
+ * cloud of small silvery leaves. The office's plant, and deliberately not
+ * the living room's fig — a different silhouette (airy, not broad-leaved)
+ * and a different green.
+ *
+ * The leaves — 360 of them — are ONE instanced mesh, one draw call:
+ * drawn as separate meshes they would have outnumbered everything else in
+ * the room put together.
+ */
+export function OliveTree() {
+  const pot = useMemo(() => new LatheGeometry(OLIVE_POT.map(([x, y]) => new Vector2(x, y)), 64), [])
+  const stems = useMemo(
+    () =>
+      OLIVE_CROWNS.map(
+        ({ tip, bend }) =>
+          new TubeGeometry(
+            new CubicBezierCurve3(
+              new Vector3(0, 0.47, 0),
+              new Vector3(0, 0.75, 0),
+              new Vector3(...bend),
+              new Vector3(...tip),
+            ),
+            24,
+            0.014,
+            6,
+          ),
+      ),
+    [],
+  )
+  const leaf = useMemo(() => new SphereGeometry(1, 10, 6), [])
+
+  const leaves = useMemo(() => {
+    const rand = seeded(19)
+    const matrices: Matrix4[] = []
+    const q = new Quaternion()
+    const e = new Euler()
+    for (const { tip, radius } of OLIVE_CROWNS) {
+      for (let i = 0; i < 120; i++) {
+        // A point in a flattened ellipsoid round the stem's tip, denser in the middle.
+        const u = rand() * Math.PI * 2
+        const v = Math.acos(2 * rand() - 1)
+        const r = radius * Math.cbrt(rand())
+        const p = new Vector3(
+          tip[0] + r * Math.sin(v) * Math.cos(u),
+          tip[1] + r * 0.62 * Math.cos(v),
+          tip[2] + r * Math.sin(v) * Math.sin(u),
+        )
+        e.set(rand() * Math.PI, rand() * Math.PI * 2, rand() * Math.PI)
+        q.setFromEuler(e)
+        const s = 0.75 + rand() * 0.5
+        matrices.push(new Matrix4().compose(p, q, new Vector3(0.058 * s, 0.004, 0.017 * s)))
+      }
+    }
+    return matrices
+  }, [])
+
+  const instanced = useRef<InstancedMesh>(null)
+  useLayoutEffect(() => {
+    const mesh = instanced.current
+    if (!mesh) return
+    leaves.forEach((matrix, i) => mesh.setMatrixAt(i, matrix))
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.computeBoundingSphere()
+  }, [leaves])
+
+  return (
+    <group>
+      <mesh geometry={pot} material={M.ceramic} />
+      <mesh position={[0, 0.475, 0]} material={M.soil}>
+        <cylinderGeometry args={[0.214, 0.214, 0.008, 48]} />
+      </mesh>
+      {stems.map((geometry, i) => (
+        <mesh key={i} geometry={geometry} material={M.trunk} />
+      ))}
+      <instancedMesh ref={instanced} args={[leaf, M.oliveLeaf, leaves.length]} />
     </group>
   )
 }

@@ -6,6 +6,7 @@ import {
   CoffeeTable,
   COFFEE_TABLE_TOP,
   FloorLamp,
+  OliveTree,
   Plant,
   Rug,
   SIDE_TABLE_TOP,
@@ -297,6 +298,13 @@ export function Office() {
           centred behind the desk and hung above the lamp's reach. */}
       <DropIn index={4} position={[DESK[0], 1.3, -2.5]} height={1.1} spin={0}>
         <RingPrint />
+      </DropIn>
+
+      {/* The back-right corner, where the room was empty: an olive tree, so
+          the office's weight is not all left of centre — shelving, desk and
+          print — and so it has something growing in it. */}
+      <DropIn index={5} position={[2.45, 0, -2.05]} spin={0.3} shade={[{ size: [0.46, 0.46], round: true }]}>
+        <OliveTree />
       </DropIn>
     </>
   )

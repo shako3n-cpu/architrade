@@ -130,6 +130,7 @@ export const M = {
   }),
 
   leaf: new MeshStandardMaterial({ color: PALETTE.leaf, roughness: 0.55 }),
+  oliveLeaf: new MeshStandardMaterial({ color: PALETTE.oliveLeaf, roughness: 0.7 }),
   trunk: new MeshStandardMaterial({ color: PALETTE.trunk, roughness: 0.85 }),
   soil: new MeshStandardMaterial({ color: PALETTE.soil, roughness: 1 }),
 
