@@ -19,6 +19,7 @@ import type { HotspotStore } from './hotspot-store'
 import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finishes } from './finishes'
+import { RIG, SCROLL_PUSH } from './camera-rig'
 import { COVE, LIGHTING, MOODS, WASH, type TimeOfDay } from './lighting'
 import { M } from './materials'
 import { PALETTE } from './palette'
@@ -313,6 +314,7 @@ function Framing({ layout }: { layout: StageLayout }) {
         }
       }
       placeAt(distance)
+      RIG.baseDistance = distance
     }
 
     // Overlay: enough that the left wall's top edge clears the end of the
@@ -809,6 +811,36 @@ function FinishFades({ finishes }: { finishes: Finishes }) {
   return null
 }
 
+/**
+ * The scroll camera: pushes the camera into the room along its own line of
+ * sight as the hero scrolls away (RIG.scroll, from useScrollCamera), and back
+ * out as it returns. Only the distance changes — whatever angle the visitor
+ * has turned the room to is kept.
+ *
+ * Eased towards the scroll rather than locked to it, so a flick of the wheel
+ * becomes a glide rather than a jump. Runs after OrbitControls (priority -1)
+ * has placed the camera for this frame, and OrbitControls reads its distance
+ * back from where this leaves it, so the two never fight.
+ */
+function ScrollDolly() {
+  const eased = useRef(0)
+  const offset = useMemo(() => new Vector3(), [])
+
+  useFrame(({ camera }, delta) => {
+    const target = RIG.scroll
+    eased.current += (target - eased.current) * (1 - Math.exp(-delta * 7))
+    if (Math.abs(target - eased.current) < 1e-4) eased.current = target
+    const k = eased.current * eased.current * (3 - 2 * eased.current)
+
+    offset.copy(camera.position).sub(TARGET)
+    const want = RIG.baseDistance * (1 - SCROLL_PUSH * k)
+    if (Math.abs(offset.length() - want) < 1e-4) return
+    camera.position.copy(TARGET).addScaledVector(offset.normalize(), want)
+  })
+
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
 /* The canvas                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -893,6 +925,7 @@ export function RoomScene({
       />
 
       <Framing layout={layout} />
+      <ScrollDolly />
       <HotspotProjector store={hotspots} />
       <FinishFades finishes={finishes} />
       {coarsePointer && <TouchScroll />}

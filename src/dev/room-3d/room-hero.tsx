@@ -16,6 +16,7 @@ import { HotspotLayer } from './hotspot-layer'
 import { RoomScene, type StageLayout } from './room-scene'
 import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { useReducedMotion } from './use-reduced-motion'
+import { useScrollCamera } from './use-scroll-camera'
 import './room-3d.css'
 
 /**
@@ -126,6 +127,12 @@ export function RoomHero() {
   const coarse = useMediaQuery('(pointer: coarse)')
   const layout: StageLayout = wide ? 'overlay' : 'stacked'
 
+  // Scrolling away pushes the camera in and fades the next section up — on
+  // the desktop layout, with a mouse, and not under reduced motion. See
+  // camera-rig.ts for why not on phones.
+  const hero = useRef<HTMLElement>(null)
+  useScrollCamera(hero, !reduced && wide && !coarse)
+
   const [replayToken, setReplayToken] = useState(0)
 
   // Shared by the scene, which writes where each hotspot dot is, and the
@@ -147,7 +154,7 @@ export function RoomHero() {
 
   return (
     // `room3d-*` classes are plain CSS in room-3d.css — see the note there.
-    <section className="room3d-hero relative isolate flex flex-col overflow-hidden bg-surface">
+    <section ref={hero} className="room3d-hero relative isolate flex flex-col overflow-hidden bg-surface">
       <Container className="room3d-copy relative z-10 pb-2">
         <div className="room3d-measure">
           <Eyebrow className="text-brass">{t('b2b.hero.eyebrow')}</Eyebrow>
