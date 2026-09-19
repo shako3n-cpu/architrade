@@ -17,7 +17,9 @@ export function useRenderActive(stage: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const element = stage.current
     if (!element) return
-    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), {
+    // The LAST entry: one delivery can carry several for the same element —
+    // out and back in again between two callbacks — and the first is stale.
+    const observer = new IntersectionObserver((entries) => setOnScreen(entries[entries.length - 1].isIntersecting), {
       rootMargin: '0px 0px 100px 0px',
     })
     observer.observe(element)

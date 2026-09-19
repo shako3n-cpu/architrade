@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { createContext, useCallback, useContext, useMemo } from 'react'
+import { STAGE } from './stage-clock'
 
 /**
  * ============================================================================
@@ -99,11 +99,11 @@ export function leaveSpan(count: number): number {
  * controller in room-scene.tsx, from the render loop or an effect.
  */
 export class RoomClock {
-  /** Clock time at which piece 0 starts. Infinity until scheduled. */
+  /** Stage time (stage-clock.ts) at which piece 0 starts. Infinity until scheduled. */
   start = Number.POSITIVE_INFINITY
-  /** Clock time at which the room starts to leave. Infinity while it stays. */
+  /** Stage time at which the room starts to leave. Infinity while it stays. */
   leave = Number.POSITIVE_INFINITY
-  /** Clock time of the click that brought this room — never start before ENTER_DELAY after it. */
+  /** Stage time of the click that brought this room, plus ENTER_DELAY — it never starts before. */
   earliest = Number.NEGATIVE_INFINITY
   timing: Timing
   /** Its shaders are compiled and it is being drawn — see <Arrival>. */
@@ -192,18 +192,15 @@ export function useLampWarmth(): () => number {
 
 export function usePieceClock(index: number): PieceClock {
   const { clock, count, reduced } = useFurnishClock()
-  const elapsed = useRef(0)
 
-  useFrame(({ clock: time }) => {
-    elapsed.current = time.elapsedTime
-  })
-
+  // Read from the stage clock (stage-clock.ts), the same timeline the room's
+  // clock is set on — never from R3F's, which restarts when the canvas pauses.
   return useMemo(
     () => ({
       drop: () =>
-        reduced ? 1 + LAMP_WARMUP : (elapsed.current - clock.start - index * clock.timing.stagger) / clock.timing.duration,
+        reduced ? 1 + LAMP_WARMUP : (STAGE.now - clock.start - index * clock.timing.stagger) / clock.timing.duration,
       leave: () =>
-        reduced ? 0 : (elapsed.current - clock.leave - (count - 1 - index) * LEAVE_STAGGER) / LEAVE_DURATION,
+        reduced ? 0 : (STAGE.now - clock.leave - (count - 1 - index) * LEAVE_STAGGER) / LEAVE_DURATION,
       style: () => clock.timing.style,
     }),
     [clock, count, reduced, index],

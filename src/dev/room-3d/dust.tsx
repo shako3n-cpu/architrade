@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, CanvasTexture, PointsMaterial, type Points } from 'three'
 import { IDLE } from './idle'
 import { LIGHTING } from './lighting'
+import { STAGE } from './stage-clock'
 import { seeded } from './util'
 
 /**
@@ -64,13 +65,13 @@ export function Dust() {
     return { geometry, material, seeds }
   }, [])
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     const p = points.current
     if (!p) return
     p.visible = IDLE.enabled
     if (!IDLE.enabled) return
 
-    const t = clock.elapsedTime
+    const t = STAGE.now
     // Through the object, not the memoised values it was built from.
     const position = p.geometry.attributes.position as BufferAttribute
     for (let i = 0; i < COUNT; i++) {

@@ -30,6 +30,7 @@ import { Room } from './room'
 import { CEILING, ROOM } from './room-geometry'
 import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { ROOMS } from './room-registry'
+import { STAGE, StageClock } from './stage-clock'
 
 /**
  * ============================================================================
@@ -94,10 +95,10 @@ function Studio({ quality, timeOfDay, reduced }: { quality: Quality; timeOfDay: 
    * which useLampGlow reads — every lamp. Intensities and colours only: the
    * same lights exist in both, so the toggle recompiles nothing.
    */
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const target = timeOfDay === 'evening' ? 1 : 0
     const gap = target - mix.current
-    mix.current += Math.sign(gap) * Math.min(Math.abs(gap), delta / MOOD_FADE)
+    mix.current += Math.sign(gap) * Math.min(Math.abs(gap), STAGE.step / MOOD_FADE)
     const e = mix.current * mix.current * (3 - 2 * mix.current)
     const day = MOODS.day
     const night = MOODS.evening
@@ -111,7 +112,7 @@ function Studio({ quality, timeOfDay, reduced }: { quality: Quality; timeOfDay: 
       // over some seconds, like cloud passing the window. The contact shadows
       // read the same value, so the room seems to breathe as one.
       IDLE.enabled = !reduced
-      const t = state.clock.elapsedTime
+      const t = STAGE.now
       IDLE.breath = reduced ? 1 : 1 + 0.035 * Math.sin(t * 0.21) + 0.015 * Math.sin(t * 0.57 + 1.3)
       light.intensity = (day.sun.intensity + (night.sun.intensity - day.sun.intensity) * e) * IDLE.breath
     }
@@ -452,7 +453,7 @@ function Arrival({
       if (!live) return
       setReady(true)
       clock.markReady()
-      if (!reduced) clock.schedule(get().clock.elapsedTime + lead)
+      if (!reduced) clock.schedule(STAGE.now + lead)
     }
     compileOffscreen(get, root).then(begin, begin)
     return () => {
@@ -475,14 +476,22 @@ function Arrival({
  * every other way, never used — and the real ones still compiled on the
  * first frame. Rejected or not, the caller carries on: a failed pre-compile
  * only means compiling on first draw.
+ *
+ * And never waited on for more than COMPILE_WAIT. compileAsync settles only
+ * once the driver reports every program ready; should one never be — a lost
+ * context, a driver that never answers — the room waiting on it would never
+ * appear, and under reduced motion the room it replaces would never go. A
+ * room drawn a moment early compiles on its first frame: a hitch, not a hang.
  */
+const COMPILE_WAIT = 2500
+
 function compileOffscreen(get: () => RootState, root: Group) {
   const { gl, camera, scene } = get()
   const previous = gl.getRenderTarget()
   gl.setRenderTarget(compileTarget())
   const compiling = gl.compileAsync(root, camera, scene)
   gl.setRenderTarget(previous)
-  return compiling
+  return Promise.race([compiling, new Promise((resolve) => window.setTimeout(resolve, COMPILE_WAIT))])
 }
 
 /**
@@ -585,7 +594,6 @@ function Rooms({
   replayToken: number
   hotspots: HotspotStore
 }) {
-  const get = useThree((state) => state.get)
   const [slots, setSlots] = useState<Slot[]>(() => [{ key: 0, room, clock: new RoomClock(INTRO) }])
   const nextKey = useRef(1)
   /** The room last acted on — a change of `room` is picked up in the loop. */
@@ -597,8 +605,8 @@ function Rooms({
   const [idle, setIdle] = useState(false)
   const idleSince = useRef(Number.POSITIVE_INFINITY)
 
-  useFrame(({ clock }, delta) => {
-    const now = clock.elapsedTime
+  useFrame(() => {
+    const now = STAGE.now
 
     // A new room asked for: send away everything on stage, bring it on.
     if (room !== handled.current) {
@@ -636,7 +644,7 @@ function Rooms({
     // The newest room's hotspots: live once it is drawn and at rest, fading
     // in over a third of a second; gone the instant it starts to leave.
     const arrived = newest.room === room && newest.clock.arrived(now, ROOMS[newest.room].pieces, reduced)
-    hotspots.publish(newest.room, arrived ? Math.min(1, hotspots.alpha + delta / 0.35) : 0)
+    hotspots.publish(newest.room, arrived ? Math.min(1, hotspots.alpha + STAGE.step / 0.35) : 0)
 
     // Idle — one room, at rest, for a second — is when rooms are prepared.
     const settled = arrived && slots.length === 1
@@ -653,8 +661,8 @@ function Rooms({
     if (replayToken === handledToken.current) return
     handledToken.current = replayToken
     const newest = slots[slots.length - 1]
-    if (!newest.clock.leaving) newest.clock.replay(get().clock.elapsedTime)
-  }, [replayToken, slots, get])
+    if (!newest.clock.leaving) newest.clock.replay(STAGE.now)
+  }, [replayToken, slots])
 
   const onWarmed = useCallback((done: RoomId) => setWarmed((current) => new Set(current).add(done)), [])
   // Prepared under reduced motion too: it moves nothing, and a cut to a room
@@ -808,7 +816,6 @@ const UPHOLSTERY = {
  * finishes are applied at once: there is nothing to fade from.
  */
 function FinishFades({ finishes }: { finishes: Finishes }) {
-  const get = useThree((state) => state.get)
   const fades = useRef<Map<string, Fade> | null>(null)
 
   const values = (f: Finishes) => {
@@ -824,19 +831,19 @@ function FinishFades({ finishes }: { finishes: Finishes }) {
   }
 
   useLayoutEffect(() => {
-    const now = get().clock.elapsedTime
+    const now = STAGE.now
     const next = values(finishes)
     if (!fades.current) {
       fades.current = new Map([...next].map(([key, v]) => [key, new Fade(v)]))
       return
     }
     for (const [key, v] of next) fades.current.get(key)?.retarget(v, now)
-  }, [finishes, get])
+  }, [finishes])
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     const all = fades.current
     if (!all) return
-    const now = clock.elapsedTime
+    const now = STAGE.now
     for (const id of ROOM_IDS) {
       const v = all.get(`fabric:${id}`)?.at(now)
       if (!v) continue
@@ -944,6 +951,9 @@ export function RoomScene({
       aria-hidden="true"
     >
       <color attach="background" args={[PALETTE.stage]} />
+
+      {/* First in every frame: the one timeline the whole stage is timed on. */}
+      <StageClock />
 
       <PerformanceMonitor onDecline={() => setQuality('low')} />
 

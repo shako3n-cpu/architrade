@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import type { Group } from 'three'
+import { STAGE } from './stage-clock'
 
 /**
  * ============================================================================
@@ -32,14 +33,14 @@ export const IDLE = {
  */
 export function useSway(phase = 0, amount = 1) {
   const group = useRef<Group>(null)
-  useFrame(({ clock }) => {
+  useFrame(() => {
     const g = group.current
     if (!g) return
     if (!IDLE.enabled) {
       g.rotation.set(0, 0, 0)
       return
     }
-    const t = clock.elapsedTime + phase
+    const t = STAGE.now + phase
     // Two slow, unrelated periods per axis, so the movement never repeats.
     g.rotation.z = amount * (0.018 * Math.sin(t * 0.55) + 0.008 * Math.sin(t * 1.3 + 1.7))
     g.rotation.x = amount * (0.012 * Math.sin(t * 0.43 + 0.8) + 0.006 * Math.sin(t * 1.1 + 2.9))
