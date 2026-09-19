@@ -19,7 +19,7 @@ import type { HotspotStore } from './hotspot-store'
 import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finishes } from './finishes'
-import { RIG, SCROLL_PUSH } from './camera-rig'
+import { RIG, SCROLL_PUSH, beginIntro, clearIntro, introPull, restartIntro } from './camera-rig'
 import { fitBesideCopy, type Rect } from './framing-fit'
 import { Dust } from './dust'
 import { IDLE } from './idle'
@@ -291,7 +291,7 @@ function modelBounds(cam: PerspectiveCamera, width: number, height: number) {
  * centring is recomputed on every resize; it moves the picture, not the
  * camera.
  */
-function Framing({ layout, copyRect }: { layout: StageLayout; copyRect: Rect | null }) {
+function Framing({ layout, copyRect, reduced }: { layout: StageLayout; copyRect: Rect | null; reduced: boolean }) {
   // The camera is read through `get()` inside the effect rather than taken
   // from the hook: it belongs to the render loop, not to React, and is
   // changed here on the loop's behalf.
@@ -373,10 +373,23 @@ function Framing({ layout, copyRect }: { layout: StageLayout; copyRect: Rect | n
       shiftX = (b.minX + b.maxX) / 2 - W / 2
       shiftY = (b.minY + b.maxY) / 2 - (FIT_TOP + (H - FIT_TOP - FIT_CONTROLS) / 2)
     }
+    /*
+     * The opening move, applied here as well as in <ScrollDolly> — the fit
+     * above needs the true distance, but the camera must not be LEFT at it:
+     * the first frame after this effect would show the settled framing and
+     * the next would jump out to the wider opening. See camera-rig.ts.
+     */
+    const pull = reduced ? 1 : introPull(STAGE.now)
+    if (pull !== 1) {
+      const direction = cam.position.clone().sub(TARGET).normalize()
+      cam.position.copy(TARGET).addScaledVector(direction, RIG.baseDistance * pull)
+      cam.lookAt(TARGET)
+    }
+
     cam.setViewOffset(W, H, shiftX, shiftY, W, H)
     cam.updateProjectionMatrix()
     ;(controls as { update?: () => void } | null)?.update?.()
-  }, [get, layout, size.width, size.height, copyRect])
+  }, [get, layout, size.width, size.height, copyRect, reduced])
 
   return null
 }
@@ -453,7 +466,11 @@ function Arrival({
       if (!live) return
       setReady(true)
       clock.markReady()
-      if (!reduced) clock.schedule(STAGE.now + lead)
+      if (reduced) return
+      clock.schedule(STAGE.now + lead)
+      // The camera settles in as the first room does — camera-rig.ts. Only
+      // the first room to arrive starts it; a later one finds it done.
+      beginIntro(STAGE.now + lead)
     }
     compileOffscreen(get, root).then(begin, begin)
     return () => {
@@ -661,8 +678,11 @@ function Rooms({
     if (replayToken === handledToken.current) return
     handledToken.current = replayToken
     const newest = slots[slots.length - 1]
-    if (!newest.clock.leaving) newest.clock.replay(STAGE.now)
-  }, [replayToken, slots])
+    if (newest.clock.leaving) return
+    newest.clock.replay(STAGE.now)
+    // Replay plays the whole opening, the camera move with it.
+    if (!reduced) restartIntro(STAGE.now + 0.15)
+  }, [replayToken, slots, reduced])
 
   const onWarmed = useCallback((done: RoomId) => setWarmed((current) => new Set(current).add(done)), [])
   // Prepared under reduced motion too: it moves nothing, and a cut to a room
@@ -874,7 +894,7 @@ function FinishFades({ finishes }: { finishes: Finishes }) {
  * has placed the camera for this frame, and OrbitControls reads its distance
  * back from where this leaves it, so the two never fight.
  */
-function ScrollDolly() {
+function ScrollDolly({ reduced }: { reduced: boolean }) {
   const eased = useRef(0)
   const offset = useMemo(() => new Vector3(), [])
 
@@ -885,7 +905,7 @@ function ScrollDolly() {
     const k = eased.current * eased.current * (3 - 2 * eased.current)
 
     offset.copy(camera.position).sub(TARGET)
-    const want = RIG.baseDistance * (1 - SCROLL_PUSH * k)
+    const want = RIG.baseDistance * (1 - SCROLL_PUSH * k) * (reduced ? 1 : introPull(STAGE.now))
     if (Math.abs(offset.length() - want) < 1e-4) return
     camera.position.copy(TARGET).addScaledVector(offset.normalize(), want)
   })
@@ -933,6 +953,9 @@ export function RoomScene({
   // else that turns out to struggle. It never climbs back up — flickering
   // between the two is worse than staying on the cheaper one.
   const [quality, setQuality] = useState<Quality>(coarsePointer ? 'low' : 'high')
+
+  // A fresh scene opens with the camera move again — camera-rig.ts.
+  useLayoutEffect(clearIntro, [])
 
   return (
     <Canvas
@@ -990,8 +1013,8 @@ export function RoomScene({
         maxPolarAngle={coarsePointer ? POLAR : POLAR + 0.12}
       />
 
-      <Framing layout={layout} copyRect={copyRect} />
-      <ScrollDolly />
+      <Framing layout={layout} copyRect={copyRect} reduced={reduced} />
+      <ScrollDolly reduced={reduced} />
       <HotspotProjector store={hotspots} />
       <FinishFades finishes={finishes} />
       {coarsePointer && <TouchScroll />}
