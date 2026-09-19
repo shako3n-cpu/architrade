@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTexture } from '@react-three/drei'
 import { MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Vector2 } from 'three'
+import { FLOOR_GRADE } from './finishes'
 import { M } from './materials'
 import { CEILING, CROWN, ROOM, SKIRTING } from './room-geometry'
 
@@ -71,7 +72,7 @@ function useWoodFloor(width: number, depth: number) {
     })
     map.colorSpace = SRGBColorSpace
 
-    return new MeshStandardMaterial({
+    const floor = new MeshStandardMaterial({
       map,
       normalMap,
       normalScale: new Vector2(0.7, 0.7),
@@ -84,6 +85,27 @@ function useWoodFloor(width: number, depth: number) {
       aoMapIntensity: 0.6,
       metalness: 0,
     })
+
+    /*
+     * The floor switch: a grade on the texture's colour, in linear space —
+     * saturation round its luminance, then a multiply and an add — so one set
+     * of oak boards can be limed, walnut or ebonised, and faded between. The
+     * uniforms are shared with <Finishes>, which drives them. See finishes.ts.
+     */
+    floor.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, FLOOR_GRADE)
+      shader.fragmentShader = shader.fragmentShader
+        .replace('void main() {', 'uniform vec3 uFloorMul;\nuniform vec3 uFloorAdd;\nuniform float uFloorSat;\nvoid main() {')
+        .replace(
+          '#include <map_fragment>',
+          [
+            '#include <map_fragment>',
+            'float floorLum = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));',
+            'diffuseColor.rgb = mix(vec3(floorLum), diffuseColor.rgb, uFloorSat) * uFloorMul + uFloorAdd;',
+          ].join('\n'),
+        )
+    }
+    return floor
   }, [loaded, width, depth])
 }
 

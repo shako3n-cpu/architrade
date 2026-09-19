@@ -43,6 +43,37 @@
       "brandTodo": "Brand not recorded yet",
       "productTodo": "Not in the catalog yet — placeholder",
       "missingTodo": "Catalog entry not found — archived or removed"
+    },
+    "finish": {
+      "title": "Finishes",
+      "fabric": {
+        "living": "Sofa fabric",
+        "kitchen": "Stool fabric",
+        "bedroom": "Bed fabric",
+        "office": "Chair fabric"
+      },
+      "walls": "Walls",
+      "floor": "Floor",
+      "option": {
+        "fabric": {
+          "ivory": "Ivory",
+          "oat": "Oat",
+          "stone": "Stone",
+          "graphite": "Graphite"
+        },
+        "wall": {
+          "chalk": "Chalk white",
+          "linen": "Linen",
+          "greige": "Greige",
+          "graphite": "Graphite"
+        },
+        "floor": {
+          "smoked": "Smoked oak",
+          "limed": "Limed oak",
+          "walnut": "Walnut",
+          "ebonised": "Ebonised oak"
+        }
+      }
     }
   }
 }

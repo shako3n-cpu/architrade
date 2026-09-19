@@ -59,6 +59,13 @@ export const M = {
 
   fabricLight: fabric(PALETTE.fabricLight, '#ffffff'),
   fabricGraphite: fabric(PALETTE.fabricGraphite, '#8e8f95'),
+  /**
+   * The upholstery of each room's MAIN piece — the sofa, the counter stools,
+   * the bed, the desk chair — shared, so the fabric switch recolours whichever
+   * room is showing. Its colour and sheen are set by <Finishes>
+   * (room-scene.tsx); this is only the starting value.
+   */
+  upholstery: fabric(PALETTE.fabricLight, '#ffffff'),
 
   graphiteMatte: new MeshStandardMaterial({ color: PALETTE.graphite, roughness: 0.72 }),
   /** Recessed plinths and castors — the parts meant to disappear into shadow. */

@@ -58,7 +58,87 @@
   }
 
   /* ------------------------------------------------------------------------
-     Product hotspots (hotspot-layer.tsx). The layer covers the canvas and
+     The finish switcher (finish-controls.tsx): three groups of round
+     swatches under the room switch. One row that scrolls sideways on a
+     phone, like the room chips above it.
+     ------------------------------------------------------------------------ */
+  .room3d-finishes {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    margin-inline: -1.25rem;
+    padding-inline: 1.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .room3d-finishes::-webkit-scrollbar {
+    display: none;
+  }
+
+  .room3d-finish {
+    flex-shrink: 0;
+  }
+
+  .room3d-finish-label {
+    margin-bottom: 0.5rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--at-muted);
+  }
+
+  .room3d-swatches {
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  /* The button is the hit area; the round swatch is drawn inside it. */
+  .room3d-swatch {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    cursor: pointer;
+  }
+
+  .room3d-swatch::before {
+    content: '';
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: var(--swatch);
+    box-shadow:
+      inset 0 0 0 1px rgb(22 24 27 / 0.12),
+      0 1px 2px rgb(22 24 27 / 0.12);
+    transition: transform var(--at-duration) var(--at-ease);
+  }
+
+  /* A floor swatch is boards, not a flat chip: a faint grain of planks. */
+  .room3d-swatch[data-kind='floor']::before {
+    background:
+      repeating-linear-gradient(90deg, transparent 0 5px, rgb(0 0 0 / 0.12) 5px 6px),
+      linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent),
+      var(--swatch);
+  }
+
+  .room3d-swatch:hover::before {
+    transform: scale(1.1);
+  }
+
+  .room3d-swatch[aria-pressed='true']::after {
+    content: '';
+    position: absolute;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: 1.5px solid var(--at-brass);
+  }
+
+ The layer covers the canvas and
      lets every pointer event through except on a dot or an open card, so a
      drag anywhere else still turns the room. Each .room3d-hotspot is a
      zero-size anchor the scene moves to its piece every frame.
@@ -308,7 +388,8 @@
 
     /* ...but the buttons are buttons, and so is the room switch. */
     .room3d-actions,
-    .room3d-rooms {
+    .room3d-rooms,
+    .room3d-finishes {
       pointer-events: auto;
     }
 

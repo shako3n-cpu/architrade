@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useMemo, useRef, useState } from 'react'
 import './i18n'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Move3d, RotateCcw } from 'lucide-react'
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/hooks/use-language'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
+import { FinishControls } from './finish-controls'
+import { DEFAULT_FABRIC, DEFAULT_FLOOR, DEFAULT_WALL, type Finish } from './finishes'
 import { HotspotStore } from './hotspot-store'
 import { HotspotLayer } from './hotspot-layer'
 import { RoomScene, type StageLayout } from './room-scene'
@@ -114,6 +116,18 @@ export function RoomHero() {
   // overlay, which draws them. Made once; never replaced.
   const [hotspots] = useState(() => new HotspotStore())
 
+  // The switcher's choices: fabric remembered per room, walls and floor for
+  // all of them.
+  const [fabricByRoom, setFabricByRoom] = useState(DEFAULT_FABRIC)
+  const [wall, setWall] = useState(DEFAULT_WALL)
+  const [floor, setFloor] = useState(DEFAULT_FLOOR)
+  const finish = useMemo<Finish>(() => ({ fabric: fabricByRoom[room], wall, floor }), [fabricByRoom, room, wall, floor])
+  const changeFinish = (next: Partial<Finish>) => {
+    if (next.fabric) setFabricByRoom((current) => ({ ...current, [room]: next.fabric }))
+    if (next.wall) setWall(next.wall)
+    if (next.floor) setFloor(next.floor)
+  }
+
   return (
     // `room3d-*` classes are plain CSS in room-3d.css — see the note there.
     <section className="room3d-hero relative isolate flex flex-col overflow-hidden bg-surface">
@@ -170,6 +184,8 @@ export function RoomHero() {
               })}
             </div>
           </div>
+
+          <FinishControls room={room} finish={finish} onChange={changeFinish} />
         </div>
       </Container>
 
@@ -188,6 +204,7 @@ export function RoomHero() {
             coarsePointer={coarse}
             armchair={armchair}
             hotspots={hotspots}
+            finish={finish}
           />
         </Suspense>
 

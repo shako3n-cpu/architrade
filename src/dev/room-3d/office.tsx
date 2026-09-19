@@ -171,7 +171,7 @@ export function DeskChair() {
         radius={0.04}
         smoothness={SMOOTH}
         position={[0, SEAT_Y, 0.01]}
-        material={M.fabricLight}
+        material={M.upholstery}
       />
 
       {/* The back, on a brass spine, leaning back a few degrees. */}
@@ -184,7 +184,7 @@ export function DeskChair() {
         smoothness={SMOOTH}
         position={[0, SEAT_Y + 0.37, -0.25]}
         rotation={[-0.12, 0, 0]}
-        material={M.fabricLight}
+        material={M.upholstery}
       />
 
       {/* Arms: a graphite stem each, a padded rest on top. */}
@@ -196,7 +196,7 @@ export function DeskChair() {
             radius={0.012}
             smoothness={SMOOTH}
             position={[side * 0.255, SEAT_Y + 0.185, -0.03]}
-            material={M.fabricLight}
+            material={M.upholstery}
           />
         </group>
       ))}

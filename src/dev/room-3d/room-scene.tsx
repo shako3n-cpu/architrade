@@ -3,12 +3,14 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { HalfFloatType, Vector3, WebGLRenderTarget, type Group, type PerspectiveCamera, type PointLight } from 'three'
+import { Color, HalfFloatType, Vector3, WebGLRenderTarget, type Group, type PerspectiveCamera, type PointLight } from 'three'
 import { FurnishProvider } from './drop-in'
 import { DURATION, LEAD_IN, leaveSpan, STAGGER, SWITCH_LEAD_IN } from './furnish-clock'
 import type { HotspotStore } from './hotspot-store'
 import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
+import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finish } from './finishes'
+import { M } from './materials'
 import { PALETTE } from './palette'
 import { Room } from './room'
 import { CEILING, ROOM } from './room-geometry'
@@ -570,6 +572,69 @@ function HotspotProjector({ store }: { store: HotspotStore }) {
   return null
 }
 
+/** Seconds a change of fabric, wall or floor takes to fade in. */
+const FINISH_FADE = 0.4
+
+/**
+ * The material and colour switcher's effect on the scene: fades the shared
+ * upholstery, the wall paint and the floor's grade to the chosen finish
+ * over FINISH_FADE, in the render loop — no remount, no reload.
+ *
+ * Each change fades from wherever the values ARE, not from the last target,
+ * so choosing again mid-fade simply bends the fade towards the new choice.
+ * The very first finish is applied at once: there is nothing to fade from.
+ */
+function Finishes({ finish }: { finish: Finish }) {
+  const get = useThree((state) => state.get)
+  const tween = useRef({
+    first: true,
+    t0: Number.NEGATIVE_INFINITY,
+    from: { fabric: new Color(), sheen: new Color(), wall: new Color(), mul: new Vector3(), add: new Vector3(), sat: 1 },
+    to: { fabric: new Color(), sheen: new Color(), wall: new Color(), mul: new Vector3(), add: new Vector3(), sat: 1 },
+  })
+
+  useLayoutEffect(() => {
+    const t = tween.current
+    const fabric = FABRICS.find((f) => f.id === finish.fabric) ?? FABRICS[0]
+    const wall = WALLS.find((w) => w.id === finish.wall) ?? WALLS[0]
+    const floor = FLOORS.find((f) => f.id === finish.floor) ?? FLOORS[0]
+
+    t.from.fabric.copy(M.upholstery.color)
+    t.from.sheen.copy(M.upholstery.sheenColor)
+    t.from.wall.copy(M.wall.color)
+    t.from.mul.copy(FLOOR_GRADE.uFloorMul.value)
+    t.from.add.copy(FLOOR_GRADE.uFloorAdd.value)
+    t.from.sat = FLOOR_GRADE.uFloorSat.value
+
+    t.to.fabric.set(fabric.color)
+    t.to.sheen.set(fabric.sheen)
+    t.to.wall.set(wall.color)
+    t.to.mul.copy(floor.mul)
+    t.to.add.copy(floor.add)
+    t.to.sat = floor.sat
+
+    // First time: straight to the finish. After: fade from now.
+    t.t0 = t.first ? Number.NEGATIVE_INFINITY : get().clock.elapsedTime
+    t.first = false
+  }, [finish.fabric, finish.wall, finish.floor, get])
+
+  useFrame(({ clock }) => {
+    const t = tween.current
+    const k = Math.min(Math.max((clock.elapsedTime - t.t0) / FINISH_FADE, 0), 1)
+    const e = k * k * (3 - 2 * k)
+    // Lerped in linear space — three stores colours linear — so a fade from
+    // ivory to graphite passes through the greys a real dimmer would.
+    M.upholstery.color.lerpColors(t.from.fabric, t.to.fabric, e)
+    M.upholstery.sheenColor.lerpColors(t.from.sheen, t.to.sheen, e)
+    M.wall.color.lerpColors(t.from.wall, t.to.wall, e)
+    FLOOR_GRADE.uFloorMul.value.lerpVectors(t.from.mul, t.to.mul, e)
+    FLOOR_GRADE.uFloorAdd.value.lerpVectors(t.from.add, t.to.add, e)
+    FLOOR_GRADE.uFloorSat.value = t.from.sat + (t.to.sat - t.from.sat) * e
+  })
+
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
 /* The canvas                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -582,6 +647,7 @@ export function RoomScene({
   coarsePointer,
   armchair,
   hotspots,
+  finish,
 }: {
   /** Change it to clear the room and furnish it as another. */
   room: RoomId
@@ -593,6 +659,8 @@ export function RoomScene({
   armchair: ArmchairMode
   /** Where the hotspot overlay's dots are told where, and whether, to show. */
   hotspots: HotspotStore
+  /** The fabric, wall and floor chosen with the switcher. */
+  finish: Finish
 }) {
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
@@ -649,6 +717,7 @@ export function RoomScene({
 
       <Framing layout={layout} />
       <HotspotProjector store={hotspots} />
+      <Finishes finish={finish} />
       {coarsePointer && <TouchScroll />}
 
       <Effects quality={quality} />
