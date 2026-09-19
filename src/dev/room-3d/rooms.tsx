@@ -20,6 +20,7 @@ import { DESK_TOP, Desk, DeskChair, DeskLamp, StyledShelving } from './office'
 import { PolyHavenArmchair } from './polyhaven'
 import type { ArmchairMode } from './room-types'
 import { ON_RUG } from './contact-shadow'
+import { ArchPrint, RingPrint, RoundMirror } from './wall-art'
 import { WallTreatment } from './walls'
 
 /**
@@ -171,6 +172,16 @@ export function Kitchen() {
       <DropIn index={3} position={[ISLAND[0], 2.8, ISLAND[1] + 0.3]} height={0.9} spin={0.12}>
         <PendantPair />
       </DropIn>
+
+      {/* The long left wall was the one bare plane in the room, a third of the
+          picture with nothing on it while everything stood back and right.
+          An arch print in oak, oversized — at its own 0.9 x 1.2m it read small
+          against five metres of wall — hung mid-wall. */}
+      <DropIn index={4} position={[-3, 0.95, -0.3]} rotationY={Math.PI / 2} height={1.1} spin={0}>
+        <group scale={1.2}>
+          <ArchPrint />
+        </group>
+      </DropIn>
     </>
   )
 }
@@ -220,6 +231,12 @@ export function Bedroom() {
       {/* Against the left wall, facing into the room. */}
       <DropIn index={3} position={[-2.72, 0, -0.75]} rotationY={Math.PI / 2} spin={0.2} shade={[{ size: [2.44, 0.52] }]}>
         <StyledSideboard />
+      </DropIn>
+
+      {/* Over the sideboard, centred on it, 28cm above its top: the round
+          mirror that wall was missing. */}
+      <DropIn index={4} position={[-3, 0.96, -0.75]} rotationY={Math.PI / 2} height={1.1} spin={0}>
+        <RoundMirror />
       </DropIn>
     </>
   )
@@ -273,6 +290,12 @@ export function Office() {
       {/* Against the left wall, facing into the room. */}
       <DropIn index={3} position={[-2.74, 0, -1.05]} rotationY={Math.PI / 2} spin={-0.22} shade={[{ size: [1.14, 0.49] }]}>
         <StyledShelving />
+      </DropIn>
+
+      {/* Six metres of graphite with nothing on it: a ring print in brass,
+          centred behind the desk and hung above the lamp's reach. */}
+      <DropIn index={4} position={[DESK[0], 1.3, -2.5]} height={1.1} spin={0}>
+        <RingPrint />
       </DropIn>
     </>
   )

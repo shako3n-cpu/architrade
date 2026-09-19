@@ -11,7 +11,7 @@ import type { ArmchairMode, RoomId } from './room-types'
  */
 export const ROOMS: Record<RoomId, { pieces: number; Layout: ComponentType<{ armchair: ArmchairMode }> }> = {
   living: { pieces: 11, Layout: LivingRoom },
-  kitchen: { pieces: 4, Layout: Kitchen },
-  bedroom: { pieces: 4, Layout: Bedroom },
-  office: { pieces: 4, Layout: Office },
+  kitchen: { pieces: 5, Layout: Kitchen },
+  bedroom: { pieces: 5, Layout: Bedroom },
+  office: { pieces: 5, Layout: Office },
 }
