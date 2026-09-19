@@ -223,6 +223,22 @@ function PublicSite() {
       <Route path="/" element={<LanguageRedirect />} />
 
       {/*
+       * PREVIEW BRANCH ONLY: /dev/room with no language prefix.
+       *
+       * The room page is a language page like every other — its text comes
+       * from i18n and its links are built with localePath — so there is no
+       * language-less copy of it to render. This sends the bare address to
+       * the visitor's own language, exactly as "/" does.
+       *
+       * Without it, /dev/room matches /:lang with `lang` = "dev", and the
+       * layout swaps that unknown code for the stored language and drops the
+       * rest: the visitor lands on /ka/room, which is nothing, and sees the
+       * not-found page. A static path outranks a dynamic one in the router,
+       * so this wins over /:lang wherever it is declared.
+       */}
+      {DevRoomHome && <Route path="/dev/room" element={<LanguageRedirect path="/dev/room" />} />}
+
+      {/*
        * On a known production catalogue domain the back office is simply not
        * there: /admin and everything under it lands on the catalogue instead.
        * On localhost and preview URLs it stays where it has always been.
