@@ -12,11 +12,12 @@ import { useLathe } from './util'
  * ============================================================================
  * THE BEDROOM
  * ----------------------------------------------------------------------------
- * Four pieces: the bed (on its rug), a bedside table, the lamp on it, and a
- * long low sideboard on the left wall, in front of warm limewash on the wall
- * behind the headboard (walls.tsx). The bedside table and the sideboard are Poly
- * Haven's (see polyhaven.tsx); the bed and the lamp are modelled here —
- * Poly Haven's only beds are a gothic four-poster and a hospital frame.
+ * Four pieces: the bed (on its rug), a bedside table with its lamp either
+ * side of it, and a long low sideboard on the left wall — against warm
+ * limewash on the wall behind the headboard (walls.tsx). The bedside tables
+ * and the sideboard are Poly Haven's (see polyhaven.tsx); the bed and the
+ * lamps are modelled here — Poly Haven's only beds are a gothic four-poster
+ * and a hospital frame.
  *
  * Same conventions as furniture.tsx: origin at the base, centred on the
  * footprint, front facing +Z — for the bed, +Z is the foot.
@@ -216,18 +217,27 @@ export function StyledSideboard() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Poly Haven's bedside table with two books on its top — to the left of
- * where the lamp lands — and three more lying on its shelf.
+ * Poly Haven's bedside table with its lamp, two books beside the lamp and
+ * three more lying on its shelf — one piece, so the pair either side of the
+ * bed keeps the room at four. The lamp still comes on only once the table
+ * has landed: it reads the clock of the DropIn it is in.
+ *
+ * `side` is which side of the bed it stands: the lamp goes to the outside,
+ * the books to the side nearer the bed, so the pair mirror each other.
  */
-export function StyledSideTable() {
+export function BedsideTable({ side }: { side: 'left' | 'right' }) {
+  const out = side === 'right' ? 1 : -1
   return (
     <group>
       <PolyHavenSideTable />
-      <group position={[-0.15, SIDE_TABLE_01_TOP, 0.02]} rotation={[0, 0.22, 0]}>
-        <BookStack count={2} seed={31} width={0.17} depth={0.23} />
+      <group position={[out * 0.08, SIDE_TABLE_01_TOP, 0.02]}>
+        <TableLamp />
+      </group>
+      <group position={[-out * 0.15, SIDE_TABLE_01_TOP, 0.02]} rotation={[0, out * 0.22, 0]}>
+        <BookStack count={2} seed={side === 'right' ? 31 : 35} width={0.17} depth={0.23} />
       </group>
       <group position={[0.02, SIDE_TABLE_01_SHELF, 0.01]}>
-        <BookStack count={3} seed={33} width={0.3} depth={0.22} />
+        <BookStack count={3} seed={side === 'right' ? 33 : 37} width={0.3} depth={0.22} />
       </group>
     </group>
   )

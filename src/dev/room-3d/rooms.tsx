@@ -1,4 +1,4 @@
-import { Bed, StyledSideboard, StyledSideTable, TableLamp } from './bedroom'
+import { BedsideTable, Bed, StyledSideboard } from './bedroom'
 import { DropIn } from './drop-in'
 import {
   Armchair,
@@ -17,7 +17,7 @@ import {
 import { COUNTER_TOP, Island, KitchenRun, PendantPair, StoolPair } from './kitchen'
 import { Vase } from './styling'
 import { DESK_TOP, Desk, DeskChair, DeskLamp, StyledShelving } from './office'
-import { PolyHavenArmchair, SIDE_TABLE_01_TOP } from './polyhaven'
+import { PolyHavenArmchair } from './polyhaven'
 import type { ArmchairMode } from './room-types'
 import { ON_RUG } from './contact-shadow'
 import { WallTreatment } from './walls'
@@ -177,8 +177,10 @@ export function Kitchen() {
 
 /* -------------------------------------------------------------------------- */
 
-/** The bedside table's centre, to the bed's right, back against the wall. */
-const NIGHTSTAND: [number, number] = [1.46, -2.24]
+/** The bed's centre line, and its bedside tables either side of it, backs to the wall. */
+const BED_X = 0.1
+const NIGHTSTAND_OFFSET = 1.36
+const NIGHTSTAND_Z = -2.24
 
 export function Bedroom() {
   return (
@@ -194,20 +196,25 @@ export function Bedroom() {
        * The first one was the living room's 3 x 2.1 lattice, and from the
        * camera it looked like a fragment poking out from under the bed.
        */}
-      <DropIn index={0} position={[0.1, 0, -1.39]} spin={-0.12} shade={[{ size: [1.92, 2.22] }]} ground={ON_RUG}>
+      <DropIn index={0} position={[BED_X, 0, -1.39]} spin={-0.12} shade={[{ size: [1.92, 2.22] }]} ground={ON_RUG}>
         <Bed />
         <group position={[0, 0, 0.62]}>
           <Rug style="banded" />
         </group>
       </DropIn>
 
-      <DropIn index={1} position={[NIGHTSTAND[0], 0, NIGHTSTAND[1]]} spin={0.34} shade={[{ size: [0.55, 0.45] }]}>
-        <StyledSideTable />
+      {/*
+       * A matching bedside table and lamp either side of the bed, each one
+       * piece. The bed had one, on its right, and two metres of bare wall
+       * on its left: the room leaned. The pair are 1.36m either side of the
+       * bed's centre, backs to the wall.
+       */}
+      <DropIn index={1} position={[BED_X + NIGHTSTAND_OFFSET, 0, NIGHTSTAND_Z]} spin={0.34} shade={[{ size: [0.55, 0.45] }]}>
+        <BedsideTable side="right" />
       </DropIn>
 
-      {/* A little right of centre, to leave the books beside it room. */}
-      <DropIn index={2} position={[NIGHTSTAND[0] + 0.08, SIDE_TABLE_01_TOP, NIGHTSTAND[1] + 0.02]} height={0.9} spin={-0.4}>
-        <TableLamp />
+      <DropIn index={2} position={[BED_X - NIGHTSTAND_OFFSET, 0, NIGHTSTAND_Z]} spin={-0.34} shade={[{ size: [0.55, 0.45] }]}>
+        <BedsideTable side="left" />
       </DropIn>
 
       {/* Against the left wall, facing into the room. */}
