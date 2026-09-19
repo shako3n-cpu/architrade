@@ -1,7 +1,7 @@
 import { Suspense, useMemo, useRef, useState } from 'react'
 import './i18n'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Move3d, RotateCcw } from 'lucide-react'
+import { Moon, Move3d, RotateCcw, Sun } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { FinishControls } from './finish-controls'
 import { DEFAULT_FABRIC, DEFAULT_FLOOR, DEFAULT_WALL, type Finish, type Finishes } from './finishes'
 import { HotspotStore } from './hotspot-store'
+import { timeOfDayNow, type TimeOfDay } from './lighting'
 import { HotspotLayer } from './hotspot-layer'
 import { RoomScene, type StageLayout } from './room-scene'
 import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
@@ -80,6 +81,21 @@ export function RoomHero() {
   const armchair = readArmchair(params.get('armchair'))
   const reduced = useReducedMotion()
   const stage = useRef<HTMLDivElement>(null)
+
+  // Day or evening: the address's choice if it has one, otherwise the
+  // visitor's own clock — read once, so the room does not change on its own
+  // at six o'clock while someone is looking at it.
+  const [clockTime] = useState(timeOfDayNow)
+  const lightParam = params.get('light')
+  const timeOfDay: TimeOfDay = lightParam === 'day' || lightParam === 'evening' ? lightParam : clockTime
+  const chooseLight = (next: TimeOfDay) =>
+    setParams(
+      (current) => {
+        current.set('light', next)
+        return current
+      },
+      { replace: true },
+    )
 
   const chooseRoom = (next: RoomId) => {
     setParams(
@@ -159,10 +175,27 @@ export function RoomHero() {
            * all. A row that scrolls sideways on a phone, as that one does,
            * rather than wrapping to two rows and pushing the room down.
            */}
-          <div className="room3d-rooms mt-6" role="group" aria-label={t('room3d.rooms')}>
-            <p className="at-label mb-3 hidden text-muted sm:block" aria-hidden="true">
+          {/* The room switch's heading, with the day / evening toggle at its end. */}
+          <div className="room3d-rooms-head mt-6">
+            <p className="at-label text-muted" aria-hidden="true">
               {t('room3d.rooms')}
             </p>
+            <div className="room3d-daynight" role="group" aria-label={t('room3d.light.label')}>
+              {(
+                [
+                  ['day', Sun],
+                  ['evening', Moon],
+                ] as const
+              ).map(([id, Icon]) => (
+                <button key={id} type="button" aria-pressed={timeOfDay === id} onClick={() => chooseLight(id)}>
+                  <Icon aria-hidden="true" />
+                  {t(`room3d.light.${id}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="room3d-rooms mt-3" role="group" aria-label={t('room3d.rooms')}>
             <div className="at-scroll-row -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:gap-x-2 sm:gap-y-3 sm:overflow-visible sm:px-0">
               {ROOM_IDS.map((id) => {
                 const active = room === id
@@ -206,6 +239,7 @@ export function RoomHero() {
             armchair={armchair}
             hotspots={hotspots}
             finishes={finishes}
+            timeOfDay={timeOfDay}
           />
         </Suspense>
 

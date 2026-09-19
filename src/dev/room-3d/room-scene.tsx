@@ -3,13 +3,23 @@ import { Canvas, useFrame, useThree, type RootState } from '@react-three/fiber'
 import { Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { Color, HalfFloatType, Vector3, WebGLRenderTarget, type Group, type PerspectiveCamera, type PointLight } from 'three'
+import {
+  Color,
+  HalfFloatType,
+  Vector3,
+  WebGLRenderTarget,
+  type DirectionalLight,
+  type Group,
+  type PerspectiveCamera,
+  type PointLight,
+} from 'three'
 import { FurnishProvider } from './drop-in'
 import { ENTER_DELAY, INTRO, LEAD_IN, RoomClock, switchTiming } from './furnish-clock'
 import type { HotspotStore } from './hotspot-store'
 import { HOTSPOT_BY_ID, HOTSPOTS } from './hotspots'
 import { LAMP_LIGHT_SLOTS, LampLightContext, type LampLightPool } from './lamp-light-pool'
 import { FABRICS, FLOOR_GRADE, FLOORS, WALLS, type Finishes } from './finishes'
+import { COVE, LIGHTING, MOODS, WASH, type TimeOfDay } from './lighting'
 import { M } from './materials'
 import { PALETTE } from './palette'
 import { Room } from './room'
@@ -66,7 +76,40 @@ type Quality = 'high' | 'low'
 /* Lighting                                                                   */
 /* -------------------------------------------------------------------------- */
 
-function Studio({ quality }: { quality: Quality }) {
+/** Seconds a change between day and evening takes. */
+const MOOD_FADE = 0.7
+
+function Studio({ quality, timeOfDay }: { quality: Quality; timeOfDay: TimeOfDay }) {
+  const sun = useRef<DirectionalLight>(null)
+  // Starts AT the first mood — the page opens in it, it does not fade into it.
+  const mix = useRef(timeOfDay === 'evening' ? 1 : 0)
+
+  /*
+   * Day and evening, faded: see lighting.ts. The sun's position, colour and
+   * strength, the studio's ambient, the cove light, and — through LIGHTING,
+   * which useLampGlow reads — every lamp. Intensities and colours only: the
+   * same lights exist in both, so the toggle recompiles nothing.
+   */
+  useFrame((state, delta) => {
+    const target = timeOfDay === 'evening' ? 1 : 0
+    const gap = target - mix.current
+    mix.current += Math.sign(gap) * Math.min(Math.abs(gap), delta / MOOD_FADE)
+    const e = mix.current * mix.current * (3 - 2 * mix.current)
+    const day = MOODS.day
+    const night = MOODS.evening
+
+    LIGHTING.evening = e
+    const light = sun.current
+    if (light) {
+      light.position.lerpVectors(day.sun.position, night.sun.position, e)
+      light.color.lerpColors(day.sun.color, night.sun.color, e)
+      light.intensity = day.sun.intensity + (night.sun.intensity - day.sun.intensity) * e
+    }
+    state.scene.environmentIntensity = day.ambient + (night.ambient - day.ambient) * e
+    COVE.emissiveIntensity = 4 * (day.cove + (night.cove - day.cove) * e)
+    WASH.opacity = 0.55 * (day.cove + (night.cove - day.cove) * e)
+  })
+
   return (
     <>
       {/*
@@ -85,13 +128,14 @@ function Studio({ quality }: { quality: Quality }) {
        * added on top — shadows hardening where an object meets the floor — is
        * supplied here by N8AO's contact darkening instead.
        */}
-      {/* Near-white with the faintest warmth. The key carries the shadows, so
-          it is set well above the studio: the first pass had the environment
-          so bright that the shadows it cast barely registered. */}
+      {/* The key — the sun by day, the moon by evening; <Studio> above moves
+          it between the two. It carries the shadows, so by day it is set well
+          above the studio: the first pass had the environment so bright that
+          the shadows it cast barely registered. */}
       <directionalLight
-        position={[5.5, 8, 4.5]}
-        intensity={3.8}
-        color="#fffaf3"
+        ref={sun}
+        position={MOODS.day.sun.position.toArray()}
+        intensity={MOODS.day.sun.intensity}
         castShadow
         // Soft, but not so soft it disappears. At 14 the five-tap filter spread
         // each shadow so thin that the armchair cast almost nothing on the rug.
@@ -107,7 +151,8 @@ function Studio({ quality }: { quality: Quality }) {
         shadow-camera-far={25}
       />
 
-      <Environment resolution={256} frames={1} environmentIntensity={0.45}>
+      {/* Its intensity is set every frame by <Studio>, for day and evening. */}
+      <Environment resolution={256} frames={1}>
         {/* The studio's own ambient — a neutral grey, so shadowed sides are
             never a dead black and never tinted. */}
         <color attach="background" args={['#d4d3d0']} />
@@ -777,6 +822,7 @@ export function RoomScene({
   armchair,
   hotspots,
   finishes,
+  timeOfDay,
 }: {
   /** Change it to clear the room and furnish it as another. */
   room: RoomId
@@ -790,6 +836,8 @@ export function RoomScene({
   hotspots: HotspotStore
   /** Every room's fabric, and the wall and floor, chosen with the switcher. */
   finishes: Finishes
+  /** Day or evening — see lighting.ts. */
+  timeOfDay: TimeOfDay
 }) {
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
@@ -821,7 +869,7 @@ export function RoomScene({
        */}
       <LampLights>
         <Suspense fallback={null}>
-          <Studio quality={quality} />
+          <Studio quality={quality} timeOfDay={timeOfDay} />
           <Room />
           <Rooms room={room} armchair={armchair} reduced={reduced} replayToken={replayToken} hotspots={hotspots} />
         </Suspense>

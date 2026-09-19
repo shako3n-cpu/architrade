@@ -3,7 +3,11 @@ import { useFrame } from '@react-three/fiber'
 import { Vector3, type Group, type MeshStandardMaterial } from 'three'
 import { useLampWarmth } from './furnish-clock'
 import { LampLightContext } from './lamp-light-pool'
+import { LIGHTING } from './lighting'
 import { M } from './materials'
+
+/** How much brighter a lamp's light is than its level, now that it lights the evening. */
+const LAMP_BOOST = 2.4
 
 /**
  * ============================================================================
@@ -82,7 +86,8 @@ export function useLampGlow(levels: GlowLevels) {
   )
 
   useFrame(() => {
-    const on = warmth()
+    // Its own warm-up, times the evening: lamps are off by day (lighting.ts).
+    const on = warmth() * LIGHTING.evening
     if (pool) {
       if (on > 0.001 && slot.current === null) slot.current = pool.claim()
       else if (on <= 0.001 && slot.current !== null) {
@@ -107,7 +112,9 @@ export function useLampGlow(levels: GlowLevels) {
       anchor.current.getWorldPosition(at)
       light.position.copy(at)
       light.distance = levels.distance
-      light.intensity = shown ? levels.light * on : 0
+      // Lamps are now the evening's main light, so their pools are set well above
+      // what they were as accents in a lit studio.
+      light.intensity = shown ? levels.light * on * LAMP_BOOST : 0
     }
   })
 

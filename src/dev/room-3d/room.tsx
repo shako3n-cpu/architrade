@@ -3,7 +3,8 @@ import { useTexture } from '@react-three/drei'
 import { MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Vector2 } from 'three'
 import { FLOOR_GRADE } from './finishes'
 import { M } from './materials'
-import { CEILING, CROWN, ROOM, SKIRTING } from './room-geometry'
+import { COVE, WASH } from './lighting'
+import { CEILING, CROWN, CROWN_HEIGHT, ROOM, SKIRTING } from './room-geometry'
 
 /**
  * ============================================================================
@@ -47,6 +48,9 @@ const FLOOR_MAPS = [
   new URL('./textures/wood_floor/wood_floor_nor_gl_1k.jpg', import.meta.url).href,
   new URL('./textures/wood_floor/wood_floor_arm_1k.jpg', import.meta.url).href,
 ]
+
+/** How far down the wall the evening cove's wash reaches. */
+const WASH_H = 1.25
 
 /** One repeat of the texture covers this many metres — Poly Haven's own figure. */
 const FLOOR_REPEAT_M = 1.7
@@ -112,6 +116,8 @@ function useWoodFloor(width: number, depth: number) {
 export function Room() {
   const { halfWidth: X, halfDepth: Z, wallHeight: H, wallThickness: T, slabThickness: S } = ROOM
   const C = CEILING
+  /** The cove line: just under the crown moulding. */
+  const coveY = H - CROWN_HEIGHT - 0.008
   const wood = useWoodFloor(2 * X + T, 2 * Z + T)
 
   // Box faces in three's order: +x, -x, +y, -y, +z, -z. Timber on top only;
@@ -176,6 +182,23 @@ export function Room() {
       </mesh>
       <mesh position={[-X + (C.depth - T) / 2, H + C.thickness / 2, C.depth / 2]} material={M.ceiling} receiveShadow>
         <boxGeometry args={[C.depth + T, C.thickness, 2 * Z - C.depth]} />
+      </mesh>
+
+      {/* The evening's cove light — see lighting.ts: a warm emissive line
+          under the crown moulding, and its wash down the upper wall. Dark
+          and transparent in the day; always there, so turning it on changes
+          no shader. */}
+      <mesh position={[0, coveY, -Z + 0.012]} material={COVE}>
+        <boxGeometry args={[2 * X, 0.012, 0.012]} />
+      </mesh>
+      <mesh position={[-X + 0.012, coveY, 0]} material={COVE}>
+        <boxGeometry args={[0.012, 0.012, 2 * Z]} />
+      </mesh>
+      <mesh position={[0, coveY - WASH_H / 2, -Z + 0.004]} material={WASH}>
+        <planeGeometry args={[2 * X, WASH_H]} />
+      </mesh>
+      <mesh position={[-X + 0.004, coveY - WASH_H / 2, 0]} rotation={[0, Math.PI / 2, 0]} material={WASH}>
+        <planeGeometry args={[2 * Z, WASH_H]} />
       </mesh>
     </group>
   )
