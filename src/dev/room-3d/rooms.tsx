@@ -19,6 +19,7 @@ import { Vase } from './styling'
 import { DESK_TOP, Desk, DeskChair, DeskLamp, StyledShelving } from './office'
 import { PolyHavenArmchair, SIDE_TABLE_01_TOP } from './polyhaven'
 import type { ArmchairMode } from './room-types'
+import { ON_RUG } from './contact-shadow'
 import { WallTreatment } from './walls'
 
 /**
@@ -36,6 +37,9 @@ import { WallTreatment } from './walls'
  * The shell for reference:  floor x -3..3, z -2.5..2.5; back wall inner face
  * at z = -2.5; left wall inner face at x = -3; the camera looks in from the
  * front right.
+ *
+ * `shade` is a floor-standing piece's footprint, for its contact shadow
+ * (contact-shadow.ts); `ground={ON_RUG}` lays that shadow on a rug's top.
  *
  * A room's wall treatment (walls.tsx) is listed with it but is not a piece:
  * it washes in with the first piece and out with the last, and does not
@@ -56,11 +60,11 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
         <Rug />
       </DropIn>
 
-      <DropIn index={1} position={[0.2, 0, -1.97]} spin={-0.28}>
+      <DropIn index={1} position={[0.2, 0, -1.97]} spin={-0.28} shade={[{ size: [2.3, 0.95] }]}>
         <Sofa />
       </DropIn>
 
-      <DropIn index={2} position={[0.2, 0, 0.15]} spin={0.34}>
+      <DropIn index={2} position={[0.2, 0, 0.15]} spin={0.34} shade={[{ size: [1.04, 1.04], round: true }]} ground={ON_RUG}>
         <CoffeeTable />
       </DropIn>
 
@@ -70,7 +74,15 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
        * and the procedural chair swapped in later would otherwise arrive
        * without them.
        */}
-      <DropIn key={`armchair-${armchair}`} index={3} position={[1.85, 0, 0.6]} rotationY={-1.84} spin={-0.36}>
+      <DropIn
+        key={`armchair-${armchair}`}
+        index={3}
+        position={[1.85, 0, 0.6]}
+        rotationY={-1.84}
+        spin={-0.36}
+        shade={[{ size: [0.82, 0.99] }]}
+        ground={ON_RUG}
+      >
         {armchair === 'procedural' ? (
           <Armchair />
         ) : (
@@ -78,20 +90,20 @@ export function LivingRoom({ armchair }: { armchair: ArmchairMode }) {
         )}
       </DropIn>
 
-      <DropIn index={4} position={[-1.45, 0, -1.7]} spin={0.22}>
+      <DropIn index={4} position={[-1.45, 0, -1.7]} spin={0.22} shade={[{ size: [0.38, 0.38], round: true }]}>
         <FloorLamp />
       </DropIn>
 
       {/* Against the left wall, facing into the room. */}
-      <DropIn index={5} position={[-2.8, 0, -0.35]} rotationY={Math.PI / 2} spin={-0.2}>
+      <DropIn index={5} position={[-2.8, 0, -0.35]} rotationY={Math.PI / 2} spin={-0.2} shade={[{ size: [1.3, 0.34] }]}>
         <Bookshelf />
       </DropIn>
 
-      <DropIn index={6} position={[2.1, 0, -0.45]} spin={0.3}>
+      <DropIn index={6} position={[2.1, 0, -0.45]} spin={0.3} shade={[{ size: [0.4, 0.4], round: true }]}>
         <SideTable />
       </DropIn>
 
-      <DropIn index={7} position={[-2.42, 0, -2.05]} spin={-0.4}>
+      <DropIn index={7} position={[-2.42, 0, -2.05]} spin={-0.4} shade={[{ size: [0.42, 0.42], round: true }]}>
         <Plant />
       </DropIn>
 
@@ -129,16 +141,25 @@ export function Kitchen() {
       <WallTreatment finish="tile" wall="back" span={BACKSPLASH} height={[COUNTER_TOP, COUNTER_TOP + 0.6]} />
 
       {/* Along the back wall, its left end against the left wall. */}
-      <DropIn index={0} position={[-0.9, 0, -2.19]} spin={-0.1}>
+      <DropIn index={0} position={[-0.9, 0, -2.19]} spin={-0.1} shade={[{ size: [4.2, 0.62] }]}>
         <KitchenRun />
       </DropIn>
 
-      <DropIn index={1} position={[ISLAND[0], 0, ISLAND[1]]} spin={0.22}>
+      <DropIn index={1} position={[ISLAND[0], 0, ISLAND[1]]} spin={0.22} shade={[{ size: [2, 0.72] }]}>
         <Island />
       </DropIn>
 
       {/* On the island's seating side, turned to face it. */}
-      <DropIn index={2} position={[ISLAND[0], 0, ISLAND[1] + 0.82]} rotationY={Math.PI} spin={-0.3}>
+      <DropIn
+        index={2}
+        position={[ISLAND[0], 0, ISLAND[1] + 0.82]}
+        rotationY={Math.PI}
+        spin={-0.3}
+        shade={[
+          { size: [0.42, 0.4], at: [-0.45, 0] },
+          { size: [0.42, 0.4], at: [0.45, 0] },
+        ]}
+      >
         <StoolPair />
       </DropIn>
 
@@ -173,14 +194,14 @@ export function Bedroom() {
        * The first one was the living room's 3 x 2.1 lattice, and from the
        * camera it looked like a fragment poking out from under the bed.
        */}
-      <DropIn index={0} position={[0.1, 0, -1.39]} spin={-0.12}>
+      <DropIn index={0} position={[0.1, 0, -1.39]} spin={-0.12} shade={[{ size: [1.92, 2.22] }]} ground={ON_RUG}>
         <Bed />
         <group position={[0, 0, 0.62]}>
           <Rug style="banded" />
         </group>
       </DropIn>
 
-      <DropIn index={1} position={[NIGHTSTAND[0], 0, NIGHTSTAND[1]]} spin={0.34}>
+      <DropIn index={1} position={[NIGHTSTAND[0], 0, NIGHTSTAND[1]]} spin={0.34} shade={[{ size: [0.55, 0.45] }]}>
         <StyledSideTable />
       </DropIn>
 
@@ -190,7 +211,7 @@ export function Bedroom() {
       </DropIn>
 
       {/* Against the left wall, facing into the room. */}
-      <DropIn index={3} position={[-2.72, 0, -0.75]} rotationY={Math.PI / 2} spin={0.2}>
+      <DropIn index={3} position={[-2.72, 0, -0.75]} rotationY={Math.PI / 2} spin={0.2} shade={[{ size: [2.44, 0.52] }]}>
         <StyledSideboard />
       </DropIn>
     </>
@@ -214,7 +235,7 @@ export function Office() {
       {/* Sitting side (+Z) towards the room. On a graphite rug that runs
           under the chair too — it comes down with the desk, as the bedroom's
           comes with the bed. */}
-      <DropIn index={0} position={[DESK[0], 0, DESK[1]]} spin={-0.2}>
+      <DropIn index={0} position={[DESK[0], 0, DESK[1]]} spin={-0.2} shade={[{ size: [1.6, 0.75] }]} ground={ON_RUG}>
         <Desk />
         <group position={[0, 0, 0.3]}>
           <Rug style="border" />
@@ -225,7 +246,14 @@ export function Office() {
           the camera. It stood behind the desk at first, facing out — and
           from where the room is seen the desk hid it; with graphite
           upholstery on the graphite rug, it read as missing. */}
-      <DropIn index={1} position={[DESK[0] + 0.08, 0, DESK[1] + 0.72]} rotationY={Math.PI - 0.35} spin={0.5}>
+      <DropIn
+        index={1}
+        position={[DESK[0] + 0.08, 0, DESK[1] + 0.72]}
+        rotationY={Math.PI - 0.35}
+        spin={0.5}
+        shade={[{ size: [0.64, 0.64], round: true }]}
+        ground={ON_RUG}
+      >
         <DeskChair />
       </DropIn>
 
@@ -236,7 +264,7 @@ export function Office() {
       </DropIn>
 
       {/* Against the left wall, facing into the room. */}
-      <DropIn index={3} position={[-2.74, 0, -1.05]} rotationY={Math.PI / 2} spin={-0.22}>
+      <DropIn index={3} position={[-2.74, 0, -1.05]} rotationY={Math.PI / 2} spin={-0.22} shade={[{ size: [1.14, 0.49] }]}>
         <StyledShelving />
       </DropIn>
     </>
