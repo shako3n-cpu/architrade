@@ -183,7 +183,9 @@
     border: 1.5px solid var(--at-brass);
   }
 
- The layer covers the canvas and
+  /* ------------------------------------------------------------------------
+     The hotspots (hotspot-layer.tsx): the gold dots over the room and the
+     card a dot opens. The layer covers the canvas and
      lets every pointer event through except on a dot or an open card, so a
      drag anywhere else still turns the room. Each .room3d-hotspot is a
      zero-size anchor the scene moves to its piece every frame.
