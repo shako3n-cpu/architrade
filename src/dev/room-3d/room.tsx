@@ -1,6 +1,5 @@
-import { useMemo } from 'react'
-import { useTexture } from '@react-three/drei'
-import { MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Vector2 } from 'three'
+import { useEffect, useMemo } from 'react'
+import { MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, TextureLoader, Vector2 } from 'three'
 import { FLOOR_GRADE } from './finishes'
 import { M } from './materials'
 import { COVE, WASH } from './lighting'
@@ -56,36 +55,39 @@ const WASH_H = 1.25
 const FLOOR_REPEAT_M = 1.7
 
 /**
- * The timber floor, sized so a plank is a real plank's width. Loaded through
- * Suspense, so the room is never seen with a flat floor that then changes.
+ * Oak before its photograph arrives — the average tone of the boards, so the
+ * floor that shows in the first frame is the same floor, in less detail.
+ */
+const FLOOR_BASE = '#6d4b30'
+
+/**
+ * The timber floor, sized so a plank is a real plank's width.
+ *
+ * THE BOARDS ARRIVE AFTER THE ROOM, NOT BEFORE IT
+ *   This used to load through Suspense — `useTexture` — so that the floor was
+ *   never seen flat and then detailed. What that actually did was suspend the
+ *   WHOLE scene: the shell, the lights, the furniture, everything inside the
+ *   boundary in room-scene.tsx waited on three JPEGs worth 1.6MB. On a fast
+ *   connection nobody saw it. Served from a CDN over a real one, the canvas
+ *   sat blank for the best part of a minute — with every asset a 200 and not
+ *   an error anywhere — until the floor finally landed. Measured on the live
+ *   preview at Fast 3G: the room could not draw until 55s, because the last
+ *   floor texture did not finish before then.
+ *
+ *   So the material is made at once in the boards' own average tone, and the
+ *   maps are attached when they arrive. The room draws as soon as its code
+ *   has; the grain fades up a few seconds later, on a floor that was already
+ *   the right colour.
  */
 function useWoodFloor(width: number, depth: number) {
-  const loaded = useTexture(FLOOR_MAPS)
-
-  return useMemo(() => {
-    // Clones, configured here: the loader's cached originals are left as
-    // they came. A clone shares its image, so nothing is decoded twice.
-    const [map, normalMap, arm] = loaded.map((original) => {
-      const texture = original.clone()
-      texture.wrapS = texture.wrapT = RepeatWrapping
-      texture.repeat.set(width / FLOOR_REPEAT_M, depth / FLOOR_REPEAT_M)
-      // The floor is seen at a raking angle; without anisotropic filtering the
-      // planks blur to a smear a metre into the room.
-      texture.anisotropy = 8
-      return texture
-    })
-    map.colorSpace = SRGBColorSpace
-
+  const floor = useMemo(() => {
     const floor = new MeshStandardMaterial({
-      map,
-      normalMap,
+      color: FLOOR_BASE,
       normalScale: new Vector2(0.7, 0.7),
       // The packed map: R is ambient occlusion, G is roughness. The factor
       // sits under 1 so the finish is a satin oil, not a bare board — enough
       // for the key light to lay a soft sheen across the room.
-      roughnessMap: arm,
       roughness: 0.85,
-      aoMap: arm,
       aoMapIntensity: 0.6,
       metalness: 0,
     })
@@ -110,7 +112,50 @@ function useWoodFloor(width: number, depth: number) {
         )
     }
     return floor
-  }, [loaded, width, depth])
+  }, [])
+
+  /*
+   * The boards themselves, fetched without blocking anything. Attached when
+   * they land — which recompiles this one material, the same compile that
+   * used to happen before the first frame instead of after it.
+   */
+  useEffect(() => {
+    let live = true
+    const loader = new TextureLoader()
+    Promise.all(FLOOR_MAPS.map((url) => loader.loadAsync(url)))
+      .then(([map, normalMap, arm]) => {
+        if (!live) {
+          for (const texture of [map, normalMap, arm]) texture.dispose()
+          return
+        }
+        for (const texture of [map, normalMap, arm]) {
+          texture.wrapS = texture.wrapT = RepeatWrapping
+          texture.repeat.set(width / FLOOR_REPEAT_M, depth / FLOOR_REPEAT_M)
+          // The floor is seen at a raking angle; without anisotropic filtering
+          // the planks blur to a smear a metre into the room.
+          texture.anisotropy = 8
+        }
+        map.colorSpace = SRGBColorSpace
+        floor.map = map
+        floor.normalMap = normalMap
+        // The packed map: R is ambient occlusion, G is roughness. The factor
+        // sits under 1 so the finish is a satin oil, not a bare board — enough
+        // for the key light to lay a soft sheen across the room.
+        floor.roughnessMap = arm
+        floor.aoMap = arm
+        // The photograph carries the colour from here on.
+        floor.color.set('#ffffff')
+        floor.needsUpdate = true
+      })
+      .catch(() => {
+        // No boards: the floor stays the flat tone, which is a floor.
+      })
+    return () => {
+      live = false
+    }
+  }, [floor, width, depth])
+
+  return floor
 }
 
 export function Room() {
