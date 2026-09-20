@@ -30,6 +30,7 @@ import { Room } from './room'
 import { CEILING, ROOM } from './room-geometry'
 import { ROOM_IDS, type ArmchairMode, type RoomId } from './room-types'
 import { ROOMS } from './room-registry'
+import { tintWallFinishes } from './wall-finishes'
 import { STAGE, StageClock } from './stage-clock'
 
 /**
@@ -871,7 +872,11 @@ function FinishFades({ finishes }: { finishes: Finishes }) {
       UPHOLSTERY[id].sheenColor.setRGB(v[3], v[4], v[5])
     }
     const wall = all.get('wall')?.at(now)
-    if (wall) M.wall.color.setRGB(wall[0], wall[1], wall[2])
+    if (wall) {
+      M.wall.color.setRGB(wall[0], wall[1], wall[2])
+      // Every room's wall finish moves with the walls — see walls.tsx.
+      tintWallFinishes(wall[0], wall[1], wall[2])
+    }
     const floor = all.get('floor')?.at(now)
     if (floor) {
       FLOOR_GRADE.uFloorMul.value.set(floor[0], floor[1], floor[2])
