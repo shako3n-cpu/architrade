@@ -561,6 +561,24 @@ function WarmUp({ room, armchair, onDone }: { room: RoomId; armchair: ArmchairMo
   )
 }
 
+/**
+ * Tells the page when the scene has actually drawn — see useRenderActive.
+ * Two frames, not one: useFrame subscribers run BEFORE the render of the
+ * frame they are in, so the first callback fires with nothing on screen yet.
+ */
+function FirstFrame({ onPainted }: { onPainted: () => void }) {
+  const frames = useRef(0)
+  const told = useRef(false)
+  useFrame(() => {
+    if (told.current) return
+    frames.current += 1
+    if (frames.current < 2) return
+    told.current = true
+    onPainted()
+  })
+  return null
+}
+
 /** A room on stage: which, and its clock. Keyed, so a room shown twice mounts twice. */
 type Slot = { key: number; room: RoomId; clock: RoomClock }
 
@@ -934,6 +952,7 @@ export function RoomScene({
   timeOfDay,
   copyRect,
   active,
+  onPainted,
 }: {
   /** Change it to clear the room and furnish it as another. */
   room: RoomId
@@ -953,6 +972,8 @@ export function RoomScene({
   copyRect: Rect | null
   /** False while the tab is hidden or the stage is off screen: nothing is drawn. */
   active: boolean
+  /** Called once the scene has drawn a frame — until then it is never paused. */
+  onPainted: () => void
 }) {
   // Phones start on the cheaper settings; PerformanceMonitor drops anything
   // else that turns out to struggle. It never climbs back up — flickering
@@ -979,6 +1000,8 @@ export function RoomScene({
       aria-hidden="true"
     >
       <color attach="background" args={[PALETTE.stage]} />
+
+      <FirstFrame onPainted={onPainted} />
 
       {/* First in every frame: the one timeline the whole stage is timed on. */}
       <StageClock />

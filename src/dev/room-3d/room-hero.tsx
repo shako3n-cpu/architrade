@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './i18n'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Moon, Move3d, RotateCcw, Sun } from 'lucide-react'
@@ -134,7 +134,13 @@ export function RoomHero() {
   // camera-rig.ts for why not on phones.
   const hero = useRef<HTMLElement>(null)
   useScrollCamera(hero, !reduced && wide && !coarse)
-  const active = useRenderActive(stage)
+  /*
+   * The canvas is never paused before it has drawn — see useRenderActive.
+   * <RoomScene> reports its first frame back here.
+   */
+  const [painted, setPainted] = useState(false)
+  const markPainted = useCallback(() => setPainted(true), [])
+  const active = useRenderActive(stage, painted)
 
   // Where the copy block sits over the stage on the desktop layout, for the
   // room to be fitted beside it (framing-fit.ts). Watched, because the copy
@@ -303,6 +309,7 @@ export function RoomHero() {
             timeOfDay={timeOfDay}
             copyRect={copyRect}
             active={active}
+            onPainted={markPainted}
           />
         </Suspense>
 
