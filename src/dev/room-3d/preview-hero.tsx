@@ -1,5 +1,6 @@
 import { Component, Suspense, lazy, useEffect, useState, type ReactNode } from 'react'
 import { B2bHero } from '@/components/b2b/hero'
+import { webglSupport } from './webgl-support'
 
 /**
  * ============================================================================
@@ -37,35 +38,20 @@ import { B2bHero } from '@/components/b2b/hero'
 const RoomHomeHero = lazy(() => import('./home-hero'))
 
 /**
- * Whether this browser and machine can be asked to draw the room. Worked out
- * once per page load: it makes a throwaway WebGL2 context, which is the only
- * honest test, and then hands it straight back.
+ * Whether this browser and machine can be asked to draw the room. The WebGL2
+ * question is webgl-support.ts, asked once per page load and shared with the
+ * dev page, which reports the same verdict in words rather than swapping in
+ * the photograph.
  */
-let capable: boolean | null = null
-
 function canDrawTheRoom(): boolean {
-  if (capable !== null) return capable
-  capable = false
-  if (typeof document === 'undefined') return capable
-
   // A device this small is better served by the photograph: the room would
   // run, but at a frame rate that reads as broken rather than as slow.
   const cores = navigator.hardwareConcurrency
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
-  if (typeof cores === 'number' && cores > 0 && cores <= 2) return capable
-  if (typeof memory === 'number' && memory > 0 && memory < 2) return capable
+  if (typeof cores === 'number' && cores > 0 && cores <= 2) return false
+  if (typeof memory === 'number' && memory > 0 && memory < 2) return false
 
-  try {
-    const canvas = document.createElement('canvas')
-    const gl = canvas.getContext('webgl2')
-    if (!gl) return capable
-    // Given back at once — the scene makes its own.
-    gl.getExtension('WEBGL_lose_context')?.loseContext()
-    capable = true
-  } catch {
-    // A browser that throws on getContext is a browser without WebGL.
-  }
-  return capable
+  return webglSupport().ok
 }
 
 /** Anything the room throws on the way up puts the photograph back. */
