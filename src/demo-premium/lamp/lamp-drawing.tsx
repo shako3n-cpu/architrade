@@ -48,15 +48,29 @@ const [cordX, cordBottom] = project([0, COLLAR.top, 0])
 const [, cordTop] = project([0, CORD.top, 0])
 const [haloX, haloY] = project([0, 0, 0])
 
+/** Both layers share one coordinate system: the camera's, in half-heights. */
+const VIEW = { viewBox: '-0.3 -1 0.6 2', preserveAspectRatio: 'xMidYMid meet' } as const
+
 export function LampDrawing() {
   return (
-    <svg className="lp-lamp-drawing" viewBox="-0.3 -1 0.6 2" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
-      <defs>
-        <radialGradient id="lp-halo" cx={haloX} cy={haloY} r="1.15" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#f6dcae" stopOpacity="0.9" />
-          <stop offset="0.35" stopColor="#efd3a6" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#efd3a6" stopOpacity="0" />
-        </radialGradient>
+    <>
+      {/* The light on the page. Its own layer, because the lamp's layer is
+          masked at the top (the cord fades out) and a mask also clips
+          everything outside its box — which cut the halo off in a hard line
+          at the stage's edge. */}
+      <svg className="lp-lamp-light" {...VIEW} aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="lp-halo" cx={haloX} cy={haloY} r="1.15" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#f6dcae" stopOpacity="0.9" />
+            <stop offset="0.35" stopColor="#efd3a6" stopOpacity="0.35" />
+            <stop offset="1" stopColor="#efd3a6" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx={haloX} cy={haloY} r="1.15" fill="url(#lp-halo)" />
+      </svg>
+
+      <svg className="lp-lamp-drawing" {...VIEW} aria-hidden="true" focusable="false">
+        <defs>
         <linearGradient id="lp-brass-flat" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#a9834f" />
           <stop offset="0.42" stopColor="#d2ad76" />
@@ -66,17 +80,16 @@ export function LampDrawing() {
           <stop offset="0" stopColor="#fff3dc" />
           <stop offset="1" stopColor="#e9cf9f" />
         </radialGradient>
-      </defs>
+        </defs>
 
-      <circle className="lp-lamp-halo" cx={haloX} cy={haloY} r="1.15" fill="url(#lp-halo)" />
-
-      <g className="lp-lamp-flat">
-        <line x1={cordX} y1={cordTop} x2={cordX} y2={cordBottom} stroke="#23262a" strokeWidth="0.0035" />
-        <path d={COLLAR_PATH} fill="#a9834f" />
-        <path d={SHADE_PATH} fill="url(#lp-brass-flat)" />
-        <path d={MOUTH_PATH} fill="url(#lp-mouth)" />
-        <path d={DIFFUSER_PATH} fill="#fffaf0" />
-      </g>
-    </svg>
+        <g className="lp-lamp-flat">
+          <line x1={cordX} y1={cordTop} x2={cordX} y2={cordBottom} stroke="#23262a" strokeWidth="0.0035" />
+          <path d={COLLAR_PATH} fill="#a9834f" />
+          <path d={SHADE_PATH} fill="url(#lp-brass-flat)" />
+          <path d={MOUTH_PATH} fill="url(#lp-mouth)" />
+          <path d={DIFFUSER_PATH} fill="#fffaf0" />
+        </g>
+      </svg>
+    </>
   )
 }

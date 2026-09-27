@@ -8,7 +8,7 @@ import { useMagnetic } from './motion'
  * under it (see useMagnetic and .lp-btn in the stylesheet).
  */
 export function StartProject({ tone = 'ink', size = 'large' }: { tone?: 'ink' | 'ivory'; size?: 'large' | 'small' }) {
-  const magnet = useMagnetic<HTMLSpanElement>(size === 'small' ? 0.18 : 0.3)
+  const magnet = useMagnetic<HTMLSpanElement>(size === 'small' ? 4 : 6)
   return (
     <span ref={magnet} className="lp-magnet">
       <Link to={CONTACT_PATH} className="lp-btn" data-tone={tone} data-size={size}>

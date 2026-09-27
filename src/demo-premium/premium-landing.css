@@ -176,7 +176,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(9rem circle at var(--mx) var(--my), rgb(216 180 119 / 0.5), transparent 70%);
+  background: radial-gradient(8rem circle at var(--mx) var(--my), rgb(216 180 119 / 0.32), transparent 70%);
   opacity: 0;
   transition: opacity 0.5s var(--lp-ease);
 }
@@ -360,6 +360,19 @@
   height: min(42svh, 24rem);
   pointer-events: none;
 }
+/*
+ * The cord dissolves on its way up. Run to the top of the window it met the
+ * navigation — at most desktop widths, the solid "start a project" button,
+ * so the lamp looked as if it hung from the button. Faded out above the
+ * lamp, it reads as a product shot's cord running up out of the light, and
+ * it cannot collide with the pill at any width.
+ */
+.lp-lamp-drawing,
+.lp-stage-canvas {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 4.5rem, #000 8.5rem);
+  mask-image: linear-gradient(to bottom, transparent 4.5rem, #000 8.5rem);
+}
+.lp-lamp-light,
 .lp-lamp-drawing {
   position: absolute;
   inset: 0 0 auto;

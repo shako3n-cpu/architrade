@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Nav } from './nav'
 import { Closing, Footer } from './sections/closing'
 import { Hero } from './sections/hero'
@@ -62,8 +63,31 @@ export default function PremiumLanding() {
  * The page is English, whatever language the site last remembered, and says
  * what it is in the tab. Both are put back on the way out, so the site the
  * visitor goes on to is exactly as it was.
+ *
+ * SCROLL, IN AND OUT
+ *   The router keeps the scroll position across pages, and RootLayout resets
+ *   it only when it changes page WITHIN itself — so the site's contact page,
+ *   reached from this page's call to action, opened 700px down. Both edges
+ *   are handled here: arriving from another page of the app this opens at
+ *   the top, and leaving it puts the window at the top in a layout-effect
+ *   cleanup, which runs before the next page paints. The cleanup checks the
+ *   address has really changed, because StrictMode unmounts and remounts once
+ *   in development without going anywhere.
  */
 function useDocumentShell() {
+  const location = useLocation()
+  const arrivedInApp = location.key !== 'default' && !location.hash
+  useEffect(() => {
+    if (arrivedInApp) window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [arrivedInApp])
+
+  useLayoutEffect(
+    () => () => {
+      if (!window.location.pathname.startsWith('/demo/premium')) window.scrollTo({ top: 0, behavior: 'instant' })
+    },
+    [],
+  )
+
   useEffect(() => {
     const root = document.documentElement
     const previous = { title: document.title, lang: root.lang }

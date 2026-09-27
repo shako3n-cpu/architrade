@@ -72,7 +72,7 @@ export function useReveals(root: RefObject<HTMLElement | null>) {
  *   Also passes the pointer's position to CSS as --mx / --my, for the
  *   button's inner highlight. Mouse and trackpad only.
  */
-export function useMagnetic<T extends HTMLElement>(strength = 0.3) {
+export function useMagnetic<T extends HTMLElement>(reach = 6) {
   const ref = useRef<T>(null)
   useEffect(() => {
     const wrapper = ref.current
@@ -86,7 +86,12 @@ export function useMagnetic<T extends HTMLElement>(strength = 0.3) {
         const box = wrapper.getBoundingClientRect()
         const x = event.clientX - (box.left + box.width / 2)
         const y = event.clientY - (box.top + box.height / 2)
-        target.style.translate = `${(x * strength).toFixed(1)}px ${(y * strength).toFixed(1)}px`
+        // A soft ceiling rather than a straight ratio: the lean builds quickly
+        // near the centre and never passes `reach` pixels, however far out the
+        // pointer is — a straight ratio carried the button 16px, which reads
+        // as the button chasing the cursor rather than leaning toward it.
+        const lean = (d: number, half: number) => (reach * Math.tanh(d / half)).toFixed(1)
+        target.style.translate = `${lean(x, box.width / 2)}px ${lean(y, box.height / 2)}px`
         // The light is placed in the button's own box, wherever it has leant to.
         const own = target.getBoundingClientRect()
         target.style.setProperty('--mx', `${(event.clientX - own.left).toFixed(0)}px`)
@@ -104,7 +109,7 @@ export function useMagnetic<T extends HTMLElement>(strength = 0.3) {
       wrapper.removeEventListener('pointermove', onMove)
       wrapper.removeEventListener('pointerleave', onLeave)
     }
-  }, [strength])
+  }, [reach])
   return ref
 }
 
