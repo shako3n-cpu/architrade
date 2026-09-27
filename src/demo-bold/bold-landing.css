@@ -773,6 +773,17 @@
   display: grid;
   gap: 1rem;
 }
+/* A tablet: houses and process full width, the plan and the sectors side
+   by side between them. */
+@media (min-width: 640px) and (max-width: 899px) {
+  .bd-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bd-card-houses,
+  .bd-card-process {
+    grid-column: 1 / -1;
+  }
+}
 @media (min-width: 900px) {
   .bd-bento {
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -930,44 +941,45 @@
   border: 1px solid rgb(35 38 42 / 0.08);
 }
 
-/* 02 process: a line that fills with amber as the card arrives. The card
-   spans both rows, so the steps spread down its full height. */
+/* 02 process: each step's marker joined to the next by a line that fills
+   with amber, one segment after another, as the card arrives. One segment
+   per step rather than one line down the list: the list's line ran past the
+   first marker and on below the last, wherever the text happened to end.
+   The card spans both rows, so the steps share out its full height. */
 .bd-card-process {
   grid-template-rows: auto auto 1fr;
 }
-.bd-card-process .bd-steps {
-  align-content: space-evenly;
-}
 .bd-steps {
-  position: relative;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
   margin: 0.75rem 0 0;
   padding: 0;
   list-style: none;
 }
-.bd-steps::before,
-.bd-steps::after {
-  content: '';
-  position: absolute;
-  top: 1.125rem;
-  bottom: 1.125rem;
-  left: calc(1.125rem - 1px);
-  width: 2px;
-  border-radius: 2px;
-}
-.bd-steps::before {
-  background: rgb(35 38 42 / 0.08);
-}
-.bd-steps::after {
-  background: linear-gradient(180deg, var(--bd-amber), var(--bd-bronze));
-  transform-origin: top;
-}
 .bd-step {
   position: relative;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: 2.25rem minmax(0, 1fr);
+  align-content: start;
   gap: 1rem;
+}
+.bd-step:not(:last-child)::before,
+.bd-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 2.25rem;
+  bottom: -1.5rem;
+  left: calc(1.125rem - 1px);
+  width: 2px;
+}
+.bd-step:not(:last-child)::before {
+  background: rgb(35 38 42 / 0.08);
+}
+.bd-step:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--bd-amber), var(--bd-bronze));
+  transform-origin: top;
 }
 .bd-step-mark {
   position: relative;
@@ -1210,11 +1222,12 @@
 }
 /* What fills in once its card has arrived: the process line, the sector
    bars, the plan's strokes. */
-.bd-motion .bd-steps::after {
+.bd-motion .bd-step::after {
   transform: scaleY(0);
-  transition: transform 2s var(--bd-ease) 0.5s;
+  transition: transform 0.9s var(--bd-ease);
+  transition-delay: calc(0.5s + var(--i, 0) * 0.4s);
 }
-.bd-motion .is-in .bd-steps::after {
+.bd-motion .is-in .bd-step::after {
   transform: none;
 }
 .bd-motion .bd-bar-fill {
