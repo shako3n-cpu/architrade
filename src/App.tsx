@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import { RootLayout } from '@/components/layout/root-layout'
 import { Home } from '@/pages/home'
 import { Catalog } from '@/pages/catalog'
@@ -23,6 +24,7 @@ import { AdminUsers } from '@/pages/admin/users'
 import { IS_ADMIN_HOST, IS_PUBLIC_ONLY_HOST } from '@/lib/host'
 import { getStoredLanguage } from '@/i18n'
 import '@/i18n'
+const PremiumLanding = lazy(() => import('@/demo-premium/premium-landing')) // demo page, its own chunk
 
 /**
  * ============================================================================
@@ -159,6 +161,7 @@ function PublicSite() {
   return (
     <Routes>
       <Route path="/" element={<LanguageRedirect />} />
+      <Route path="/demo/premium" element={<Suspense><PremiumLanding /></Suspense>} />
 
       {/*
        * On a known production catalogue domain the back office is simply not

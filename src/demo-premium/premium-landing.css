@@ -1,0 +1,961 @@
+/* ============================================================================
+   PREMIUM LANDING — DEMO STYLESHEET
+   ----------------------------------------------------------------------------
+   Everything is scoped under .lp and prefixed lp-, and it is plain CSS rather
+   than utility classes so none of it lands in the site's own stylesheet.
+
+   BUILT ON THE SITE'S TOKENS (src/index.css), NOT BESIDE THEM
+     Ivory, graphite, bronze and the fonts are the site's own custom
+     properties, read through. The one colour the site does not define is the
+     slate: the cool graphite paint swatch from the 3D room configurator
+     (#5d6066), the only cool value anywhere in the brand.
+
+   WHERE THIS DEPARTS FROM THE SITE'S HOUSE RULES, AND WHY
+     The site forbids gradients and caps corner radius at 4px. This page was
+     briefed with a pill navigation and a gradient-mesh band, so it has
+     them — and nothing else: cards, figures and the plan keep the site's
+     square corners and hairlines, and there are no drop shadows anywhere.
+
+   FOUR TYPE SIZES: display, heading, body and small. Nothing else.
+   ========================================================================== */
+
+.lp {
+  --lp-ivory: var(--at-background); /* #fbf9f5 */
+  --lp-ivory-deep: var(--at-surface); /* #f2eee6 */
+  --lp-ink: var(--at-ink); /* #23262a */
+  --lp-espresso: var(--at-graphite-deep); /* #16181b */
+  --lp-brass: var(--at-brass); /* #8c6d46 — text on ivory */
+  --lp-brass-light: var(--at-brass-on-ink); /* #d8b477 — text on dark */
+  --lp-slate: #5d6066;
+  --lp-muted: var(--at-muted);
+  --lp-muted-on-dark: var(--at-ink-muted);
+  --lp-line: var(--at-hairline);
+
+  --lp-display: clamp(2.75rem, 1rem + 5vw, 6rem);
+  --lp-heading: clamp(2rem, 1.25rem + 2.4vw, 3.5rem);
+  --lp-body: clamp(1rem, 0.95rem + 0.25vw, 1.1875rem);
+  --lp-small: 0.75rem;
+
+  --lp-gutter: 1.25rem;
+  --lp-section: clamp(5.5rem, 3rem + 7vw, 9.5rem);
+  --lp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  background: var(--lp-ivory);
+  color: var(--lp-ink);
+  overflow-x: clip;
+}
+
+@media (min-width: 640px) {
+  .lp {
+    --lp-gutter: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .lp {
+    --lp-gutter: 3rem;
+  }
+}
+
+.lp-wrap {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: var(--lp-gutter);
+}
+
+/* --- Type ----------------------------------------------------------------- */
+
+.lp-display,
+.lp-heading {
+  font-family: var(--at-font-heading);
+  font-weight: 400;
+  color: var(--lp-ink);
+  margin: 0;
+  text-wrap: balance;
+}
+.lp-display {
+  font-size: var(--lp-display);
+  line-height: 1.02;
+  letter-spacing: -0.028em;
+}
+.lp-heading {
+  font-size: var(--lp-heading);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.lp-body {
+  font-size: var(--lp-body);
+  line-height: 1.7;
+  color: var(--lp-muted);
+  margin: 0;
+  max-width: 36rem;
+}
+.lp-label {
+  font-family: var(--at-font-body);
+  font-size: var(--lp-small);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  color: var(--lp-muted);
+  margin: 0;
+}
+.lp-brass {
+  color: var(--lp-brass);
+}
+.lp-on-dark {
+  color: var(--lp-muted-on-dark);
+}
+.lp-quiet {
+  display: block;
+  color: var(--lp-muted);
+}
+
+/* --- Links and the call to action ---------------------------------------- */
+
+.lp-textlink {
+  position: relative;
+  display: inline-flex;
+  padding-block: 0.5rem;
+  font-size: var(--lp-small);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-ink);
+  text-decoration: none;
+}
+.lp-textlink::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0.25rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0.3);
+  transform-origin: left;
+  transition: transform 0.7s var(--lp-ease);
+}
+.lp-textlink:hover::after,
+.lp-textlink:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* The wrapper catches the pointer a little outside the button; the button
+   leans inside it (useMagnetic). */
+.lp-magnet {
+  display: inline-flex;
+  padding: 0.75rem;
+  margin: -0.75rem;
+}
+
+.lp-btn {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  height: 3.5rem;
+  padding-inline: 1.75rem 1.5rem;
+  border-radius: 999px;
+  background: var(--lp-ink);
+  color: var(--lp-ivory);
+  font-size: var(--lp-small);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    translate 0.6s var(--lp-ease),
+    background-color 0.5s var(--lp-ease);
+}
+.lp-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(9rem circle at var(--mx) var(--my), rgb(216 180 119 / 0.5), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s var(--lp-ease);
+}
+.lp-btn:hover::before {
+  opacity: 1;
+}
+.lp-btn:hover {
+  background: #2d3035;
+}
+.lp-btn[data-size='small'] {
+  height: 2.5rem;
+  gap: 0.5rem;
+  padding-inline: 1.125rem 1rem;
+  letter-spacing: 0.14em;
+}
+.lp-btn[data-tone='ivory'] {
+  background: var(--lp-ivory);
+  color: var(--lp-ink);
+}
+.lp-arrow {
+  flex: none;
+  transition: translate 0.6s var(--lp-ease);
+}
+.lp-btn:hover .lp-arrow {
+  translate: 3px 0;
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 2.25rem;
+}
+.lp-actions-center {
+  justify-content: center;
+}
+
+.lp-skip {
+  position: fixed;
+  z-index: 60;
+  top: -5rem;
+  left: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--lp-ink);
+  color: var(--lp-ivory);
+  border-radius: 999px;
+  font-size: var(--lp-small);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.lp-skip:focus {
+  top: 1rem;
+}
+
+/* --- Nav: the floating pill ---------------------------------------------- */
+
+.lp-nav {
+  position: fixed;
+  z-index: 40;
+  top: 0.75rem;
+  left: 50%;
+  translate: -50% 0;
+  width: min(calc(100% - 1.5rem), 64rem);
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-inline: 1.5rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgb(35 38 42 / 0.07);
+  background: rgb(251 249 245 / 0.62);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  backdrop-filter: blur(16px) saturate(1.3);
+  transition:
+    background-color 0.6s var(--lp-ease),
+    border-color 0.6s var(--lp-ease);
+  animation: lp-drop 1s var(--lp-ease) both;
+}
+.lp-nav[data-scrolled] {
+  background: rgb(251 249 245 / 0.86);
+  border-color: rgb(35 38 42 / 0.1);
+}
+.lp-wordmark {
+  font-family: var(--at-font-serif);
+  font-size: var(--lp-body);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  color: var(--lp-ink);
+  text-decoration: none;
+}
+.lp-nav-links {
+  display: none;
+  gap: 2.25rem;
+}
+.lp-nav-link {
+  position: relative;
+  padding-block: 0.5rem;
+  font-size: var(--lp-small);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+  text-decoration: none;
+  transition: color 0.4s var(--lp-ease);
+}
+.lp-nav-link::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0.3rem;
+  height: 1px;
+  background: var(--lp-brass);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s var(--lp-ease);
+}
+.lp-nav-link:hover {
+  color: var(--lp-ink);
+}
+.lp-nav-link:hover::after {
+  transform: scaleX(1);
+}
+@media (min-width: 768px) {
+  .lp-nav-links {
+    display: flex;
+  }
+}
+.lp-btn-short {
+  display: none;
+}
+/* The narrowest phones: the pill's button says less, so the wordmark keeps
+   its tracking. The full label stays in the accessibility tree. */
+@media (max-width: 399px) {
+  .lp-nav {
+    padding-inline-start: 1.125rem;
+  }
+  .lp-nav .lp-btn-full {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .lp-nav .lp-btn-short {
+    display: inline;
+  }
+}
+
+/* --- Hero ------------------------------------------------------------------ */
+
+.lp-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 4rem;
+}
+/* The hero's gradient mesh: the lamp's warmth where it hangs, a breath of
+   slate low on the far side, on the ivory. */
+.lp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(70% 45% at 50% 22%, rgb(239 211 166 / 0.3), transparent 70%),
+    radial-gradient(55% 40% at 0% 100%, rgb(93 96 102 / 0.045), transparent 70%);
+}
+
+.lp-stage {
+  position: relative;
+  height: min(58svh, 34rem);
+  pointer-events: none;
+}
+.lp-lamp-drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.lp-lamp-flat {
+  transition: opacity 1s var(--lp-ease) 0.2s;
+}
+.lp-stage[data-ready] .lp-lamp-flat {
+  opacity: 0;
+}
+.lp-stage-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s var(--lp-ease);
+}
+.lp-stage[data-ready] .lp-stage-canvas {
+  opacity: 1;
+}
+
+.lp-hero-inner {
+  position: relative;
+}
+.lp-hero-copy {
+  display: grid;
+  gap: 1.75rem;
+  justify-items: start;
+}
+.lp-hero-lead {
+  max-width: 34rem;
+}
+.lp-hero-copy .lp-actions {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .lp-hero {
+    min-height: 100svh;
+    justify-content: flex-end;
+    padding-block: 9rem clamp(4rem, 9vh, 7rem);
+  }
+  .lp-hero::before {
+    background:
+      radial-gradient(45% 60% at 76% 34%, rgb(239 211 166 / 0.32), transparent 70%),
+      radial-gradient(40% 45% at 0% 100%, rgb(93 96 102 / 0.045), transparent 70%);
+  }
+  .lp-stage {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 50%;
+    height: auto;
+    z-index: -1;
+  }
+  .lp-hero-copy {
+    max-width: min(62rem, 72%);
+  }
+}
+
+/* The hero rises in with the first paint: CSS only, waiting on nothing. */
+.lp-rise {
+  animation: lp-rise 1.1s var(--lp-ease) both;
+  animation-delay: calc(0.1s + var(--i, 0) * 0.09s);
+}
+
+/* --- Proof: figures and clients ------------------------------------------ */
+
+.lp-proof {
+  border-block: 1px solid var(--lp-line);
+}
+.lp-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+.lp-figure {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-block: clamp(2rem, 4vw, 3.5rem);
+  padding-left: clamp(1rem, 3vw, 2.5rem);
+  border-left: 1px solid var(--lp-line);
+}
+.lp-figure:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.lp-figure-value {
+  margin: 0;
+  font-family: var(--at-font-heading);
+  font-size: var(--lp-heading);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+}
+.lp-clients {
+  display: grid;
+  gap: 1rem;
+  padding-block: 2rem 2.5rem;
+  border-top: 1px solid var(--lp-line);
+}
+.lp-client-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--at-font-heading);
+  font-size: var(--lp-body);
+  line-height: 1.6;
+  color: rgb(35 38 42 / 0.78);
+}
+@media (min-width: 1024px) {
+  .lp-clients {
+    grid-template-columns: 11rem minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+
+/* --- Value sections -------------------------------------------------------- */
+
+.lp-section {
+  padding-block: var(--lp-section);
+}
+.lp-section-tint {
+  background: var(--lp-ivory-deep);
+}
+.lp-split {
+  display: grid;
+  gap: clamp(3rem, 6vw, 6rem);
+  align-items: center;
+}
+.lp-split-text {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: start;
+}
+@media (min-width: 1024px) {
+  .lp-split {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+  .lp-split-reverse {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  }
+  .lp-split-reverse > .lp-split-text {
+    order: 2;
+  }
+}
+
+.lp-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+.lp-kicker-index {
+  color: var(--lp-brass);
+}
+.lp-kicker-rule {
+  width: 2.5rem;
+  height: 1px;
+  background: var(--lp-brass);
+  opacity: 0.6;
+}
+
+/* The site's survey marks, in bronze. The global rule sets the colour and
+   then resets it with a `border-top: 1px solid` shorthand, so on this page
+   they came out in the text colour; stated again here, after it. */
+.lp .at-survey::before,
+.lp .at-survey::after {
+  border-color: var(--lp-brass);
+}
+
+/* 01 — the houses card, with a light that follows the pointer. */
+.lp-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--lp-ivory-deep);
+  padding: clamp(1.75rem, 4vw, 3.5rem);
+}
+.lp-card-light {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(24rem circle at var(--px, 78%) var(--py, 18%), rgb(216 180 119 / 0.28), transparent 70%);
+  opacity: 0.55;
+  transition: opacity 0.8s var(--lp-ease);
+  pointer-events: none;
+}
+.lp-card[data-lit] .lp-card-light {
+  opacity: 1;
+}
+.lp-houses-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.25rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--lp-line);
+}
+.lp-houses-count .lp-display {
+  line-height: 0.9;
+}
+.lp-houses-count .lp-label {
+  max-width: 14rem;
+}
+.lp-disciplines {
+  display: grid;
+  gap: 0 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-disciplines li {
+  display: grid;
+  gap: 0.25rem;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--lp-line);
+}
+.lp-discipline-name {
+  font-family: var(--at-font-heading);
+  font-size: var(--lp-body);
+  line-height: 1.3;
+  color: var(--lp-ink);
+}
+@media (min-width: 520px) {
+  .lp-disciplines {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* 02 — the plan, and the legend beside it. */
+.lp-legend {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--lp-small);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-ink);
+}
+.lp-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+.lp-swatch {
+  width: 1.75rem;
+  height: 2px;
+  background: var(--lp-ink);
+}
+.lp-swatch[data-tone='brass'] {
+  background: var(--lp-brass);
+}
+.lp-swatch[data-tone='slate'] {
+  height: 4px;
+  background: var(--lp-slate);
+}
+
+.lp-plan-figure {
+  margin: 0;
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+  background: var(--lp-ivory);
+}
+.lp-plan {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.lp-plan path,
+.lp-plan rect,
+.lp-plan circle {
+  fill: none;
+  stroke-linejoin: round;
+}
+.lp-plan-wall {
+  stroke: var(--lp-ink);
+  stroke-width: 6;
+}
+.lp-plan-line {
+  stroke: var(--lp-ink);
+  stroke-width: 1.5;
+}
+.lp-plan-faint {
+  opacity: 0.4;
+}
+.lp-plan-acoustic {
+  stroke: var(--lp-slate);
+  stroke-width: 5;
+}
+.lp-plan-light {
+  stroke: var(--lp-brass);
+  stroke-width: 2;
+}
+.lp-plan-notes {
+  stroke: var(--lp-muted);
+  stroke-width: 1;
+}
+.lp-plan-notes text {
+  stroke: none;
+  fill: var(--lp-muted);
+  font-family: var(--at-font-body);
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+.lp-plan [data-draw] {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: 0;
+}
+
+/* 03 — the four steps, on a rule that fills with brass as it arrives. */
+.lp-process-head {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 48rem;
+}
+.lp-steps-wrap {
+  position: relative;
+  margin-top: clamp(3rem, 6vw, 5rem);
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--lp-line);
+}
+.lp-steps-rule {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--lp-brass);
+  transform-origin: left;
+}
+.lp-steps {
+  display: grid;
+  gap: 2.75rem 2.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-step {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+.lp-step-name {
+  margin: 0;
+  font-family: var(--at-font-heading);
+  font-size: var(--lp-body);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  color: var(--lp-ink);
+}
+.lp-step-body {
+  margin: 0;
+  font-size: var(--lp-body);
+  line-height: 1.65;
+  color: var(--lp-muted);
+}
+@media (min-width: 720px) {
+  .lp-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1180px) {
+  .lp-steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* --- Testimonial: the dark band on its gradient mesh --------------------- */
+
+.lp-quote {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-block: calc(var(--lp-section) * 1.1);
+  background: var(--lp-espresso);
+  color: var(--lp-ivory);
+}
+/* The light that follows the pointer across the band. */
+.lp-quote::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(34rem circle at var(--px, 50%) var(--py, 45%), rgb(216 180 119 / 0.1), transparent 65%);
+  opacity: 0;
+  transition: opacity 1s var(--lp-ease);
+  pointer-events: none;
+}
+.lp-quote[data-lit]::after {
+  opacity: 1;
+}
+
+/* Three soft discs of the page's colours drifting very slowly under the
+   band. Radial gradients are soft on their own, so there is no blur filter
+   to re-render: only transforms move, which the compositor does for free. */
+.lp-mesh {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+}
+.lp-mesh span {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.lp-mesh-brass {
+  width: 75vmax;
+  height: 75vmax;
+  left: -22vmax;
+  top: -38vmax;
+  background: radial-gradient(closest-side, rgb(169 131 79 / 0.5), transparent);
+  animation: lp-drift-a 34s ease-in-out infinite alternate;
+}
+.lp-mesh-slate {
+  width: 80vmax;
+  height: 80vmax;
+  right: -30vmax;
+  bottom: -46vmax;
+  background: radial-gradient(closest-side, rgb(93 96 102 / 0.75), transparent);
+  animation: lp-drift-b 42s ease-in-out infinite alternate;
+}
+.lp-mesh-ember {
+  width: 50vmax;
+  height: 50vmax;
+  left: 38%;
+  top: 10%;
+  background: radial-gradient(closest-side, rgb(109 84 54 / 0.55), transparent);
+  animation: lp-drift-c 38s ease-in-out infinite alternate;
+}
+/* Film grain over the mesh: stops the gradients banding, and gives the dark
+   a surface instead of a void. */
+.lp-grain {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.lp-quote-inner {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+.lp-quote figure {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+}
+.lp-quote-text {
+  margin: 2rem 0 0;
+  max-width: 30ch;
+  color: var(--lp-ivory);
+}
+.lp-quote-text p {
+  margin: 0;
+}
+.lp-quote-by {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 2.5rem;
+}
+.lp-placeholder-tag {
+  padding: 0.25rem 0.75rem;
+  border: 1px dashed rgb(184 176 164 / 0.5);
+  border-radius: 999px;
+  font-size: var(--lp-small);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-muted-on-dark);
+}
+
+/* --- Closing ---------------------------------------------------------------- */
+
+.lp-closing {
+  padding-block: var(--lp-section);
+}
+.lp-closing-frame {
+  display: grid;
+  justify-items: center;
+  gap: 1.75rem;
+  padding: clamp(3rem, 8vw, 7rem) clamp(0.5rem, 5vw, 4rem);
+  text-align: center;
+}
+.lp-closing-body {
+  max-width: 38rem;
+}
+.lp-closing-frame .lp-actions {
+  margin-top: 0.75rem;
+}
+
+.lp-footer {
+  border-top: 1px solid var(--lp-line);
+}
+.lp-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding-block: 2rem;
+}
+
+/* --- Scroll reveals ----------------------------------------------------------
+   The hidden state exists only under .lp-motion, which useReveals adds once
+   it is certain an observer will undo it. */
+
+.lp-motion [data-reveal=''] {
+  opacity: 0;
+  transform: translate3d(0, 1.75rem, 0);
+  transition:
+    opacity 1s var(--lp-ease),
+    transform 1.2s var(--lp-ease);
+  transition-delay: calc(var(--i, 0) * 0.09s);
+}
+.lp-motion [data-reveal=''].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-motion [data-reveal='rule'] {
+  transform: scaleX(0);
+  transition: transform 2.4s var(--lp-ease) 0.2s;
+}
+.lp-motion [data-reveal='rule'].is-in {
+  transform: none;
+}
+
+.lp-motion [data-reveal='draw'] [data-draw] {
+  transition:
+    stroke-dashoffset 1.8s var(--lp-ease) var(--d, 0s),
+    opacity 0.2s linear var(--d, 0s);
+}
+/* Transparent as well as undrawn: a stroke dashed down to nothing still
+   leaves a speck where the dash begins, and on the chairs that was a grid of
+   dots waiting for the drawing. */
+.lp-motion [data-reveal='draw']:not(.is-in) [data-draw] {
+  stroke-dashoffset: var(--len);
+  opacity: 0;
+}
+.lp-motion [data-reveal='draw'] .lp-plan-notes {
+  transition: opacity 1.2s var(--lp-ease) var(--d, 0s);
+}
+.lp-motion [data-reveal='draw']:not(.is-in) .lp-plan-notes {
+  opacity: 0;
+}
+
+/* --- Keyframes --------------------------------------------------------------- */
+
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.25rem, 0);
+  }
+}
+@keyframes lp-drop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.75rem, 0);
+  }
+}
+@keyframes lp-drift-a {
+  to {
+    transform: translate3d(16vmax, 10vmax, 0) scale(1.12);
+  }
+}
+@keyframes lp-drift-b {
+  to {
+    transform: translate3d(-14vmax, -8vmax, 0) scale(0.92);
+  }
+}
+@keyframes lp-drift-c {
+  to {
+    transform: translate3d(-12vmax, 9vmax, 0) scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-rise,
+  .lp-nav,
+  .lp-mesh span {
+    animation: none;
+  }
+  .lp-btn,
+  .lp-arrow,
+  .lp-textlink::after,
+  .lp-nav-link::after {
+    transition: none;
+  }
+}
