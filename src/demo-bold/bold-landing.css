@@ -20,6 +20,114 @@
    TYPE: display, heading, title, body and small.
    ========================================================================== */
 
+/* ============================================================================
+   FALLBACK FACES THAT TAKE THE SAME ROOM AS NOTO
+   ----------------------------------------------------------------------------
+   The fonts come from Google with display=swap, so until they land the page
+   is set in whatever the stack falls back to — and the first draft's
+   fallbacks were narrower. On a Fast 3G load the hero headline went out on
+   two lines, then re-broke onto three when Noto arrived ~0.9s later, and the
+   lead and the call to action below it jumped ~45px (CLS 0.10–0.14).
+
+   So the fallback is a LOCAL font with its metrics overridden to match
+   Noto's: size-adjust makes the same words the same width, ascent/descent
+   make the line sit at the same baseline. Nothing is downloaded. The
+   numbers were MEASURED, not looked up — widths of the page's own strings in
+   each font, in the browser, with canvas measureText:
+
+     Noto Sans / Serif Georgian   ascent 1.07em, descent 0.29em
+     Arial   (Windows, macOS, iOS)       the sans fallback
+     Roboto  (Android, which has no Arial)
+     Georgia (Windows, macOS, iOS)       the serif fallback. Android's own
+                                         serif IS Noto Serif, whose Latin is
+                                         Noto Serif Georgian's — it measured
+                                         100%, and needs no face at all.
+
+   size-adjust is one number per face but words differ, so each face is
+   fitted to the text that matters most where it is used:
+
+     display   the hero headline's sans half ("Furniture that")
+     accent    the hero headline's serif half ("outlasts the trend.")
+     light     the hero's lead paragraph (weight 300 — all body text)
+     medium    the hero's chip, buttons and nav (weight 500 — the rest)
+     serif     the serif elsewhere: section accents, marquee, quote
+
+   Overrides are the target metric divided by size-adjust (the browser
+   applies them to the adjusted size). If the fonts or the hero's words
+   change, re-measure: with Noto loaded, size-adjust is
+   ctx.measureText(text) in Noto ÷ the same in the fallback, at one size and
+   weight, for the text that face is fitted to.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'bd-display-fb';
+  src: local('Arial'), local('ArialMT');
+  size-adjust: 112.15%;
+  ascent-override: 95.41%;
+  descent-override: 25.86%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-display-fb-android';
+  src: local('Roboto'), local('Roboto-Regular');
+  size-adjust: 110.44%;
+  ascent-override: 96.89%;
+  descent-override: 26.26%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-accent-fb';
+  src: local('Georgia');
+  size-adjust: 107.17%;
+  ascent-override: 99.84%;
+  descent-override: 27.06%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-sans-fb';
+  src: local('Arial'), local('ArialMT');
+  font-weight: 100 449;
+  size-adjust: 102.95%;
+  ascent-override: 103.93%;
+  descent-override: 28.17%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-sans-fb';
+  src: local('Arial'), local('ArialMT');
+  font-weight: 450 900;
+  size-adjust: 106.59%;
+  ascent-override: 100.38%;
+  descent-override: 27.21%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-sans-fb-android';
+  src: local('Roboto'), local('Roboto-Regular');
+  font-weight: 100 449;
+  size-adjust: 104.69%;
+  ascent-override: 102.21%;
+  descent-override: 27.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-sans-fb-android';
+  src: local('Roboto'), local('Roboto-Regular');
+  font-weight: 450 900;
+  size-adjust: 106.24%;
+  ascent-override: 100.72%;
+  descent-override: 27.3%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-serif-fb';
+  src: local('Georgia');
+  size-adjust: 106.35%;
+  ascent-override: 100.61%;
+  descent-override: 27.27%;
+  line-gap-override: 0%;
+}
+
 .bd {
   --bd-ivory: var(--at-background); /* #fbf9f5 */
   --bd-sand: var(--at-surface); /* #f2eee6 */
@@ -49,8 +157,13 @@
   --bd-radius: 28px;
   --bd-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* Noto first; then its measured stand-ins (above); then the system. */
+  --bd-sans: 'Noto Sans Georgian', 'bd-sans-fb', 'bd-sans-fb-android', system-ui, sans-serif;
+  --bd-serif: 'Noto Serif Georgian', 'bd-serif-fb', serif;
+
   background: var(--bd-night);
   color: var(--bd-ivory);
+  font-family: var(--bd-sans);
   overflow-x: clip;
 }
 @media (min-width: 640px) {
@@ -104,7 +217,7 @@
 .bd-display,
 .bd-heading {
   margin: 0;
-  font-family: var(--at-font-body);
+  font-family: var(--bd-sans);
   font-weight: 500;
   text-wrap: balance;
 }
@@ -120,7 +233,7 @@
 }
 /* The half of a headline set in the serif, filled with the gradient. */
 .bd-accent {
-  font-family: var(--at-font-serif);
+  font-family: var(--bd-serif);
   font-weight: 400;
   letter-spacing: -0.02em;
 }
@@ -136,6 +249,15 @@
    repaints the text, so it is not spent on every gradient on the page. */
 .bd-hero .bd-accent {
   animation: bd-sheen 9s ease-in-out infinite alternate;
+}
+/* The hero headline's two halves, each on a fallback fitted to its own
+   words, so the headline breaks where Noto will break it before Noto has
+   arrived. See the fallback faces at the top. */
+.bd-hero .bd-display {
+  font-family: 'Noto Sans Georgian', 'bd-display-fb', 'bd-display-fb-android', system-ui, sans-serif;
+}
+.bd-hero .bd-accent {
+  font-family: 'Noto Serif Georgian', 'bd-accent-fb', serif;
 }
 
 .bd-body {
@@ -356,7 +478,7 @@
   background: rgb(22 18 15 / 0.86);
 }
 .bd-wordmark {
-  font-family: var(--at-font-serif);
+  font-family: var(--bd-serif);
   font-size: 1.125rem;
   font-weight: 400;
   letter-spacing: 0.22em;
@@ -598,18 +720,34 @@
 }
 
 /*
- * On a phone the stage is a band across the top of the hero, and its layers
- * are taller than the band: the arch sits in the band and its light runs on
- * down behind the headline, instead of pushing the call to action below the
- * fold.
+ * On a phone the stage is a band across the top of the hero, and the copy
+ * under it — chip, three-line headline, lead, call to action — is a fixed
+ * ~431px at phone widths. So the BAND is what gives: it takes the screen's
+ * height less 29rem (that copy, the 1.25rem the band sits below the top,
+ * and a little air), between 9rem and 24rem. A share of the height (43svh)
+ * left the call to action 29px under the fold at 360×740 and 71px under at
+ * 375×667; this puts it on screen on both, with the arch smaller rather
+ * than the button gone.
+ *
+ * The layers are a little taller than the band: the arch sits in the band
+ * (22–73% of the layer's height, ~25–80% of the band's) and its pool of
+ * light runs on behind the chip.
  */
 .bd-stage {
-  --bd-stage-layers: min(48svh, 27rem);
+  --bd-band: clamp(9rem, calc(100vh - 29rem), 24rem);
+  --bd-stage-layers: calc(var(--bd-band) * 1.1);
   position: relative;
-  height: min(43svh, 24rem);
+  height: var(--bd-band);
   /* Clear of the floating nav, which sits over the top of the band. */
   margin-top: 1.25rem;
   pointer-events: none;
+}
+/* Where it exists, the SMALL viewport height: the one with the browser's
+   toolbars showing, which is what the first screen actually is. */
+@supports (height: 100svh) {
+  .bd-stage {
+    --bd-band: clamp(9rem, calc(100svh - 29rem), 24rem);
+  }
 }
 .bd-arch-light,
 .bd-arch-drawing {
@@ -748,7 +886,7 @@
   margin: 0;
   padding: 0 3.5rem 0 0;
   list-style: none;
-  font-family: var(--at-font-serif);
+  font-family: var(--bd-serif);
   font-size: var(--bd-title);
   white-space: nowrap;
   color: rgb(251 249 245 / 0.72);
@@ -859,7 +997,7 @@
 
 .bd-card-title {
   margin: 0;
-  font-family: var(--at-font-body);
+  font-family: var(--bd-sans);
   font-size: var(--bd-title);
   font-weight: 500;
   line-height: 1.25;
@@ -998,7 +1136,7 @@
 }
 .bd-step-name {
   margin: 0.35rem 0 0.25rem;
-  font-family: var(--at-font-body);
+  font-family: var(--bd-sans);
   font-size: var(--bd-body);
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -1123,7 +1261,7 @@
 }
 .bd-quote-text p {
   margin: 0;
-  font-family: var(--at-font-serif);
+  font-family: var(--bd-serif);
   font-size: calc(var(--bd-heading) * 0.68);
   font-weight: 400;
   line-height: 1.22;
