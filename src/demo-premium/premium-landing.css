@@ -348,16 +348,23 @@
     radial-gradient(55% 40% at 0% 100%, rgb(93 96 102 / 0.045), transparent 70%);
 }
 
+/*
+ * On a phone the stage is a band across the top of the hero, and its layers
+ * are taller than the band: the lamp sits in the band, and the rest of its
+ * light runs on down behind the headline instead of pushing the call to
+ * action below the fold.
+ */
 .lp-stage {
+  --lp-stage-layers: min(58svh, 34rem);
   position: relative;
-  height: min(58svh, 34rem);
+  height: min(42svh, 24rem);
   pointer-events: none;
 }
 .lp-lamp-drawing {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
   width: 100%;
-  height: 100%;
+  height: var(--lp-stage-layers);
   overflow: visible;
 }
 .lp-lamp-flat {
@@ -368,7 +375,8 @@
 }
 .lp-stage-canvas {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
+  height: var(--lp-stage-layers);
   opacity: 0;
   transition: opacity 1s var(--lp-ease);
 }
@@ -403,6 +411,7 @@
       radial-gradient(40% 45% at 0% 100%, rgb(93 96 102 / 0.045), transparent 70%);
   }
   .lp-stage {
+    --lp-stage-layers: 100%;
     position: absolute;
     inset: 0 0 0 auto;
     width: 50%;
@@ -667,6 +676,12 @@
   letter-spacing: 1.8px;
   text-transform: uppercase;
 }
+/* Room names would be specks at phone width; the drawing reads without them. */
+@media (max-width: 639px) {
+  .lp-plan-notes text {
+    display: none;
+  }
+}
 .lp-plan [data-draw] {
   stroke-dasharray: var(--len);
   stroke-dashoffset: 0;
@@ -770,27 +785,27 @@
   will-change: transform;
 }
 .lp-mesh-brass {
-  width: 75vmax;
-  height: 75vmax;
-  left: -22vmax;
-  top: -38vmax;
-  background: radial-gradient(closest-side, rgb(169 131 79 / 0.5), transparent);
+  width: 90vmax;
+  height: 90vmax;
+  left: -30vmax;
+  top: -45vmax;
+  background: radial-gradient(closest-side, rgb(216 180 119 / 0.3), rgb(216 180 119 / 0.08) 55%, transparent);
   animation: lp-drift-a 34s ease-in-out infinite alternate;
 }
 .lp-mesh-slate {
-  width: 80vmax;
-  height: 80vmax;
-  right: -30vmax;
-  bottom: -46vmax;
-  background: radial-gradient(closest-side, rgb(93 96 102 / 0.75), transparent);
+  width: 85vmax;
+  height: 85vmax;
+  right: -28vmax;
+  bottom: -50vmax;
+  background: radial-gradient(closest-side, rgb(93 96 102 / 0.85), rgb(93 96 102 / 0.25) 60%, transparent);
   animation: lp-drift-b 42s ease-in-out infinite alternate;
 }
 .lp-mesh-ember {
-  width: 50vmax;
-  height: 50vmax;
-  left: 38%;
-  top: 10%;
-  background: radial-gradient(closest-side, rgb(109 84 54 / 0.55), transparent);
+  width: 60vmax;
+  height: 60vmax;
+  left: 30%;
+  top: -5%;
+  background: radial-gradient(closest-side, rgb(109 84 54 / 0.4), transparent);
   animation: lp-drift-c 38s ease-in-out infinite alternate;
 }
 /* Film grain over the mesh: stops the gradients banding, and gives the dark
@@ -817,7 +832,7 @@
 }
 .lp-quote-text {
   margin: 2rem 0 0;
-  max-width: 30ch;
+  max-width: 36ch;
   color: var(--lp-ivory);
 }
 .lp-quote-text p {

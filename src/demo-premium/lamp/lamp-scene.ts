@@ -177,17 +177,17 @@ export function mountLamp(host: HTMLElement, { still, onReady, onLost }: LampOpt
 
   /* ---- Size ------------------------------------------------------------- */
 
-  const resize = () => {
+  const fitToHost = () => {
     const { width, height } = host.getBoundingClientRect()
     if (!width || !height) return
     renderer.setSize(width, height, false)
     camera.aspect = width / height
     camera.updateProjectionMatrix()
-    // A paused or still lamp is redrawn at its new size by hand — once it has
+    // A stopped or still lamp is redrawn at its new size by hand — once it has
     // compiled; drawing before that would compile on the main thread.
     if (ready && !running) render()
   }
-  const sizes = new ResizeObserver(resize)
+  const sizes = new ResizeObserver(fitToHost)
 
   /* ---- Running, pausing, and the first frame ----------------------------- */
 
@@ -200,7 +200,7 @@ export function mountLamp(host: HTMLElement, { still, onReady, onLost }: LampOpt
     run = run && !still && ready && !disposed
     if (run === running) return
     running = run
-    // A paused canvas that resumes should not treat the gap as one long frame.
+    // A stopped canvas that starts again should not treat the gap as one long frame.
     if (run) last = 0
     renderer.setAnimationLoop(run ? tick : null)
   }
@@ -217,7 +217,7 @@ export function mountLamp(host: HTMLElement, { still, onReady, onLost }: LampOpt
    * hero's text keeps animating while the GPU gets ready; then one frame is
    * drawn, and the page is told once that frame has been presented.
    */
-  resize()
+  fitToHost()
   renderer
     .compileAsync(scene, camera)
     .catch(() => undefined)
