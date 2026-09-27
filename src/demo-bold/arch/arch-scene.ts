@@ -156,7 +156,7 @@ export function mountArch(host: HTMLElement, { still, onReady, onLost }: ArchOpt
       color: '#2a1a0c',
       emissive: '#ffffff',
       emissiveMap: keep(amberLight()),
-      emissiveIntensity: 1,
+      emissiveIntensity: 0.85,
       roughness: 0.2,
       metalness: 0,
       clearcoat: 1,
@@ -212,7 +212,7 @@ export function mountArch(host: HTMLElement, { still, onReady, onLost }: ArchOpt
 
     const breath = Math.sin((age * 2 * Math.PI) / 6.5)
     arch.position.y = ease * 0.06 * breath
-    glass.emissiveIntensity = 1 + ease * 0.12 * breath
+    glass.emissiveIntensity = 0.85 + ease * 0.1 * breath
     const sink = 1 - ease * 0.06 * breath
     floor.scale.set(sink, 0.42 * sink, 1)
     pool.opacity = 0.55 * sink
@@ -326,26 +326,37 @@ function normaliseUVs(geometry: BufferGeometry) {
 
 /**
  * The light in the glass: warm at the top, deep amber at the foot — the
- * colour of a low sun through a reeded pane.
+ * colour of a low sun through a reeded pane — with the reeds themselves in
+ * it as a faint rise and fall of brightness across the pane. The clear coat
+ * alone only showed them where it caught a reflection, which under this
+ * lighting was hardly anywhere; the flat drawing showed them everywhere.
  */
 function amberLight(): CanvasTexture {
   const canvas = document.createElement('canvas')
-  canvas.width = 4
+  canvas.width = 256
   canvas.height = 256
   const context = canvas.getContext('2d')!
   const gradient = context.createLinearGradient(0, 0, 0, 256)
-  gradient.addColorStop(0, '#f8d9a2')
-  gradient.addColorStop(0.45, '#e39f4c')
-  gradient.addColorStop(1, '#5c3517')
+  gradient.addColorStop(0, '#f2c27a')
+  gradient.addColorStop(0.45, '#d98a36')
+  gradient.addColorStop(1, '#4e2b12')
   context.fillStyle = gradient
-  context.fillRect(0, 0, 4, 256)
+  context.fillRect(0, 0, 256, 256)
+  // Sixteen reeds, matching the clear coat's normal map.
+  const reed = 256 / 16
+  for (let x = 0; x < 256; x++) {
+    const phase = ((x % reed) + 0.5) / reed
+    const light = Math.cos(phase * Math.PI * 2)
+    context.fillStyle = light > 0 ? `rgba(255,236,200,${(light * 0.16).toFixed(3)})` : `rgba(40,20,5,${(-light * 0.22).toFixed(3)})`
+    context.fillRect(x, 0, 1, 256)
+  }
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
   return texture
 }
 
 /**
- * Reeded glass: one rounded flute as a normal map, repeated across the pane.
+ * Reeded glass: one convex flute as a normal map, repeated across the pane.
  * The clear coat reflects the studio through it, so the highlights break
  * into vertical bands the way fluted glass does.
  */

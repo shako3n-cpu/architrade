@@ -4,7 +4,7 @@
  * film grain to keep the gradients from banding.
  *
  * All CSS. The discs are radial gradients — soft on their own, so there is no
- * blur filter to re-render — and only their transforms animate, which the
+ * softening filter to re-render — and only their transforms animate, which the
  * compositor handles without touching layout or paint. The page therefore
  * paints its mesh with its first frame; there is no library to wait for.
  * Held still under reduced motion and while the band is off screen (see

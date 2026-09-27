@@ -604,9 +604,11 @@
  * fold.
  */
 .bd-stage {
-  --bd-stage-layers: min(60svh, 34rem);
+  --bd-stage-layers: min(48svh, 27rem);
   position: relative;
-  height: min(46svh, 26rem);
+  height: min(43svh, 24rem);
+  /* Clear of the floating nav, which sits over the top of the band. */
+  margin-top: 1.25rem;
   pointer-events: none;
 }
 .bd-arch-light,
@@ -656,6 +658,7 @@
     --bd-stage-layers: 100%;
     position: absolute;
     inset: 0 0 0 auto;
+    margin-top: 0;
     width: 50%;
     height: auto;
     z-index: -1;

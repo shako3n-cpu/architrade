@@ -7,7 +7,7 @@ import { Mesh } from '../mesh'
 const order = (i: number) => ({ '--i': i }) as CSSProperties
 
 /**
- * The close: on the light band, one large rounded panel carrying the page's
+ * The close: on the light band, one large round-cornered panel carrying the page's
  * richest gradient — bronze through amber into warm charcoal, drifting — with
  * the call to action on it, and the address for anyone who would rather write.
  */
