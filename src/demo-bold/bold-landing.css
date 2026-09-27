@@ -35,13 +35,17 @@
    numbers were MEASURED, not looked up — widths of the page's own strings in
    each font, in the browser, with canvas measureText:
 
-     Noto Sans / Serif Georgian   ascent 1.07em, descent 0.29em
+     Noto Sans / Serif Georgian   ascent 1.068em, descent 0.292em
      Arial   (Windows, macOS, iOS)       the sans fallback
      Roboto  (Android, which has no Arial)
      Georgia (Windows, macOS, iOS)       the serif fallback. Android's own
                                          serif IS Noto Serif, whose Latin is
                                          Noto Serif Georgian's — it measured
-                                         100%, and needs no face at all.
+                                         100% wide. Its vertical metrics are
+                                         a hair off (1.069/0.293), and beside
+                                         the adjusted sans on one line that
+                                         made each line a fraction taller, so
+                                         it gets a face for the overrides.
 
    size-adjust is one number per face but words differ, so each face is
    fitted to the text that matters most where it is used:
@@ -63,24 +67,24 @@
   font-family: 'bd-display-fb';
   src: local('Arial'), local('ArialMT');
   size-adjust: 112.15%;
-  ascent-override: 95.41%;
-  descent-override: 25.86%;
+  ascent-override: 95.23%;
+  descent-override: 26.04%;
   line-gap-override: 0%;
 }
 @font-face {
   font-family: 'bd-display-fb-android';
   src: local('Roboto'), local('Roboto-Regular');
   size-adjust: 110.44%;
-  ascent-override: 96.89%;
-  descent-override: 26.26%;
+  ascent-override: 96.7%;
+  descent-override: 26.44%;
   line-gap-override: 0%;
 }
 @font-face {
   font-family: 'bd-accent-fb';
   src: local('Georgia');
   size-adjust: 107.17%;
-  ascent-override: 99.84%;
-  descent-override: 27.06%;
+  ascent-override: 99.65%;
+  descent-override: 27.25%;
   line-gap-override: 0%;
 }
 @font-face {
@@ -88,8 +92,8 @@
   src: local('Arial'), local('ArialMT');
   font-weight: 100 449;
   size-adjust: 102.95%;
-  ascent-override: 103.93%;
-  descent-override: 28.17%;
+  ascent-override: 103.74%;
+  descent-override: 28.36%;
   line-gap-override: 0%;
 }
 @font-face {
@@ -97,8 +101,8 @@
   src: local('Arial'), local('ArialMT');
   font-weight: 450 900;
   size-adjust: 106.59%;
-  ascent-override: 100.38%;
-  descent-override: 27.21%;
+  ascent-override: 100.2%;
+  descent-override: 27.39%;
   line-gap-override: 0%;
 }
 @font-face {
@@ -106,8 +110,8 @@
   src: local('Roboto'), local('Roboto-Regular');
   font-weight: 100 449;
   size-adjust: 104.69%;
-  ascent-override: 102.21%;
-  descent-override: 27.7%;
+  ascent-override: 102.02%;
+  descent-override: 27.89%;
   line-gap-override: 0%;
 }
 @font-face {
@@ -115,16 +119,23 @@
   src: local('Roboto'), local('Roboto-Regular');
   font-weight: 450 900;
   size-adjust: 106.24%;
-  ascent-override: 100.72%;
-  descent-override: 27.3%;
+  ascent-override: 100.53%;
+  descent-override: 27.48%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'bd-serif-fb-android';
+  src: local('Noto Serif'), local('NotoSerif-Regular');
+  ascent-override: 106.8%;
+  descent-override: 29.2%;
   line-gap-override: 0%;
 }
 @font-face {
   font-family: 'bd-serif-fb';
   src: local('Georgia');
   size-adjust: 106.35%;
-  ascent-override: 100.61%;
-  descent-override: 27.27%;
+  ascent-override: 100.42%;
+  descent-override: 27.46%;
   line-gap-override: 0%;
 }
 
@@ -159,7 +170,7 @@
 
   /* Noto first; then its measured stand-ins (above); then the system. */
   --bd-sans: 'Noto Sans Georgian', 'bd-sans-fb', 'bd-sans-fb-android', system-ui, sans-serif;
-  --bd-serif: 'Noto Serif Georgian', 'bd-serif-fb', serif;
+  --bd-serif: 'Noto Serif Georgian', 'bd-serif-fb', 'bd-serif-fb-android', serif;
 
   background: var(--bd-night);
   color: var(--bd-ivory);
@@ -257,7 +268,7 @@
   font-family: 'Noto Sans Georgian', 'bd-display-fb', 'bd-display-fb-android', system-ui, sans-serif;
 }
 .bd-hero .bd-accent {
-  font-family: 'Noto Serif Georgian', 'bd-accent-fb', serif;
+  font-family: 'Noto Serif Georgian', 'bd-accent-fb', 'bd-serif-fb-android', serif;
 }
 
 .bd-body {

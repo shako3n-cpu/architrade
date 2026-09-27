@@ -44,7 +44,8 @@ export default function BoldLanding() {
   useDocumentShell()
 
   return (
-    <div ref={page} className="bd">
+    // lang="en" HERE, not only on <html>: see useDocumentShell.
+    <div ref={page} className="bd" lang="en">
       <a href="#bd-main" className="bd-skip">
         Skip to content
       </a>
@@ -64,6 +65,19 @@ export default function BoldLanding() {
 /**
  * English, whatever language the site last remembered, and named in the tab;
  * both put back on the way out.
+ *
+ * THE LANGUAGE HAS TO BE RIGHT FROM THE FIRST FRAME
+ *   index.html starts the document as lang="ka", and the site's stylesheet
+ *   gives Georgian headings their own leading and tracking —
+ *   `:lang(ka) :is(h1…h6) { line-height: 1.28; letter-spacing: 0 }`,
+ *   unlayered and more specific than .bd-display. This used to switch <html>
+ *   to "en" in an ordinary effect, which runs AFTER the first paint: for the
+ *   first half-second of a slow load the hero headline was set at Georgian
+ *   leading (59px lines instead of 45px), then snapped shut and pulled
+ *   everything under it up — a layout shift of ~0.03 with nothing to do
+ *   with fonts. So the page's root element carries lang="en" itself, which
+ *   :lang() sees from the very first render, and <html> is switched in a
+ *   layout effect, before paint, for everything outside it.
  *
  * SCROLL, IN AND OUT
  *   The router keeps the scroll position across pages, and RootLayout resets
@@ -88,7 +102,7 @@ function useDocumentShell() {
     [],
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement
     const previous = { title: document.title, lang: root.lang }
     document.title = 'ARCHTRADE — Furniture that outlasts the trend'
