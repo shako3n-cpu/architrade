@@ -1,0 +1,1331 @@
+/* ============================================================================
+   BOLD LANDING — DEMO STYLESHEET
+   ----------------------------------------------------------------------------
+   Scoped under .bd and prefixed bd-. Plain CSS rather than utility classes,
+   so nothing here reaches the site's own stylesheet.
+
+   THE PALETTE IS THE BRAND'S, PUSHED
+     Ivory, graphite and bronze are the site's own tokens (src/index.css),
+     read through. What this variant adds is only the blend between them:
+     amber (bronze at full warmth) and a warm charcoal (graphite pulled
+     toward bronze) for the dark bands. No blue, no violet, nothing that is
+     not already in the brand at a lower volume.
+
+   WHERE IT BREAKS THE SITE'S HOUSE RULES, ON PURPOSE
+     The site: square corners, no gradients, no shadows. This variant was
+     briefed as the loud one — rounded glass, moving gradients, glow — and is
+     kept from tipping over by sticking to one hero object, four bands, and
+     the brand's colours.
+
+   TYPE: display, heading, title, body and small.
+   ========================================================================== */
+
+.bd {
+  --bd-ivory: var(--at-background); /* #fbf9f5 */
+  --bd-sand: var(--at-surface); /* #f2eee6 */
+  --bd-ink: var(--at-ink); /* #23262a */
+  --bd-muted: var(--at-muted); /* #6b6862 */
+  --bd-muted-dark: var(--at-ink-muted); /* #b8b0a4 */
+  --bd-bronze: var(--at-brass); /* #8c6d46 */
+  --bd-bronze-bright: var(--at-brass-bright); /* #a9834f */
+  --bd-bronze-light: var(--at-brass-on-ink); /* #d8b477 */
+  --bd-amber: #e3a54f;
+  --bd-night: #120f0d;
+  --bd-charcoal: #1c1510;
+
+  --bd-gradient: linear-gradient(100deg, #f7d49a 0%, #e3a54f 35%, #c08a4f 65%, #f0c27f 100%);
+  /* On ivory the light end of the gradient is too pale to read; this one
+     keeps large type above 3:1 all the way across. */
+  --bd-gradient-deep: linear-gradient(100deg, #b5782f 0%, #8c6d46 55%, #6d5436 100%);
+
+  --bd-display: clamp(2.9rem, 1rem + 5.6vw, 6.5rem);
+  --bd-heading: clamp(2.2rem, 1.3rem + 3vw, 4.25rem);
+  --bd-title: clamp(1.25rem, 1.05rem + 0.6vw, 1.625rem);
+  --bd-body: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --bd-small: 0.875rem;
+
+  --bd-gutter: 1.25rem;
+  --bd-section: clamp(5.5rem, 3rem + 8vw, 10rem);
+  --bd-radius: 28px;
+  --bd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  background: var(--bd-night);
+  color: var(--bd-ivory);
+  overflow-x: clip;
+}
+@media (min-width: 640px) {
+  .bd {
+    --bd-gutter: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .bd {
+    --bd-gutter: 3rem;
+  }
+}
+
+.bd-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: var(--bd-gutter);
+}
+
+/*
+ * Each band sets its colours as custom properties, and everything inside
+ * reads them. Inheritance means the NEAREST band decides — which matters for
+ * the closing panel, a dark band inside a light one: with plain descendant
+ * rules (.bd-light .bd-body after .bd-dark .bd-body) the light band's muted
+ * grey won there, and the panel's paragraph all but vanished.
+ */
+.bd,
+.bd-dark {
+  --bd-fg: var(--bd-ivory);
+  --bd-fg-muted: var(--bd-muted-dark);
+  --bd-accent-fill: var(--bd-gradient);
+}
+.bd-light {
+  --bd-fg: var(--bd-ink);
+  --bd-fg-muted: var(--bd-muted);
+  --bd-accent-fill: var(--bd-gradient-deep);
+}
+.bd-dark {
+  background: var(--bd-night);
+  color: var(--bd-fg);
+}
+.bd-light {
+  background: var(--bd-ivory);
+  color: var(--bd-fg);
+}
+
+/* --- Type ------------------------------------------------------------------- */
+
+.bd-display,
+.bd-heading {
+  margin: 0;
+  font-family: var(--at-font-body);
+  font-weight: 500;
+  text-wrap: balance;
+}
+.bd-display {
+  font-size: var(--bd-display);
+  line-height: 0.98;
+  letter-spacing: -0.042em;
+}
+.bd-heading {
+  font-size: var(--bd-heading);
+  line-height: 1.02;
+  letter-spacing: -0.036em;
+}
+/* The half of a headline set in the serif, filled with the gradient. */
+.bd-accent {
+  font-family: var(--at-font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.bd-accent,
+.bd-gradient-text {
+  background-image: var(--bd-accent-fill);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Only the hero's accent moves: a slow travel of light along the words. It
+   repaints the text, so it is not spent on every gradient on the page. */
+.bd-hero .bd-accent {
+  animation: bd-sheen 9s ease-in-out infinite alternate;
+}
+
+.bd-body {
+  margin: 0;
+  font-size: var(--bd-body);
+  line-height: 1.65;
+  font-weight: 300;
+  color: var(--bd-fg-muted);
+}
+.bd-label {
+  margin: 0;
+  font-size: var(--bd-small);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--bd-fg-muted);
+}
+
+.bd-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Chips ------------------------------------------------------------------- */
+
+.bd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.45rem 0.95rem 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: var(--bd-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgb(251 249 245 / 0.88);
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.bd-chip-light {
+  color: var(--bd-ink);
+  background: rgb(255 255 255 / 0.65);
+  border-color: rgb(35 38 42 / 0.08);
+}
+.bd-chip-dot {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--bd-amber);
+  box-shadow: 0 0 12px 2px rgb(227 165 79 / 0.6);
+}
+.bd-chip-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgb(227 165 79 / 0.7);
+  animation: bd-ping 2.6s var(--bd-ease) infinite;
+}
+
+/* --- Buttons ------------------------------------------------------------------ */
+
+.bd-magnet {
+  display: inline-flex;
+  padding: 0.75rem;
+  margin: -0.75rem;
+}
+.bd-btn {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 3.5rem;
+  padding-inline: 1.75rem 1.5rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f3c47a 0%, #dd9a45 48%, #a9834f 100%);
+  color: #1d130a;
+  font-size: var(--bd-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    0 12px 32px -12px rgb(227 165 79 / 0.75);
+  transition:
+    translate 0.6s var(--bd-ease),
+    box-shadow 0.5s var(--bd-ease);
+}
+/* The sheen under the pointer. */
+.bd-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(7rem circle at var(--mx) var(--my), rgb(255 255 255 / 0.45), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s var(--bd-ease);
+}
+.bd-btn:hover::before {
+  opacity: 1;
+}
+.bd-btn:hover {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 16px 44px -12px rgb(227 165 79 / 0.95);
+}
+.bd-btn[data-size='small'] {
+  height: 2.625rem;
+  gap: 0.5rem;
+  padding-inline: 1.15rem 1rem;
+}
+.bd-arrow {
+  flex: none;
+  transition: translate 0.6s var(--bd-ease);
+}
+.bd-btn:hover .bd-arrow {
+  translate: 3px 0;
+}
+.bd-btn-short {
+  display: none;
+}
+
+.bd-btn-glass {
+  display: inline-flex;
+  align-items: center;
+  height: 3.5rem;
+  padding-inline: 1.6rem;
+  border-radius: 999px;
+  font-size: var(--bd-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--bd-ivory);
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  transition:
+    background-color 0.4s var(--bd-ease),
+    border-color 0.4s var(--bd-ease);
+}
+.bd-btn-glass:hover {
+  background: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.28);
+}
+
+.bd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+.bd-actions-center {
+  justify-content: center;
+}
+
+.bd-skip {
+  position: fixed;
+  z-index: 60;
+  top: -5rem;
+  left: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  background: var(--bd-amber);
+  color: var(--bd-night);
+  font-size: var(--bd-small);
+  font-weight: 500;
+}
+.bd-skip:focus {
+  top: 1rem;
+}
+/* The site's bronze focus ring is too dark to see on the dark bands. */
+.bd-dark :focus-visible,
+.bd-nav :focus-visible {
+  outline-color: var(--bd-amber);
+}
+
+/* --- Nav: dark glass ----------------------------------------------------------- */
+
+.bd-nav {
+  position: fixed;
+  z-index: 40;
+  top: 0.75rem;
+  left: 50%;
+  translate: -50% 0;
+  width: min(calc(100% - 1.5rem), 68rem);
+  height: 3.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-inline: 1.5rem 0.55rem;
+  border-radius: 999px;
+  background: rgb(18 15 13 / 0.5);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 10px 34px -14px rgb(0 0 0 / 0.5);
+  transition: background-color 0.6s var(--bd-ease);
+  animation: bd-drop 1s var(--bd-ease) both;
+}
+.bd-nav[data-scrolled] {
+  /* Nearly solid once the page moves: at 0.7 the glass went a muddy grey
+     over the light band. */
+  background: rgb(22 18 15 / 0.86);
+}
+.bd-wordmark {
+  font-family: var(--at-font-serif);
+  font-size: 1.125rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  color: var(--bd-fg);
+  text-decoration: none;
+}
+.bd-nav-links {
+  display: none;
+  gap: 2rem;
+}
+.bd-nav-link {
+  position: relative;
+  padding-block: 0.5rem;
+  font-size: var(--bd-small);
+  font-weight: 500;
+  color: rgb(251 249 245 / 0.7);
+  text-decoration: none;
+  transition: color 0.4s var(--bd-ease);
+}
+.bd-nav-link::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0.2rem;
+  height: 1px;
+  background: var(--bd-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s var(--bd-ease);
+}
+.bd-nav-link:hover {
+  color: var(--bd-ivory);
+}
+.bd-nav-link:hover::after {
+  transform: scaleX(1);
+}
+@media (min-width: 768px) {
+  .bd-nav-links {
+    display: flex;
+  }
+}
+@media (max-width: 399px) {
+  .bd-nav {
+    padding-inline-start: 1.125rem;
+  }
+  .bd-nav .bd-btn-full {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .bd-nav .bd-btn-short {
+    display: inline;
+  }
+}
+
+/* --- The moving gradient mesh -------------------------------------------------- */
+
+.bd-mesh {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bd-blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.bd-blob-a {
+  animation: bd-drift-a 24s ease-in-out infinite alternate;
+}
+.bd-blob-b {
+  animation: bd-drift-b 19s ease-in-out infinite alternate;
+}
+.bd-blob-c {
+  animation: bd-drift-c 29s ease-in-out infinite alternate;
+}
+[data-offscreen] .bd-blob {
+  animation-play-state: paused;
+}
+
+/* The hero: bronze high on the right, amber behind the arch, ember low left. */
+.bd-mesh[data-tone='hero'] .bd-blob-a {
+  width: 72vmax;
+  height: 72vmax;
+  right: -26vmax;
+  top: -34vmax;
+  background: radial-gradient(closest-side, rgb(169 131 79 / 0.55), rgb(169 131 79 / 0.12) 60%, transparent);
+}
+.bd-mesh[data-tone='hero'] .bd-blob-b {
+  width: 52vmax;
+  height: 52vmax;
+  right: -2vmax;
+  top: 12%;
+  background: radial-gradient(closest-side, rgb(227 165 79 / 0.38), rgb(227 165 79 / 0.08) 60%, transparent);
+}
+.bd-mesh[data-tone='hero'] .bd-blob-c {
+  width: 85vmax;
+  height: 85vmax;
+  left: -38vmax;
+  bottom: -52vmax;
+  background: radial-gradient(closest-side, rgb(109 84 54 / 0.7), rgb(90 58 34 / 0.2) 60%, transparent);
+}
+
+/* The figures band: embers low, so the glass cards have something to frost. */
+.bd-mesh[data-tone='proof'] .bd-blob-a {
+  width: 60vmax;
+  height: 60vmax;
+  left: -18vmax;
+  top: -20vmax;
+  background: radial-gradient(closest-side, rgb(109 84 54 / 0.55), transparent);
+}
+.bd-mesh[data-tone='proof'] .bd-blob-b {
+  width: 46vmax;
+  height: 46vmax;
+  left: 40%;
+  top: 5%;
+  background: radial-gradient(closest-side, rgb(227 165 79 / 0.2), transparent);
+}
+.bd-mesh[data-tone='proof'] .bd-blob-c {
+  width: 60vmax;
+  height: 60vmax;
+  right: -20vmax;
+  bottom: -30vmax;
+  background: radial-gradient(closest-side, rgb(169 131 79 / 0.35), transparent);
+}
+
+/* The testimonial: the hero's mesh turned the other way. */
+.bd-mesh[data-tone='quote'] .bd-blob-a {
+  width: 70vmax;
+  height: 70vmax;
+  left: -24vmax;
+  top: -30vmax;
+  background: radial-gradient(closest-side, rgb(169 131 79 / 0.5), rgb(169 131 79 / 0.1) 60%, transparent);
+}
+.bd-mesh[data-tone='quote'] .bd-blob-b {
+  width: 50vmax;
+  height: 50vmax;
+  left: 38%;
+  top: 30%;
+  background: radial-gradient(closest-side, rgb(227 165 79 / 0.3), transparent);
+}
+.bd-mesh[data-tone='quote'] .bd-blob-c {
+  width: 80vmax;
+  height: 80vmax;
+  right: -34vmax;
+  bottom: -48vmax;
+  background: radial-gradient(closest-side, rgb(109 84 54 / 0.75), transparent);
+}
+
+/* The closing panel: the richest blend on the page. */
+.bd-mesh[data-tone='close'] .bd-blob-a {
+  width: 60vmax;
+  height: 60vmax;
+  left: -16vmax;
+  top: -28vmax;
+  background: radial-gradient(closest-side, rgb(227 165 79 / 0.62), rgb(227 165 79 / 0.15) 60%, transparent);
+}
+.bd-mesh[data-tone='close'] .bd-blob-b {
+  width: 55vmax;
+  height: 55vmax;
+  right: -18vmax;
+  top: -8vmax;
+  background: radial-gradient(closest-side, rgb(169 131 79 / 0.7), transparent);
+}
+.bd-mesh[data-tone='close'] .bd-blob-c {
+  width: 70vmax;
+  height: 70vmax;
+  left: 20%;
+  bottom: -46vmax;
+  background: radial-gradient(closest-side, rgb(90 58 34 / 0.9), transparent);
+}
+
+/* The light band: warm washes on ivory, faint enough for dark type. */
+.bd-mesh[data-tone='light'] .bd-blob-a {
+  width: 62vmax;
+  height: 62vmax;
+  left: -20vmax;
+  top: -18vmax;
+  background: radial-gradient(closest-side, rgb(227 165 79 / 0.26), transparent);
+}
+.bd-mesh[data-tone='light'] .bd-blob-b {
+  width: 56vmax;
+  height: 56vmax;
+  right: -18vmax;
+  top: 30%;
+  background: radial-gradient(closest-side, rgb(169 131 79 / 0.22), transparent);
+}
+.bd-mesh[data-tone='light'] .bd-blob-c {
+  width: 50vmax;
+  height: 50vmax;
+  left: 30%;
+  bottom: -26vmax;
+  background: radial-gradient(closest-side, rgb(216 180 119 / 0.3), transparent);
+}
+
+/* An architect's grid, faint, fading out toward the edges of the band. */
+.bd-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 25%, transparent 75%);
+}
+.bd-mesh[data-tone='light'] .bd-grid {
+  background-image:
+    linear-gradient(rgb(35 38 42 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(35 38 42 / 0.05) 1px, transparent 1px);
+}
+/* Grain: stops the gradients banding, and gives the dark a surface. */
+.bd-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.bd-mesh[data-tone='light'] .bd-grain {
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+}
+
+/* --- Hero ---------------------------------------------------------------------- */
+
+.bd-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 4.5rem;
+}
+
+/*
+ * On a phone the stage is a band across the top of the hero, and its layers
+ * are taller than the band: the arch sits in the band and its light runs on
+ * down behind the headline, instead of pushing the call to action below the
+ * fold.
+ */
+.bd-stage {
+  --bd-stage-layers: min(60svh, 34rem);
+  position: relative;
+  height: min(46svh, 26rem);
+  pointer-events: none;
+}
+.bd-arch-light,
+.bd-arch-drawing {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: var(--bd-stage-layers);
+  overflow: visible;
+}
+.bd-arch-flat {
+  transition: opacity 1s var(--bd-ease) 0.2s;
+}
+.bd-stage[data-ready] .bd-arch-flat {
+  opacity: 0;
+}
+.bd-stage-canvas {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--bd-stage-layers);
+  opacity: 0;
+  transition: opacity 1s var(--bd-ease);
+}
+.bd-stage[data-ready] .bd-stage-canvas {
+  opacity: 1;
+}
+
+.bd-hero-copy {
+  display: grid;
+  gap: 1.6rem;
+  justify-items: start;
+}
+.bd-hero-lead {
+  max-width: 34rem;
+}
+.bd-hero-copy .bd-actions {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .bd-hero {
+    min-height: 100svh;
+    justify-content: center;
+    padding-block: 8rem 6rem;
+  }
+  .bd-stage {
+    --bd-stage-layers: 100%;
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 50%;
+    height: auto;
+    z-index: -1;
+  }
+  .bd-hero-copy {
+    max-width: min(46rem, 54%);
+  }
+}
+
+.bd-rise {
+  animation: bd-rise 1.1s var(--bd-ease) both;
+  animation-delay: calc(0.1s + var(--i, 0) * 0.09s);
+}
+
+/* --- Proof: glass figures and the client marquee --------------------------------- */
+
+.bd-proof {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: 1rem clamp(4.5rem, 8vw, 7rem);
+}
+.bd-glass {
+  position: relative;
+  border-radius: var(--bd-radius);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.03));
+  border: 1px solid rgb(255 255 255 / 0.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 24px 60px -30px rgb(0 0 0 / 0.7);
+}
+.bd-stats {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+.bd-stat {
+  display: grid;
+  gap: 0.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+.bd-stat-value {
+  margin: 0.25rem 0 0;
+  font-size: var(--bd-display);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+.bd-stat-note {
+  margin: 0;
+  font-size: var(--bd-small);
+  line-height: 1.5;
+  color: rgb(184 176 164 / 0.85);
+}
+@media (min-width: 768px) {
+  .bd-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.bd-marquee {
+  display: grid;
+  gap: 1.25rem;
+  justify-items: center;
+  margin-top: clamp(3rem, 6vw, 5rem);
+}
+.bd-marquee-window {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.bd-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: bd-marquee 55s linear infinite;
+}
+.bd-marquee:hover .bd-marquee-track {
+  animation-play-state: paused;
+}
+.bd-marquee-list {
+  display: flex;
+  gap: 3.5rem;
+  margin: 0;
+  padding: 0 3.5rem 0 0;
+  list-style: none;
+  font-family: var(--at-font-serif);
+  font-size: var(--bd-title);
+  white-space: nowrap;
+  color: rgb(251 249 245 / 0.72);
+}
+
+/* --- Work: the bento, on the light band ----------------------------------------- */
+
+.bd-values {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: var(--bd-section);
+}
+.bd-section-head {
+  display: grid;
+  gap: 1.25rem;
+  justify-items: start;
+  max-width: 54rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+.bd-bento {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 900px) {
+  .bd-bento {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    /* Every area must be a rectangle, or the whole declaration is dropped
+       and the cards pile into one cell — which the first draft did. */
+    grid-template-areas:
+      'houses houses houses houses process process'
+      'plan plan sectors sectors process process';
+  }
+  .bd-card-houses {
+    grid-area: houses;
+  }
+  .bd-card-process {
+    grid-area: process;
+  }
+  .bd-card-plan {
+    grid-area: plan;
+  }
+  .bd-card-sectors {
+    grid-area: sectors;
+  }
+}
+
+/* Light glass. The light that follows the pointer is two layers: a wash
+   across the card, and a bright rim where the pointer is near its edge (a
+   one-pixel ring cut out of a radial gradient with a mask). */
+.bd-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: var(--bd-radius);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.74), rgb(255 255 255 / 0.5));
+  border: 1px solid rgb(255 255 255 / 0.9);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow:
+    0 0 0 1px rgb(35 38 42 / 0.05),
+    0 28px 60px -32px rgb(90 58 34 / 0.4);
+}
+.bd-card::before,
+.bd-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--bd-ease);
+}
+.bd-card::before {
+  z-index: -1;
+  background: radial-gradient(26rem circle at var(--px, 50%) var(--py, 50%), rgb(227 165 79 / 0.16), transparent 60%);
+}
+.bd-card::after {
+  padding: 1px;
+  background: radial-gradient(16rem circle at var(--px, 50%) var(--py, 50%), rgb(221 154 69 / 0.95), transparent 60%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+[data-lit] > .bd-card::before,
+[data-lit] > .bd-card::after {
+  opacity: 1;
+}
+
+.bd-card-title {
+  margin: 0;
+  font-family: var(--at-font-body);
+  font-size: var(--bd-title);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--bd-ink);
+  text-wrap: balance;
+}
+.bd-card-body {
+  margin: 0;
+  font-size: var(--bd-body);
+  line-height: 1.6;
+  font-weight: 300;
+  color: var(--bd-muted);
+  max-width: 36rem;
+}
+
+/* 01 houses — and one dot per house, filling the card's empty half. */
+.bd-house-dots {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .bd-card-houses {
+    padding-right: calc(clamp(1.5rem, 3vw, 2.5rem) + 15rem);
+  }
+  .bd-house-dots {
+    position: absolute;
+    top: 50%;
+    right: clamp(1.5rem, 3vw, 2.5rem);
+    translate: 0 -50%;
+    display: grid;
+    grid-template-columns: repeat(6, 1.5rem);
+    gap: 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bd-house-dots li {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f3c47a, #a9834f);
+    box-shadow: 0 6px 14px -6px rgb(169 131 79 / 0.8);
+  }
+  .bd-motion .bd-house-dots li {
+    opacity: 0;
+    transform: scale(0.4);
+    transition:
+      opacity 0.6s var(--bd-ease),
+      transform 0.8s var(--bd-ease);
+    transition-delay: calc(0.4s + var(--i, 0) * 0.035s);
+  }
+  .bd-motion .is-in .bd-house-dots li {
+    opacity: 1;
+    transform: none;
+  }
+}
+.bd-houses-number {
+  margin: -0.5rem 0 -0.25rem;
+  font-size: calc(var(--bd-display) * 1.5);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+}
+.bd-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bd-tags li {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: var(--bd-small);
+  font-weight: 500;
+  color: var(--bd-ink);
+  background: rgb(255 255 255 / 0.7);
+  border: 1px solid rgb(35 38 42 / 0.08);
+}
+
+/* 02 process: a line that fills with amber as the card arrives. The card
+   spans both rows, so the steps spread down its full height. */
+.bd-card-process {
+  grid-template-rows: auto auto 1fr;
+}
+.bd-card-process .bd-steps {
+  align-content: space-evenly;
+}
+.bd-steps {
+  position: relative;
+  display: grid;
+  gap: 1.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bd-steps::before,
+.bd-steps::after {
+  content: '';
+  position: absolute;
+  top: 1.125rem;
+  bottom: 1.125rem;
+  left: calc(1.125rem - 1px);
+  width: 2px;
+  border-radius: 2px;
+}
+.bd-steps::before {
+  background: rgb(35 38 42 / 0.08);
+}
+.bd-steps::after {
+  background: linear-gradient(180deg, var(--bd-amber), var(--bd-bronze));
+  transform-origin: top;
+}
+.bd-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 1rem;
+}
+.bd-step-mark {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6d4a22;
+  background: #fff8ee;
+  border: 1px solid rgb(221 154 69 / 0.6);
+  box-shadow: 0 0 0 4px rgb(251 249 245 / 0.9);
+}
+.bd-step-name {
+  margin: 0.35rem 0 0.25rem;
+  font-family: var(--at-font-body);
+  font-size: var(--bd-body);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--bd-ink);
+}
+.bd-step-body {
+  margin: 0;
+  font-size: var(--bd-small);
+  line-height: 1.6;
+  color: var(--bd-muted);
+}
+
+/* 03 the plan */
+.bd-plan {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.5rem;
+}
+.bd-plan path,
+.bd-plan rect,
+.bd-plan circle {
+  fill: none;
+  stroke-linejoin: round;
+}
+.bd-plan-wall {
+  stroke: var(--bd-ink);
+  stroke-width: 4;
+}
+.bd-plan-line {
+  stroke: var(--bd-ink);
+  stroke-width: 1.25;
+  opacity: 0.8;
+}
+.bd-plan-light {
+  stroke: #c9822f;
+  stroke-width: 2;
+  fill: rgb(227 165 79 / 0.25);
+}
+.bd-plan [data-draw] {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: 0;
+}
+
+/* 04 sectors */
+.bd-bars {
+  display: grid;
+  gap: 1rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bd-bars li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 1.75rem;
+  align-items: center;
+  gap: 0.875rem;
+  font-size: var(--bd-small);
+}
+.bd-bar-name {
+  color: var(--bd-ink);
+  font-weight: 500;
+}
+.bd-bar-track {
+  height: 0.625rem;
+  border-radius: 999px;
+  background: rgb(35 38 42 / 0.07);
+  overflow: hidden;
+}
+.bd-bar-fill {
+  display: block;
+  height: 100%;
+  width: calc(var(--share) * 100%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a9834f, var(--bd-amber));
+  transform-origin: left;
+}
+.bd-bars-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: auto 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(35 38 42 / 0.08);
+  font-size: var(--bd-small);
+  color: var(--bd-muted);
+}
+.bd-bars-total strong {
+  font-size: var(--bd-title);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.bd-card-sectors {
+  grid-template-rows: auto auto auto 1fr;
+}
+.bd-bar-count {
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--bd-ink);
+}
+
+/* --- Testimonial --------------------------------------------------------------- */
+
+.bd-quote {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: calc(var(--bd-section) * 1.05);
+}
+.bd-quote-card {
+  display: grid;
+  justify-items: center;
+  gap: 2.25rem;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 5rem);
+  text-align: center;
+}
+.bd-quote-text {
+  margin: 0;
+}
+.bd-quote-text p {
+  margin: 0;
+  font-family: var(--at-font-serif);
+  font-size: calc(var(--bd-heading) * 0.68);
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  color: var(--bd-ivory);
+  text-wrap: balance;
+}
+.bd-quote-by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+}
+/* No photograph: there is no person yet. A disc of the gradient holds the place. */
+.bd-quote-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--bd-gradient);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.08);
+}
+.bd-placeholder-tag {
+  padding: 0.3rem 0.8rem;
+  border: 1px dashed rgb(184 176 164 / 0.55);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--bd-muted-dark);
+}
+
+/* --- Closing ------------------------------------------------------------------- */
+
+.bd-closing {
+  padding-block: var(--bd-section) calc(var(--bd-section) * 0.6);
+}
+.bd-closing-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  justify-items: center;
+  gap: 1.6rem;
+  padding: clamp(3.5rem, 9vw, 8rem) clamp(1.25rem, 6vw, 5rem);
+  border-radius: 40px;
+  text-align: center;
+  background: var(--bd-charcoal);
+  box-shadow: 0 50px 90px -45px rgb(90 58 34 / 0.75);
+}
+.bd-closing-title {
+  max-width: 14ch;
+}
+.bd-closing-body {
+  max-width: 38rem;
+}
+.bd-closing-panel .bd-actions {
+  margin-top: 0.5rem;
+}
+
+.bd-footer {
+  border-top: 1px solid var(--at-hairline);
+}
+.bd-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding-block: 2rem;
+}
+.bd-footer-link {
+  font-size: var(--bd-small);
+  font-weight: 500;
+  color: var(--bd-ink);
+  text-decoration: underline;
+  text-decoration-color: rgb(140 109 70 / 0.5);
+  text-underline-offset: 0.3em;
+}
+
+/* --- Scroll reveals --------------------------------------------------------------
+   The hidden state exists only under .bd-motion, which useReveals adds once
+   it is certain an observer will undo it. */
+
+.bd-motion [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 2rem, 0) scale(0.985);
+  transition:
+    opacity 1s var(--bd-ease),
+    transform 1.2s var(--bd-ease);
+  transition-delay: calc(var(--i, 0) * 0.09s);
+}
+.bd-motion [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+/* What fills in once its card has arrived: the process line, the sector
+   bars, the plan's strokes. */
+.bd-motion .bd-steps::after {
+  transform: scaleY(0);
+  transition: transform 2s var(--bd-ease) 0.5s;
+}
+.bd-motion .is-in .bd-steps::after {
+  transform: none;
+}
+.bd-motion .bd-bar-fill {
+  transform: scaleX(0);
+  transition: transform 1.4s var(--bd-ease);
+  transition-delay: calc(0.5s + var(--i, 0) * 0.12s);
+}
+.bd-motion .is-in .bd-bar-fill {
+  transform: none;
+}
+.bd-motion .bd-plan [data-draw] {
+  transition:
+    stroke-dashoffset 1.6s var(--bd-ease) calc(0.4s + var(--d, 0s)),
+    opacity 0.2s linear calc(0.4s + var(--d, 0s));
+}
+.bd-motion :not(.is-in) > .bd-plan [data-draw] {
+  stroke-dashoffset: var(--len);
+  opacity: 0;
+}
+
+/* --- Keyframes -------------------------------------------------------------------- */
+
+@keyframes bd-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.5rem, 0);
+  }
+}
+@keyframes bd-drop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.75rem, 0);
+  }
+}
+@keyframes bd-sheen {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+@keyframes bd-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  80%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+@keyframes bd-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@keyframes bd-drift-a {
+  50% {
+    transform: translate3d(-9vmax, 7vmax, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(5vmax, 12vmax, 0) scale(0.94);
+  }
+}
+@keyframes bd-drift-b {
+  50% {
+    transform: translate3d(8vmax, -6vmax, 0) scale(0.9);
+  }
+  100% {
+    transform: translate3d(-6vmax, 5vmax, 0) scale(1.15);
+  }
+}
+@keyframes bd-drift-c {
+  50% {
+    transform: translate3d(10vmax, -8vmax, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(4vmax, 6vmax, 0) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bd-rise,
+  .bd-nav,
+  .bd-blob,
+  .bd-hero .bd-accent,
+  .bd-chip-dot::after {
+    animation: none;
+  }
+  /* The marquee stands still as a centred, wrapped list, shown once. */
+  .bd-marquee-track {
+    animation: none;
+    width: auto;
+    justify-content: center;
+  }
+  .bd-marquee-window {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .bd-marquee-list {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem 2.5rem;
+    padding: 0;
+    white-space: normal;
+  }
+  .bd-marquee-list[aria-hidden='true'] {
+    display: none;
+  }
+  .bd-btn,
+  .bd-arrow,
+  .bd-nav-link::after {
+    transition: none;
+  }
+}
